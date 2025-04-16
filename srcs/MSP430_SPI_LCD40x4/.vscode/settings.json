@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "*.s": "platformio-debug.asm",
+        "CCP.C": "cpp",
+        "SID03.C": "cpp",
+        "SIDFUN.C": "cpp",
+        "CDOSBOOT.C": "cpp",
+        "PCDOSDK.C": "cpp",
+        "RWINBOOT.C": "cpp",
+        "BOOTOBJ.C": "cpp"
+    }
+}

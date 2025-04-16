@@ -1,0 +1,46 @@
+;;  Z80Proto_seg.def
+;;
+    DEFC PO_1 = 01h
+    DEFC PO_2 = 02h
+
+    DEFC S_SEG_0 = 0
+    DEFC S_SEG_1 = 1
+    DEFC S_SEG_2 = 2
+    DEFC S_SEG_3 = 3
+    DEFC S_SEG_4 = 4
+    DEFC S_SEG_5 = 5
+
+    DEFC SEG_CHR_0 = 0
+    DEFC SEG_CHR_1 = 1
+    DEFC SEG_CHR_2 = 2
+    DEFC SEG_CHR_3 = 3
+    DEFC SEG_CHR_4 = 4
+    DEFC SEG_CHR_5 = 5
+    DEFC SEG_CHR_6 = 6
+    DEFC SEG_CHR_7 = 7
+    DEFC SEG_CHR_8 = 8
+    DEFC SEG_CHR_9 = 9
+    DEFC SEG_CHR_A = 10
+    DEFC SEG_CHR_B = 11
+    DEFC SEG_CHR_C = 12
+    DEFC SEG_CHR_D = 13
+    DEFC SEG_CHR_E = 14
+    DEFC SEG_CHR_F = 15
+    DEFC SEG_CHR_H = 16
+    DEFC SEG_CHR_I = 17
+    DEFC SEG_CHR_J = 18
+    DEFC SEG_CHR_L = 19
+    DEFC SEG_CHR_N = 20
+    DEFC SEG_CHR_O = 21
+    DEFC SEG_CHR_P = 22
+    DEFC SEG_CHR_R = 23
+    DEFC SEG_CHR_T = 24
+    DEFC SEG_CHR_U = 25
+    DEFC SEG_CHR_V = 26
+    DEFC SEG_CHR_X = 27
+    DEFC SEG_CHR_Y = 28
+    DEFC SEG_CHR_Z = 29
+    DEFC SEG_CHR_HYPEN = 30
+    DEFC SEG_CHR_NOUN = 31
+    DEFC SEG_CHR_VERB = 32
+    DEFC SEG_CHR_BLANK = 33

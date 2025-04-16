@@ -1,0 +1,1843 @@
+/tmp/tmpXXZ1WdxE.asm:
+     1                          MODULE m_loader_asm
+     2                          LINE 0, "m_loader.asm"
+m_loader.asm:
+                                
+     1                          ;   m_loader.asm -- MiniLoader for Z80proto
+     2                          ;   (C)2024, 2025 yasunoxx▼Julia <yasunoxx gmail>
+     3                          ;   assemble: zcc +embedded --no-crt m_loader.asm -o m_loader.bin -m --list
+     4                          ;             (or 'make')
+     5                          
+     6                              include "../Z80proto_bio.def"
+../Z80proto_bio.def:
+     1                          ;;  Z80proto_bio.def -- definition for Z80proto Basic I/O devices
+     2                          
+     3                          i8253_C0    EQU 10h
+     4                          i8253_C1    EQU 11h
+     5                          i8253_C1_LSB    EQU 40h
+     6                          i8253_C1_MSB    EQU 9Ch
+     7                          i8253_C2    EQU 12h
+     8                          i8253_CC    EQU 13h
+     9                          ;
+    10                          PO_0        EQU 00h
+    11                          PI_0        EQU 0Ch
+    12                          ROMSEL      EQU 08h
+    13                          PAGE1       EQU 09h
+    14                          ;
+    15                          ; SPI device addr.
+    16                          SPI_DEVID_NULL  EQU 00000000b
+    17                          SPI_DEVID_Ch0   EQU 00100000b
+    18                          SPI_DEVID_Ch1   EQU 01000000b
+    19                          SPI_DEVID_Ch2   EQU 01100000b
+    20                          
+    21                          ; 25FL016A command
+    22                          SPIROM_CMD_WRSR EQU 01h
+    23                          SPIROM_CMD_FAST_READ    EQU 0Bh
+    24                          
+m_loader.asm:
+     7                              include "../z80sioctc.def"
+../z80sioctc.def:
+     1                          ;	z80sioctc.def
+     2                          
+     3                          	DEFC	CTC_Ch0 = 20h
+     4                          	DEFC	CTC_Ch1 = 21h
+     5                          	DEFC	CTC_Ch2 = 22h
+     6                          	DEFC	CTC_Ch3 = 23h
+     7                          	DEFC	SIO_Ch0_D = 24h
+     8                          	DEFC	SIO_Ch0_C = 25h
+     9                          	DEFC	SIO_Ch1_D = 26h
+    10                          	DEFC	SIO_Ch1_C = 27h
+    11                          ;
+    12                          ; SCI Control Characters
+    13                          	DEFC	NULL = 0
+    14                          	DEFC	BELL = 07h
+    15                          	DEFC	CR = 0Dh
+    16                          	DEFC	LF = 0Ah
+    17                          	DEFC	DELETE = 7Fh
+    18                          	DEFC	BACKSPACE = 08h
+    19                          
+    20                          ; Flags F_STAT_SIOn
+    21                          	DEFC	F_STAT_ALLSENT = 0
+    22                          	DEFC	F_STAT_BREAK   = 1
+    23                          	DEFC	F_STAT_RECEIVE = 2
+    24                          	DEFC	F_STAT_TXEMPTY = 3
+    25                          ;
+    26                          ;;	external address
+    27                          	extern	INTSIO
+    28                          	extern	INTCTC
+    29                          	extern	putAreg2chrs
+    30                          
+m_loader.asm:
+     8                              include "../Z80proto_seg.def"
+../Z80proto_seg.def:
+     1                          ;;  Z80Proto_seg.def
+     2                          ;;
+     3                              DEFC PO_1 = 01h
+     4                              DEFC PO_2 = 02h
+     5                          
+     6                              DEFC S_SEG_0 = 0
+     7                              DEFC S_SEG_1 = 1
+     8                              DEFC S_SEG_2 = 2
+     9                              DEFC S_SEG_3 = 3
+    10                              DEFC S_SEG_4 = 4
+    11                              DEFC S_SEG_5 = 5
+    12                          
+    13                              DEFC SEG_CHR_0 = 0
+    14                              DEFC SEG_CHR_1 = 1
+    15                              DEFC SEG_CHR_2 = 2
+    16                              DEFC SEG_CHR_3 = 3
+    17                              DEFC SEG_CHR_4 = 4
+    18                              DEFC SEG_CHR_5 = 5
+    19                              DEFC SEG_CHR_6 = 6
+    20                              DEFC SEG_CHR_7 = 7
+    21                              DEFC SEG_CHR_8 = 8
+    22                              DEFC SEG_CHR_9 = 9
+    23                              DEFC SEG_CHR_A = 10
+    24                              DEFC SEG_CHR_B = 11
+    25                              DEFC SEG_CHR_C = 12
+    26                              DEFC SEG_CHR_D = 13
+    27                              DEFC SEG_CHR_E = 14
+    28                              DEFC SEG_CHR_F = 15
+    29                              DEFC SEG_CHR_H = 16
+    30                              DEFC SEG_CHR_I = 17
+    31                              DEFC SEG_CHR_J = 18
+    32                              DEFC SEG_CHR_L = 19
+    33                              DEFC SEG_CHR_N = 20
+    34                              DEFC SEG_CHR_O = 21
+    35                              DEFC SEG_CHR_P = 22
+    36                              DEFC SEG_CHR_R = 23
+    37                              DEFC SEG_CHR_T = 24
+    38                              DEFC SEG_CHR_U = 25
+    39                              DEFC SEG_CHR_V = 26
+    40                              DEFC SEG_CHR_X = 27
+    41                              DEFC SEG_CHR_Y = 28
+    42                              DEFC SEG_CHR_Z = 29
+    43                              DEFC SEG_CHR_HYPEN = 30
+    44                              DEFC SEG_CHR_NOUN = 31
+    45                              DEFC SEG_CHR_VERB = 32
+    46                              DEFC SEG_CHR_BLANK = 33
+    47                          
+m_loader.asm:
+     9                              include "../memmap.def"
+../memmap.def:
+     1                          ;	memmap.def -- system memory area definition
+     2                          ;
+     3                          	DEFC	SYSMEM_TOP	= 0F000h
+     4                          ;
+     5                          	DEFC	BUF_DISK_IO	= 0F000h
+     6                          ; +800h
+     7                          	DEFC	BUF_SPIROM	= 0F800h
+     8                          ; +100h
+     9                          	DEFC	BUF_SIO0RX	= 0F900h
+    10                          ; +40h
+    11                          	DEFC	BUF_SIO1RX	= 0F940h
+    12                          ; +40h
+    13                          	DEFC	BUF_CON		= 0F980h
+    14                          	DEFC	SIZE_BUF_CON	= 64
+    15                          ; +40h
+    16                          	DEFC	BUF_SIO0TX	= 0F9C0h
+    17                          ; +40h
+    18                          	DEFC	BUF_SIO1TX	= 0FA00h
+    19                          ;   Next    = 0FA40h
+    20                          ;
+    21                          	DEFC	PO_2_BUP	= 0FB00h
+    22                          	DEFC	PROG_PLACE	= 0FB01h
+    23                          	DEFC	V_CNT_16	= 0FB02h
+    24                          	DEFC	V_CNT_8A	= 0FB04h
+    25                          	DEFC	V_CNT_8B	= 0FB05h
+    26                          	DEFC	SPI_SELD_DEV	= 0FB06h
+    27                          ;
+    28                          	DEFC	SEG_STATE	= 0FB10h
+    29                          	DEFC	SEG_POS	= 0FB11h
+    30                          	DEFC	SEG_0	= 0FB12h
+    31                          	DEFC	SEG_1	= 0FB13h
+    32                          	DEFC	SEG_2	= 0FB14h
+    33                          	DEFC	SEG_3	= 0FB15h
+    34                          	DEFC	SEG_4	= 0FB16h
+    35                          	DEFC	SEG_5	= 0FB17h
+    36                          ;
+    37                          	DEFC	LOOP_SEQ	= 0FB20h
+    38                          	DEFC	BUF_ASC2BIN	= 0FB21h
+    39                          ;
+    40                          	DEFC	F_STAT_SIO0	= 0FB30h
+    41                          	DEFC	F_STAT_SIO1	= 0FB31h
+    42                          	DEFC	PTR_BUF_SIO0_RX_READ  = 0FB32h
+    43                          	DEFC	PTR_BUF_SIO0_RX_WRITE = 0FB33h
+    44                          	DEFC	PTR_BUF_SIO1_RX_READ  = 0FB34h
+    45                          	DEFC	PTR_BUF_SIO1_RX_WRITE = 0FB35h
+    46                          	DEFC	PTR_BUF_SIO0_TX_READ  = 0FB36h
+    47                          	DEFC	PTR_BUF_SIO0_TX_WRITE = 0FB37h
+    48                          	DEFC	PTR_BUF_SIO1_TX_READ  = 0FB38h
+    49                          	DEFC	PTR_BUF_SIO1_TX_WRITE = 0FB39h
+    50                          	DEFC	BUF_GETCHAR_SIO0	  = 0FB3Ah
+    51                          	DEFC	CNT_BUF_CON	= 0FB3Bh
+    52                          ;
+    53                          	DEFC	FDC_COMMAND_DATA = 0FB3Ch
+    54                          	DEFC	FDC_COMMAND_CMD  = 0FB3Dh
+    55                          ;
+    56                          	DEFC	BUF_BREAKPOINT_ADDR   = 0FBECh
+    57                          	DEFC	BUF_BREAKPOINT_OPCODE = 0FBEEh
+    58                          	DEFC	REG_BUF	  = 0FBF0h
+    59                          ;
+    60                          	DEFC	BIOS_ADDR_TABLE	= 0FC00h
+    61                          	DEFC	BIOS_ADDR_COUNT = 12
+    62                          
+m_loader.asm:
+    10                          
+    11                          ;;
+    12                          ;;; Program
+    13                          ;;
+    14                          rst00:
+    15                          ;;  !!!DO NOT EDIT!!!: m_loader.asm is "run on ROM" only
+    16                          ;   run on ROM
+    17                              ORG 0h
+    18                          ;
+    19                              include "config.asm"
+config.asm:
+     1                          ;   config.asm - configuration for m_loader.asm
+     2                          
+     3                          ;;  !CHOOSE ANY ONE!: interrupt mode IM2 or IM1
+     4                          ;  use im2
+     5                              DEFC INTERRUPT_MODE = 2
+     6   000000 ed5e                im  2
+     7                          ;  use im1
+     8                          ;   DEFC INTERRUPT_MODE = 1
+     9                          ;    im  1
+    10                          
+    11                          
+    12                          ;;  !!!EDIT CAREFULLY!!!
+    13   000002 31ffff              ld  sp, 0FFFFh
+    14                          
+    15                          
+    16                          ;   end config.asm
+    17                          
+m_loader.asm:
+    20                          ;
+    21   000005 c38000              jp main
+    22                          
+    23                              include "../crt_z80_rsts.asm"
+../crt_z80_rsts.asm:
+     1                          ; Define the low memory for builds that start at 0x0E000
+     2                          ;
+     3                          ; Allow overriding of:
+     4                          ; - All rsts
+     5                          ; - (including im2)
+     6                          ; - NMI (not 808x)
+     7                          
+     8                          ;
+     9                          ;        PUBLIC  rst00
+    10                          ;        PUBLIC  isr_im1
+    11                          ;
+    12                                  EXTERN  debug_rst08
+    13                                  EXTERN  debug_rst10
+    14                                  EXTERN  debug_rst18
+    15                                  EXTERN  DEBUGSTOP
+    16                                  EXTERN  int_CTC
+    17                                  EXTERN  int_SIO
+    18                                  EXTERN  int_void
+    19                          ;
+    20                                  defs    $0008-ASMPC
+    21                          rst08:
+    22   000008 00                  nop
+    23   000009 c9                  ret
+    24                          ;    jp  debug_rst08
+    25                          ;
+    26   00000a 000000000000            defs    $0010-ASMPC
+    27                          rst10:
+    28   000010 00                  nop
+    29   000011 c9                  ret
+    30                          ;    jp  debug_rst10
+    31                          ;
+    32   000012 000000000000            defs    $0018-ASMPC
+    33                          rst18:
+    34   000018 00                  nop
+    35   000019 c9                  ret
+    36                          ;    jp  debug_rst18
+    37                          ;
+    38   00001a 000000000000            defs    $0020-ASMPC
+    39                          rst20:
+    40   000020 00                  nop
+    41   000021 c9                  ret
+    42                          ;
+    43   000022 000000000000            defs    $0028-ASMPC
+    44                          rst28:
+    45   000028 00                  nop
+    46   000029 c9                  ret
+    47                          ;
+    48   00002a 000000000000            defs    $0030-ASMPC
+    49                          rst30:
+    50                              EXTERN  DEBUGBREAK
+    51   000030 cd8505              call    DEBUGBREAK
+    52                          ;    ret    ; NO RETURN
+    53                          ;
+    54   000033 0000000000              defs    $0038-ASMPC
+    55                          ;
+    56                          ; im1 Interrupts
+    57                          ;
+    58                          rst38:
+    59                          if INTERRUPT_MODE == 1
+    60                          isr_im1:
+    61                              push    af
+    62                              push    bc
+    63                              push    de
+    64                              push    hl
+    65                          
+    66                          ;;  guess who?
+    67                          ;    call    int_sci
+    68                          ;    call    int_i8253
+    69                          
+    70                          isr_end: ; end ISR
+    71                              pop hl
+    72                              pop de
+    73                              pop bc
+    74                              pop af
+    75                          ;
+    76                              ei
+    77                              reti
+    78                          endif
+    79                          if INTERRUPT_MODE == 2
+    80   000038 00                  nop
+    81   000039 c9                  ret
+    82                          endif
+    83                          ;
+    84   00003a 0000000000000000        defs    $0050-ASMPC
+                0000000000000000
+                000000000000    
+    85                          ;    ORG 0050h
+    86                              PUBLIC  Hexadecimal
+    87                          Hexadecimal:
+    88   000050 30                  defb    '0'
+    89   000051 31                  defb    '1'
+    90   000052 32                  defb    '2'
+    91   000053 33                  defb    '3'
+    92   000054 34                  defb    '4'
+    93   000055 35                  defb    '5'
+    94   000056 36                  defb    '6'
+    95   000057 37                  defb    '7'
+    96   000058 38                  defb    '8'
+    97   000059 39                  defb    '9'
+    98   00005a 41                  defb    'A'
+    99   00005b 42                  defb    'B'
+   100   00005c 43                  defb    'C'
+   101   00005d 44                  defb    'D'
+   102   00005e 45                  defb    'E'
+   103   00005f 46                  defb    'F'
+   104                          ;
+   105   000060 000000000000            defs    $0066-ASMPC
+   106                          nmi:
+   107   000066 0e10                ld  c, 16   ;   SEG_CHR_H
+   108   000068 c3b205              jp  DEBUGSTOP
+   109   00006b 76                  halt
+   110                          
+   111   00006c 00000000            defs    4
+   112                          
+   113                                  defs    $0070-ASMPC
+   114                          Vectors:
+   115                          ;   0070h~  CTC
+   116                          ;        PUBLIC  INTCTC
+   117                          ;        PUBLIC  INTSIO
+   118                          ;        PUBLIC  INTDMA
+   119                          INTCTC:
+   120   000070 9502                defw    int_CTC
+   121   000072 df02                defw    int_void
+   122   000074 df02                defw    int_void
+   123   000076 df02                defw    int_void
+   124                          ;
+   125                          ;   0078h   SIO
+   126                          INTSIO:
+   127   000078 a502                defw    int_SIO
+   128                          ;
+   129                          ;   007Ah   DMA
+   130                          INTDMA:
+   131   00007a df02                defw    int_void
+   132                          
+   133   00007c 00000000                defs    $0080-ASMPC
+   134                          
+m_loader.asm:
+    24                          
+    25                          ; ----------------------------------------------------------------------------
+    26                          ;;
+    27                          ;;;   Main routine ?
+    28                          ;;
+    29                          ; ----------------------------------------------------------------------------
+    30                          ;
+    31                          main:
+    32   000080 af                  xor a
+    33   000081 d300                out (PO_0), a
+    34   000083 d301                out (PO_1), a
+    35   000085 d302                out (PO_2), a
+    36                              ; no ROMKICK
+    37   000087 d308                out (ROMSEL), a
+    38   000089 d309                out (PAGE1), a
+    39                          ;
+    40   00008b 3e04                ld  a, 00000100b    ; Initial PO_2 value
+    41   00008d cd1f05              call    out_PO_2
+    42                          
+    43                          ;; initialize system devices
+    44                          init:
+    45   000090 018907              ld  bc, 0789h
+    46   000093 cdbe05              call    sloop
+    47                          ;
+    48                          if INTERRUPT_MODE == 2
+    49                          ;;  for im2
+    50   000096 cde302              call    conf_CTC
+    51   000099 cd0f03              call    conf_SIO
+    52                          endif
+    53                          if INTERRUPT_MODE == 1
+    54                          ;;  for im1
+    55                              call    conf_timer1
+    56                              call    conf_timer_other
+    57                          endif
+    58                          ;
+    59   00009c cd9704              call    conf_sysmem
+    60                          ;
+    61   00009f cd5c06              call    spi_dev_unsel
+    62                          ;
+    63   0000a2 fb                  ei
+    64                          
+    65                          ;;
+    66                          ;;; Proto2 title
+    67                          ;;
+    68                              ; Proto2 title
+    69   0000a3 21b006              ld  hl, SEG_TITLE_PROTO2
+    70   0000a6 1112fb              ld  de, SEG_0
+    71   0000a9 010600              ld  bc, 6
+    72   0000ac edb0                ldir
+    73                          
+    74   0000ae cdc605              call    loop
+    75                          ;
+    76                          
+    77                          ;;
+    78                          ;;; MiniLoader, a small loader
+    79                          ;;
+    80                          
+    81                          loader: ; Loader title
+    82   0000b1 21b606              ld  hl, SEG_TITLE_LOADER
+    83   0000b4 1112fb              ld  de, SEG_0
+    84   0000b7 010600              ld  bc, 6
+    85   0000ba edb0                ldir
+    86                          
+    87                          ;; Loader title to SIO0
+    88   0000bc 21c206              ld  hl, STR_loader_title
+    89   0000bf cdf403              call    puts_SIO0
+    90   0000c2 cdc605              call    loop
+    91                          ; check AUTOLOAD switch
+    92   0000c5 db0c                in  a, (PI_0)
+    93   0000c7 cb57                bit 2, a
+    94                          ;; branch here
+    95   0000c9 caba01              jp  z, spirom_read00
+    96                          
+    97                          ;;
+    98                          ;;;
+    99                          ;;;; Console Mode
+   100                          ;;;
+   101                          ;;
+   102                          loader_cons: ; Console title
+   103   0000cc 21bc06              ld  hl, SEG_TITLE_CONS
+   104   0000cf 1112fb              ld  de, SEG_0
+   105   0000d2 010600              ld  bc, 6
+   106   0000d5 edb0                ldir
+   107                          ;
+   108                          loader_cons_oneliner: ; Startup Console one line
+   109   0000d7 21d506              ld  hl, STR_loader_prompt
+   110   0000da cdf403              call    puts_SIO0
+   111                          ;
+   112   0000dd dd2180f9            ld  ix, BUF_CON
+   113   0000e1 213bfb              ld  hl, CNT_BUF_CON
+   114   0000e4 af                  xor a
+   115   0000e5 77                  ld  (hl), a
+   116   0000e6 cd0204              call    gets_SIO0
+   117                          
+   118                          parse_cons: ;; parse command
+   119                          parse_cons_2:
+   120   0000e9 213bfb              ld  hl, CNT_BUF_CON
+   121   0000ec 7e                  ld  a, (hl)
+   122                          ;
+   123   0000ed 0600                ld  b, 0
+   124   0000ef 4f                  ld  c, a    ; BC = CNT_BUF_CON
+   125   0000f0 2180f9              ld  hl, BUF_CON
+   126   0000f3 09                  add hl, bc  ; HL = BUF_CON + CNT_BUF_CON
+   127   0000f4 3e00                ld  a, NULL
+   128   0000f6 77                  ld  (hl), a ; NULL termination
+   129   0000f7 2180f9              ld  hl, BUF_CON
+   130   0000fa 7e                  ld  a, (hl)
+   131                          ;
+   132                          parse_cons_3:
+   133   0000fb fe4c                cp  'L'
+   134   0000fd cab401              jp  z, spirom_loadIndex
+   135                              ; L : load FAT0(0x1F0000~) into buffer
+   136   000100 fe44                cp  'D'
+   137   000102 ca1c01              jp  z, dump_cons
+   138                              ; Dnnnn : memory dump nnnn~+127 bytes
+   139   000105 fe4a                cp  'J'
+   140   000107 ca0d01              jp  z, jump_cons
+   141                              ; Jnnnn : jump
+   142                          ;
+   143                          ;   cp  'M'
+   144                          ;   jp  z, modify_cons
+   145                          ;   ; Mnnnn : modify memory
+   146                          ;   cp  'S'
+   147                          ;   jp  z, upload_srec_1line
+   148                          ;   ; Sxxxx... : S-record type memory modify
+   149                          ;   ; (accept S1, S2, S3 record, ignore other records)
+   150                          ;   cp  'C'
+   151                          ;   jp  z, command_to_spidev
+   152                          ;   ; Cnnxx : send command address 'nn' data 'xx' to device 2
+   153                          ;   cp  'R'
+   154                          ;   jp  z, read_in_spibuf
+   155                          ;   ; Rnnnn : read ROM 0xnnnn00~+255 bytes to buffer
+   156                          ;   cp  'W'
+   157                          ;   jp  z, write_out_spibuf
+   158                          ;   ; Wnnnn : write buffer to ROM 0xnnnn00~+255 bytes
+   159                          ;   cp  'P'
+   160                          ;   jp  z, in_port_cons
+   161                          ;   ; Pnn : read I/O address 'nn'
+   162                          ;   cp  'Q'
+   163                          ;   jp  z, out_port_cons
+   164                          ;   ; Pnnxx : write I/O address 'nn' data 'xx'
+   165                          ;   cp  'O'
+   166                          ;   jp  z, output_srec
+   167                          ;   ; O : output S-record format
+   168                          ;   cp  'N'
+   169                          ;   jp  z, noun_verb_mode
+   170                          ;   ; N : for debug mode ...
+   171                          ;
+   172   00010a c3d700              jp  loader_cons_oneliner
+   173                          
+   174                          jump_cons: ;   jump addr
+   175   00010d dd2180f9            ld  ix, BUF_CON
+   176   000111 dd23                inc ix
+   177   000113 cd0a06              call    p_ix2bc
+   178                          ;
+   179   000116 dd60dd69            ld  ix, bc  ; dump start address
+   180   00011a dde9                jp  (ix)
+   181                          
+   182                          dump_cons: ;   dump 128 bytes
+   183   00011c dd2180f9            ld  ix, BUF_CON
+   184   000120 dd23                inc ix
+   185   000122 cd0a06              call    p_ix2bc
+   186                          ;
+   187   000125 5059                ld  de, bc  ; dump start address
+   188                          ;
+   189                          ; dump 128 bytes, 16 bytes x 8 lines
+   190   000127 0608                ld  b, 8
+   191                          dump_cons_loop: ; Address
+   192   000129 cd8e01              call    dump_cons2      ; as de2buf_sio0tx
+   193   00012c e5                  push    hl
+   194   00012d 21c0f9              ld  hl, BUF_SIO0TX
+   195   000130 cdf403              call    puts_SIO0
+   196   000133 e1                  pop hl
+   197                          ;
+   198   000134 3e3a                ld  a, ':'
+   199   000136 cda403              call    putchar_SIO0
+   200                          ; output 16 bytes and Increment
+   201   000139 cd4801              call    dump_cons3
+   202   00013c e5                  push    hl
+   203   00013d 211000              ld  hl, 16
+   204   000140 19                  add hl, de
+   205   000141 eb                  ex  de, hl
+   206   000142 e1                  pop hl
+   207   000143 10e4                djnz    dump_cons_loop
+   208                          ;
+   209   000145 c3d700              jp  loader_cons_oneliner
+   210                          
+   211                          dump_cons3: ; output 4bytes x 4
+   212   000148 c5                  push    bc
+   213   000149 d5                  push    de
+   214   00014a dde5                push    ix
+   215                          ;
+   216                          dump_cons3_2:
+   217   00014c 0608                ld  b, 8
+   218   00014e dd62dd6b            ld  ix, de
+   219                          
+   220                          dump_cons3_3:
+   221   000152 dd7e00              ld  a, (ix)
+   222   000155 57                  ld  d, a
+   223   000156 dd23                inc ix
+   224   000158 dd7e00              ld  a, (ix)
+   225   00015b 5f                  ld  e, a
+   226   00015c dd23                inc ix
+   227                          ;
+   228   00015e cd8e01              call    dump_cons2      ; as de2buf_sio0tx
+   229   000161 e5                  push    hl
+   230   000162 21c0f9              ld  hl, BUF_SIO0TX
+   231   000165 cdf403              call    puts_SIO0
+   232   000168 e1                  pop hl
+   233                          ;
+   234   000169 78                  ld  a, b
+   235   00016a fe07                cp  7
+   236   00016c 280a                jr  z, dump_cons3_4
+   237   00016e fe05                cp  5
+   238   000170 2806                jr  z, dump_cons3_4
+   239   000172 fe03                cp  3
+   240   000174 2802                jr  z, dump_cons3_4
+   241   000176 1805                jr  dump_cons3_5
+   242                          dump_cons3_4:
+   243   000178 3e20                ld  a, ' '
+   244   00017a cda403              call    putchar_SIO0
+   245                          dump_cons3_5:
+   246   00017d 10d3                djnz    dump_cons3_3
+   247                          ;
+   248   00017f 3e0d                ld  a, CR
+   249   000181 cda403              call    putchar_SIO0
+   250   000184 3e0a                ld  a, LF
+   251   000186 cda403              call    putchar_SIO0
+   252                          ;
+   253   000189 dde1                pop ix
+   254   00018b d1                  pop de
+   255   00018c c1                  pop bc
+   256                          ;
+   257   00018d c9                  ret
+   258                          
+   259                          dump_cons2:
+   260                          de2buf_sio0tx: ; DE(4 nibbles) -> BUF_SIO0TX
+   261   00018e c5                  push    bc
+   262   00018f e5                  push    hl
+   263                          
+   264   000190 2121fb              ld  hl, BUF_ASC2BIN
+   265   000193 01c0f9              ld  bc, BUF_SIO0TX
+   266                          ;
+   267   000196 7a                  ld  a, d
+   268   000197 3221fb              ld  (BUF_ASC2BIN), a
+   269   00019a af                  xor a
+   270   00019b cd2406              call    nibble2a
+   271   00019e af                  xor a
+   272   00019f cd2406              call    nibble2a
+   273   0001a2 7b                  ld  a, e
+   274   0001a3 3221fb              ld  (BUF_ASC2BIN), a
+   275   0001a6 af                  xor a
+   276   0001a7 cd2406              call    nibble2a
+   277   0001aa af                  xor a
+   278   0001ab cd2406              call    nibble2a
+   279                          ;
+   280                          dump_cons2_end:
+   281   0001ae 3e00                ld  a, NULL
+   282   0001b0 02                  ld  (bc), a
+   283                          ;
+   284   0001b1 e1                  pop hl
+   285   0001b2 c1                  pop bc
+   286                          ;
+   287   0001b3 c9                  ret
+   288                          
+   289                          ;;
+   290                          ;;;
+   291                          ;;;; SPI loader Mode
+   292                          ;;;
+   293                          ;;
+   294                          
+   295                          ;; spirom_loadIndex -- read Index block to BUF_SPIROM
+   296                          ;
+   297                          spirom_loadIndex:
+   298   0001b4 cd3502              call    spirom_readIndex
+   299                          ;; exit
+   300   0001b7 c3d700              jp  loader_cons_oneliner
+   301                          
+   302                          ;; spirom_read00 -- Autoboot: Read Sector 00 and execute
+   303                          spirom_read00:
+   304   0001ba cd6602              call    spirom_setWRSR
+   305                          ;
+   306   0001bd 3e40                ld  a, SPI_DEVID_Ch1
+   307   0001bf 3206fb              ld  (SPI_SELD_DEV), a
+   308   0001c2 cd4e06              call    spi_dev_sel
+   309                          ;
+   310   0001c5 dd21001f            ld  ix, 1F00h   ; FAT block 0~15
+   311   0001c9 cd7c02              call    spirom_setAddr
+   312   0001cc cd4e02              call    spirom_read256toBUF
+   313                          ;
+   314                          ;;  for debug: display addresses
+   315   0001cf ed5b02f8            ld  de, (BUF_SPIROM + 2)    ; Destination Address
+   316   0001d3 cd8e01              call    de2buf_sio0tx
+   317   0001d6 21c0f9              ld  hl, BUF_SIO0TX
+   318   0001d9 cdf403              call    puts_SIO0
+   319   0001dc 3e2c                ld  a, ','
+   320   0001de cda403              call    putchar_SIO0
+   321                          ;
+   322   0001e1 ed4b04f8            ld  bc, (BUF_SPIROM + 4)    ; Block Size
+   323   0001e5 5059                ld  de, bc
+   324   0001e7 cd8e01              call    de2buf_sio0tx
+   325   0001ea 21c0f9              ld  hl, BUF_SIO0TX
+   326   0001ed cdf403              call    puts_SIO0
+   327   0001f0 3e2c                ld  a, ','
+   328   0001f2 cda403              call    putchar_SIO0
+   329                          ;
+   330   0001f5 fd2a06f8            ld  iy, (BUF_SPIROM + 6)    ; Exec. Address
+   331   0001f9 fde5                push    iy
+   332   0001fb fd54fd5d            ld  de, iy
+   333   0001ff cd8e01              call    de2buf_sio0tx
+   334   000202 21c0f9              ld  hl, BUF_SIO0TX
+   335   000205 cdf403              call    puts_SIO0
+   336                          ;
+   337   000208 ed5b02f8            ld  de, (BUF_SPIROM + 2)    ; reload Destination Address
+   338                          ;
+   339                          ;   reset ROM
+   340   00020c cd5c06              call    spi_dev_unsel
+   341   00020f 3e40                ld  a, SPI_DEVID_Ch1
+   342   000211 3206fb              ld  (SPI_SELD_DEV), a
+   343   000214 cd4e06              call    spi_dev_sel
+   344                          ;
+   345   000217 dd210000            ld  ix, 0       ; sector 0 / block 0
+   346   00021b cd7c02              call    spirom_setAddr
+   347                          spirom_read00_loop:
+   348   00021e cd4e02              call    spirom_read256toBUF
+   349                          ;
+   350   000221 c5                  push    bc
+   351   000222 2100f8              ld  hl, BUF_SPIROM
+   352   000225 010001              ld  bc, 256
+   353   000228 edb0                ldir
+   354                          ;   DE += 256
+   355   00022a c1                  pop bc
+   356                          ;
+   357   00022b 10f1                djnz    spirom_read00_loop
+   358                          ;
+   359   00022d cd5c06              call    spi_dev_unsel
+   360                          ;
+   361   000230 fde1                pop iy
+   362   000232 f3                  di
+   363   000233 fde9                jp  (iy)    ;;; NO RETURN
+   364                          ;    jp  loader_cons
+   365                          
+   366                          ;
+   367                          ;; spirom_ subroutines
+   368                          ;
+   369                          spirom_readIndex:
+   370   000235 cd6602              call    spirom_setWRSR
+   371                          ;
+   372   000238 3e40                ld  a, SPI_DEVID_Ch1
+   373   00023a 3206fb              ld  (SPI_SELD_DEV), a
+   374   00023d cd4e06              call    spi_dev_sel
+   375                          ;
+   376                          ;    ld  ix, 1F01h   ; FAT block 16~31
+   377   000240 dd21001f            ld  ix, 1F00h   ; FAT block 0~15 for debug
+   378   000244 cd7c02              call    spirom_setAddr
+   379   000247 cd4e02              call    spirom_read256toBUF
+   380                          ;
+   381   00024a cd5c06              call    spi_dev_unsel
+   382                          ;
+   383   00024d c9                  ret
+   384                          
+   385                          spirom_read256toBUF:    ; read (IX) block to BUF_SPIROM
+   386   00024e c5                  push    bc
+   387                          ;
+   388   00024f 0600                ld  b, 0h
+   389   000251 dd2100f8            ld  ix, BUF_SPIROM
+   390                          spirom_read256_loop:
+   391   000255 cd6306              call    spi_read_8bit
+   392   000258 dd7700              ld  (ix), a
+   393   00025b dd23                inc ix
+   394                          ;; disp readdata
+   395   00025d 78                  ld  a, b
+   396   00025e 2f                  cpl a
+   397   00025f cd4605              call    drv_7seg_sub_disp2
+   398                          ;
+   399   000262 10f1                djnz    spirom_read256_loop
+   400                          ;
+   401   000264 c1                  pop bc
+   402   000265 c9                  ret
+   403                          
+   404                          spirom_setWRSR: ; read on fast read data mode, destroy AF
+   405   000266 3e40                ld  a, SPI_DEVID_Ch1
+   406   000268 3206fb              ld  (SPI_SELD_DEV), a
+   407   00026b cd4e06              call    spi_dev_sel
+   408                          ;
+   409   00026e 3e01                ld  a, SPIROM_CMD_WRSR
+   410   000270 cd8a06              call    spi_write_8bit
+   411   000273 3e00                ld  a, 00000000b    ; SRWD = 0, BP[2:0] = 000, WEL = 0, WIP = 0
+   412   000275 cd8a06              call    spi_write_8bit
+   413                          ;
+   414   000278 cd5c06              call    spi_dev_unsel
+   415                          ;
+   416   00027b c9                  ret
+   417                          ;
+   418                          spirom_setAddr: ; IX = read/wrte addr MSB 16bit(nnnn00h), destroy AF, HL
+   419   00027c 3e0b                ld  a, SPIROM_CMD_FAST_READ
+   420   00027e cd8a06              call    spi_write_8bit
+   421   000281 dde5e1              ld  hl, ix
+   422   000284 7c                  ld  a, h    ;   Addr. MSB
+   423   000285 cd8a06              call    spi_write_8bit
+   424   000288 7d                  ld  a, l    ;   Addr. middle
+   425   000289 cd8a06              call    spi_write_8bit
+   426   00028c af                  xor a   ;   Addr. LSB
+   427   00028d cd8a06              call    spi_write_8bit
+   428   000290 af                  xor a   ;   dummy byte
+   429   000291 cd8a06              call    spi_write_8bit
+   430                          ;
+   431   000294 c9                  ret
+   432                          ;
+   433                          
+   434                          
+   435                          ;;
+   436                          ;;; Interrupt Service Routines, and Peripherals subroutines
+   437                          ;;
+   438                          
+   439                          ;   --------------------------------------------------------------------------
+   440                          ;;
+   441                          ;;; im1 devices
+   442                          ;;
+   443                          ;   --------------------------------------------------------------------------
+   444                          if  INTERRUPT_MODE == 1
+   445                          
+   446                          ;;; FIXME: add getchar*, putchar*, gets*, puts* routines for im1
+   447                          int_sci: ;;  check SCI
+   448                              nop
+   449                          ;
+   450                              ret ; to rst38
+   451                          
+   452                          int_i8253: ;;  time is up(maybe), re-set counter
+   453                              call    conf_timer1
+   454                              call    int_counter_dec
+   455                          ;
+   456                              ret ; to rst38
+   457                          
+   458                              include "../Z80proto_im1.asm"
+   459                          
+   460                          endif
+   461                          
+   462                          ;   --------------------------------------------------------------------------
+   463                          ;;
+   464                          ;;; im2 devices
+   465                          ;;
+   466                          ;   --------------------------------------------------------------------------
+   467                          if  INTERRUPT_MODE == 2
+   468                          
+   469                          int_CTC:
+   470   000295 f5                  push    af
+   471   000296 c5                  push    bc
+   472   000297 e5                  push    hl
+   473   000298 dde5                push    ix
+   474                          ;
+   475   00029a cd7304              call    int_counter_dec
+   476                          ;
+   477   00029d dde1                pop ix
+   478   00029f e1                  pop hl
+   479   0002a0 c1                  pop bc
+   480   0002a1 f1                  pop af
+   481                          ;
+   482   0002a2 fb                  ei
+   483   0002a3 ed4d                reti
+   484                          
+   485                          int_SIO:
+   486   0002a5 f5                  push    af
+   487   0002a6 cd3a03              call    analyze_SIO0    ; Get stat and Error Recovery
+   488                          ;
+   489   0002a9 dde5                push    ix
+   490   0002ab dd2130fb            ld  ix, F_STAT_SIO0
+   491   0002af ddcb0056            bit F_STAT_RECEIVE, (ix)
+   492   0002b3 2002                jr  nz, int_SIO_Ch0_RCA
+   493   0002b5 1822                jr  int_SIO_exit
+   494                          ;
+   495                          int_SIO_Ch0_RCA:
+   496   0002b7 ddcb0096            res F_STAT_RECEIVE, (ix)
+   497   0002bb c5                  push    bc
+   498                          ;
+   499   0002bc dd2100f9            ld  ix, BUF_SIO0RX
+   500   0002c0 0600                ld  b, 0
+   501   0002c2 3a33fb              ld  a, (PTR_BUF_SIO0_RX_WRITE)
+   502   0002c5 4f                  ld  c, a
+   503   0002c6 dd09                add ix, bc
+   504                          ;
+   505   0002c8 db24                in  a, (SIO_Ch0_D)
+   506   0002ca dd7700              ld  (ix), a
+   507                          ;
+   508   0002cd 79                  ld  a, c
+   509   0002ce 3c                  inc a
+   510   0002cf e63f                and 00111111b
+   511   0002d1 3233fb              ld  (PTR_BUF_SIO0_RX_WRITE), a
+   512                          ;
+   513   0002d4 c1                  pop bc
+   514   0002d5 1802                jr  int_SIO_exit
+   515                          
+   516                          int_SIO_Ch1:
+   517   0002d7 1800                jr  int_SIO_exit
+   518                          
+   519                          int_SIO_exit:
+   520   0002d9 dde1                pop ix
+   521   0002db f1                  pop af
+   522                          ;
+   523   0002dc fb                  ei
+   524   0002dd ed4d                reti
+   525                          
+   526                          int_void:   ; im2, do nothing
+   527   0002df 00                  nop
+   528                          ;
+   529   0002e0 fb                  ei
+   530   0002e1 ed4d                reti
+   531                          ;
+   532                          ;;
+   533                          ;
+   534                              include "../z80sio_sub.asm"
+../z80sio_sub.asm:
+     1                          ;;
+     2                          ;;; SIO subroutines
+     3                          ;;
+     4                          ;    include "../z80sioctc.def"
+     5                          ;    include "../memmap.def"
+     6                              PUBLIC  analyze_SIO0
+     7                              PUBLIC  putchar_SIO0
+     8                              PUBLIC  getchar_SIO0
+     9                              PUBLIC  puts_SIO0
+    10                              PUBLIC  gets_SIO0
+    11                              PUBLIC  putAreg2chrs
+    12                              PUBLIC  conf_CTC
+    13                              PUBLIC  conf_SIO
+    14                          
+    15                          conf_CTC:
+    16   0002e3 3e03                ld  a, 3    ; Ch. Reset
+    17   0002e5 d320                out(CTC_Ch0), a
+    18   0002e7 d321                out(CTC_Ch1), a
+    19   0002e9 d322                out(CTC_Ch2), a
+    20   0002eb d323                out(CTC_Ch3), a
+    21                          ;
+    22   0002ed af                  xor a       ; Interrupt Vector MSB
+    23   0002ee ed47                ld  i, a
+    24   0002f0 3e70                ld  a, INTCTC - rst00  ; Interrupt Vector LSB
+    25   0002f2 d320                out(CTC_Ch0), a
+    26                          ;
+    27                          conf_CTC_Ch0:
+    28   0002f4 3e87                ld  a, 10000111b
+    29                                          ; Ch0
+    30                                          ; Interrupt Enable
+    31                                          ; Timer Mode
+    32                                          ; Prescaler 1/16φ
+    33                                          ; Down Edge
+    34                                          ; No Trigger Start
+    35                                          ; Next: Time Constant
+    36                                          ; Reset Enable, Timer start when write Time Constant
+    37                                          ; This is configuration, not Interrupt Vector
+    38   0002f6 d320                out(CTC_Ch0), a
+    39   0002f8 3efa                ld  a, 250  ; (16*250)/4000000 = 4000, 1msec/Interrupt
+    40   0002fa d320                out(CTC_Ch0), a
+    41                          ;
+    42   0002fc c9                  ret
+    43                          ;
+    44                          conf_CTC_Ch1: ;; call from conf_SIO_Ch0
+    45   0002fd 3e47                ld  a, 01000111b
+    46                                          ; Ch1
+    47                                          ; Interrupt Disable
+    48                                          ; Counter Mode
+    49                                          ; Down Edge
+    50                                          ; Next: Time Constant
+    51                                          ; Reset Enable, Counter start when write Time Constant
+    52                                          ; This is configuration, not Interrupt Vector
+    53   0002ff d321                out(CTC_Ch1), a
+    54   000301 3e0d                ld  a, 13  ; 13/2000000
+    55   000303 d321                out(CTC_Ch1), a
+    56                          ;
+    57   000305 c9                  ret
+    58                          
+    59                          conf_CTC_Ch2: ;; call from conf_SIO_Ch1
+    60   000306 3e47                ld  a, 01000111b
+    61                                          ; Ch2
+    62                                          ; same as Ch1
+    63   000308 d322                out(CTC_Ch2), a
+    64   00030a 3e0d                ld  a, 13  ; 13/2000000
+    65   00030c d322                out(CTC_Ch2), a
+    66                          ;
+    67   00030e c9                  ret
+    68                          
+    69                          conf_SIO: ;;  Ch0 configure
+    70   00030f cdfd02              call    conf_CTC_Ch1
+    71                              ;   13 counts, SIO prescale is 16, (13*16)/2000000 = 9615.38bps
+    72                          ;
+    73   000312 060c                ld  b, 12
+    74   000314 0e25                ld  c, SIO_Ch0_C
+    75   000316 212e03              ld  hl, SIO0_CONF
+    76   000319 edb3                otir
+    77                          ;
+    78                          ;;  Ch1 configure
+    79                          ;   Set CTC_Ch2
+    80   00031b cd0603              call    conf_CTC_Ch2
+    81                              ;   13 counts, SIO prescale is 16, (13*16)/2000000 = 9615.38bps
+    82                          ;
+    83   00031e 0606                ld  b, 6
+    84   000320 0e27                ld  c, SIO_Ch1_C
+    85   000322 212803              ld  hl, SIO1_CONF
+    86   000325 edb3                otir
+    87                          ;
+    88   000327 c9                  ret
+    89                          
+    90                          SIO1_CONF:
+    91                          ;   WR0, channel reset
+    92   000328 00                  defb    0
+    93   000329 18                  defb    00011000b
+    94                          ;   WR2, Interrupt Vector
+    95   00032a 02                  defb    2
+    96   00032b 78                  defb    INTSIO - rst00
+    97                          ;   WR1, Wait/Ready functions and Interrupt behavior
+    98   00032c 01                  defb    1
+    99   00032d 00                  defb    0           ; disable all(TORIAEZU)
+   100                          
+   101                          SIO0_CONF:
+   102                          ;   WR0, channel reset
+   103   00032e 00                  defb    0
+   104   00032f 18                  defb    00011000b
+   105                          ;   WR2, Interrupt Vector(but Ch0 is not effect)
+   106   000330 02                  defb    2
+   107   000331 00                  defb    0
+   108                          ;   WR4, Rx and Tx control
+   109   000332 04                  defb    4
+   110   000333 44                  defb    01000100b    ; x16 clock, Async. Mode 1 stop bit, non parity
+   111                          ;   WR3, Receiver Logic control
+   112   000334 03                  defb    3
+   113   000335 c1                  defb    11000001b    ; Rx 8bit, not Auto Enables, Rx enable
+   114                          ;    defb    11100001b    ; Rx 8bit, Auto Enables, Rx enable
+   115                          ;   WR5, Transmit control
+   116   000336 05                  defb    5
+   117   000337 68                  defb    01101000b    ; Tx 8bit, Tx enable
+   118                          ;   WR1, Wait/Ready functions and Interrupt behavior
+   119   000338 01                  defb    1
+   120   000339 1c                  defb    00011100b    ; Wait/Ready disable, Rx INT on All receive character,
+   121                                                  ; but parity error is not sp. condx., use Status Affects Vector,
+   122                                                  ; Tx INT & Ext./Stat. INT disable
+   123                          ;    defb    00001100b    ; Wait/Ready disable, Rx INT on First receive character,
+   124                          ;                        ; set Status Affects Vector(but ignore it),
+   125                          ;                        ; Tx INT & Ext./Stat. INT disable
+   126                          
+   127                          analyze_SIO0:   ;; get status flags, and reset error
+   128   00033a f5                  push    af
+   129   00033b c5                  push    bc
+   130   00033c dde5                push    ix
+   131   00033e dd2130fb            ld  ix, F_STAT_SIO0
+   132                          ;
+   133   000342 af                  xor a
+   134   000343 d325                out (SIO_Ch0_C), a
+   135   000345 3e00                ld  a, 00000000b    ; Select RR0
+   136   000347 d325                out (SIO_Ch0_C), a
+   137                          ;
+   138   000349 db25                in  a, (SIO_Ch0_C)
+   139   00034b 4f                  ld  c, a
+   140                          analyze_SIO0_RR0_bit0: ;;　read status and error recovery
+   141   00034c cb41                bit 0, c    ; Receive Character Available
+   142   00034e 2804                jr  z, analyze_SIO0_RR0_bit1
+   143                          ;
+   144                              ; Receiver Flag Set
+   145   000350 ddcb00d6            set F_STAT_RECEIVE, (ix)
+   146                          ;
+   147                          analyze_SIO0_RR0_bit1:
+   148   000354 cb49                bit 1, c
+   149   000356 2807                jr  z, analyze_SIO0_RR0_bit2
+   150                          ;
+   151   000358 af                  xor a
+   152   000359 d325                out (SIO_Ch0_C), a
+   153   00035b 3e28                ld  a, 00101000b    ; Reset TxINT Pending
+   154   00035d d325                out (SIO_Ch0_C), a
+   155                          ;
+   156                          analyze_SIO0_RR0_bit2:
+   157   00035f cb51                bit 2, c
+   158   000361 2804                jr  z, analyze_SIO0_RR0_bit6
+   159                          ;
+   160                              ; TxBuf Empty Flag Set
+   161   000363 ddcb00de            set F_STAT_TXEMPTY, (ix)
+   162                          ;
+   163                          analyze_SIO0_RR0_bit6:
+   164   000367 cb71                bit 6, c
+   165   000369 2807                jr  z, analyze_SIO0_RR0_bit7
+   166                          ;
+   167   00036b af                  xor a
+   168   00036c d325                out (SIO_Ch0_C), a
+   169   00036e 3ed0                ld  a, 11010000b    ; Reset Transmit Underrun and Ext/Stat. Int.
+   170   000370 d325                out (SIO_Ch0_C), a
+   171                          ;
+   172                          analyze_SIO0_RR0_bit7:
+   173   000372 cb79                bit 7, c
+   174   000374 280b                jr  z, analyze_SIO0_RR1
+   175                          ;
+   176                              ; Receive Break
+   177   000376 af                  xor a
+   178   000377 d325                out (SIO_Ch0_C), a
+   179   000379 3e10                ld  a, 00010000b    ; Reset Ext/Stat. Int.(see manual p296)
+   180   00037b d325                out (SIO_Ch0_C), a
+   181   00037d ddcb00ce            set F_STAT_BREAK, (ix)
+   182                          ;
+   183                          analyze_SIO0_RR1:
+   184   000381 af                  xor a
+   185   000382 d325                out (SIO_Ch0_C), a
+   186   000384 3e01                ld  a, 00000001b    ; Select RR1
+   187   000386 d325                out (SIO_Ch0_C), a
+   188                          ;
+   189   000388 db25                in  a, (SIO_Ch0_C)
+   190   00038a 79                  ld  a, c
+   191                          analyze_SIO0_RR1_bit0:
+   192   00038b cb41                bit 0, c
+   193   00038d 2804                jr  z, analyze_SIO0_RR1_bit456
+   194                          ;
+   195                              ; Tx All sent flag set
+   196   00038f ddcb00c6            set F_STAT_ALLSENT, (ix)
+   197                          ;
+   198                          analyze_SIO0_RR1_bit456:
+   199   000393 79                  ld  a, c
+   200   000394 e670                and  01110000b
+   201   000396 2807                jr  z, analyze_SIO0_end
+   202                          ;
+   203                          analyze_SIO0_RR1_bit456_e: ; Parity Error, Receive Overrun Error or Framing Error
+   204   000398 af                  xor a
+   205   000399 d325                out (SIO_Ch0_C), a
+   206   00039b 3e30                ld  a, 00110000b    ; Reset Error
+   207   00039d d325                out (SIO_Ch0_C), a
+   208                          ;
+   209                          analyze_SIO0_end:
+   210   00039f dde1                pop ix
+   211   0003a1 c1                  pop bc
+   212   0003a2 f1                  pop af
+   213                          ;
+   214   0003a3 c9                  ret
+   215                          
+   216                          putchar_SIO0: ;;  A = Transmit Character
+   217   0003a4 f5                  push    af
+   218   0003a5 dde5                push    ix
+   219   0003a7 dd2130fb            ld  ix, F_STAT_SIO0
+   220                          putchar_SIO0_1:
+   221   0003ab cd3a03              call    analyze_SIO0
+   222   0003ae ddcb005e            bit F_STAT_TXEMPTY, (ix)
+   223   0003b2 28f7                jr  z, putchar_SIO0_1
+   224                          
+   225                          putchar_SIO0_2:
+   226   0003b4 ddcb009e            res F_STAT_TXEMPTY, (ix)
+   227                          ;
+   228   0003b8 dde1                pop ix
+   229   0003ba f1                  pop af
+   230                          ;
+   231                              ; transmit
+   232   0003bb d324                out (SIO_Ch0_D), a
+   233                          ;
+   234   0003bd c9                  ret
+   235                          
+   236                          getchar_SIO0: ;;  A = Receive Character
+   237   0003be f5                  push    af
+   238   0003bf c5                  push    bc
+   239                          ; Compare Read Pointer and Write Pointer
+   240   0003c0 3a32fb              ld  a, (PTR_BUF_SIO0_RX_READ)
+   241   0003c3 0600                ld  b, 0
+   242   0003c5 4f                  ld  c, a
+   243                          ;
+   244   0003c6 3a33fb              ld  a, (PTR_BUF_SIO0_RX_WRITE)
+   245   0003c9 91                  sub c
+   246   0003ca 281d                jr  z, getchar_SIO0_norecv
+   247                          ; Get Receive Character from BUF_SIO0RX
+   248   0003cc dde5                push    ix
+   249   0003ce dd2100f9            ld  ix, BUF_SIO0RX
+   250   0003d2 dd09                add ix, bc
+   251   0003d4 dd44dd4d            ld  bc, ix  ; BC = BUF_SIO0RX + (PTR_BUF_SIO0_RX_READ)
+   252   0003d8 dde1                pop ix
+   253                          ;
+   254   0003da 0a                  ld  a, (bc)
+   255   0003db 323afb              ld  (BUF_GETCHAR_SIO0), a
+   256                          ; Pointer Increment
+   257   0003de 3a32fb              ld  a, (PTR_BUF_SIO0_RX_READ)
+   258   0003e1 3c                  inc a
+   259   0003e2 e63f                and 00111111b
+   260   0003e4 3232fb              ld  (PTR_BUF_SIO0_RX_READ), a
+   261                          ;
+   262   0003e7 1805                jr  getchar_SIO0_exit
+   263                          ;
+   264                          getchar_SIO0_norecv:
+   265   0003e9 3e00                ld  a, NULL
+   266   0003eb 323afb              ld  (BUF_GETCHAR_SIO0), a
+   267                          ;
+   268                          getchar_SIO0_exit:
+   269   0003ee c1                  pop bc
+   270   0003ef f1                  pop af
+   271   0003f0 3a3afb              ld  a, (BUF_GETCHAR_SIO0)
+   272                          ;
+   273   0003f3 c9                  ret
+   274                          
+   275                          puts_SIO0: ;;  HL = String Addr.(NULL Term.)
+   276   0003f4 f5                  push    af
+   277                          ;
+   278                          puts_SIO0_loop:
+   279   0003f5 7e                  ld  a, (hl)
+   280   0003f6 fe00                cp  0
+   281   0003f8 2806                jr  z, puts_SIO0_end
+   282                          ;
+   283   0003fa cda403              call    putchar_SIO0
+   284   0003fd 23                  inc hl
+   285   0003fe 18f5                jr  puts_SIO0_loop
+   286                          ;
+   287                          puts_SIO0_end:
+   288   000400 f1                  pop af
+   289                          ;
+   290   000401 c9                  ret
+   291                          
+   292                          gets_SIO0:  ;; IX = *buffer, HL = CNT_BUF_CON
+   293                                      ;; for usage, see loader_cons_oneliner()
+   294   000402 cdbe03              call    getchar_SIO0
+   295                          ; receive anything ?
+   296   000405 fe00                cp  NULL
+   297   000407 28f9                jr  z, gets_SIO0 ; nothing
+   298                          ;
+   299   000409 fe7f                cp  DELETE
+   300   00040b 2821                jr  z, del_cons
+   301   00040d fe08                cp  BACKSPACE
+   302   00040f 281d                jr  z, bs_cons
+   303                          ;
+   304   000411 cda403              call    putchar_SIO0    ; echo back
+   305   000414 fe0d                cp  CR
+   306   000416 c8                  ret z                   ; exit
+   307                          ;
+   308                          ; Other Characters
+   309   000417 fe60                cp  'a' - 1
+   310   000419 3802                jr  c, gets_SIO0_1
+   311                          ; Conversion UCASE
+   312   00041b d620                sub 20h
+   313                          gets_SIO0_1:
+   314   00041d dd7700              ld  (ix), a ;   A -> (BUF_CON)
+   315                          ;
+   316   000420 7e                  ld  a, (hl)
+   317   000421 fe3f                cp  SIZE_BUF_CON - 1
+   318   000423 3804                jr  c, gets_SIO0_2
+   319                          ;   buffer over, aborted
+   320   000425 dd2b                dec ix
+   321   000427 35                  dec (hl)
+   322                              ;; rewind *RX_BUF ?
+   323   000428 c9                  ret                     ; abort
+   324                          ;
+   325                          gets_SIO0_2:
+   326   000429 dd23                inc ix
+   327   00042b 34                  inc (hl)    ;   CNT_BUF_CON
+   328                          ;
+   329   00042c 18d4                jr  gets_SIO0
+   330                          
+   331                          bs_cons: ;; BACKSPACE
+   332                          del_cons: ;; DELETE
+   333   00042e 213bfb              ld  hl, CNT_BUF_CON
+   334   000431 7e                  ld  a, (hl)
+   335   000432 fe00                cp  0
+   336   000434 2007                jr  nz, bs_cons_2
+   337   000436 3e07                ld  a, BELL
+   338   000438 cda403              call    putchar_SIO0
+   339   00043b 18c5                jr  gets_SIO0
+   340                          ;
+   341                          bs_cons_2:
+   342   00043d 35                  dec (hl)
+   343   00043e dd2b                dec ix
+   344                          ;
+   345   000440 3e08                ld  a, BACKSPACE
+   346   000442 cda403              call    putchar_SIO0    ; echo back
+   347   000445 18bb                jr  gets_SIO0
+   348                          
+   349                          init_SIO_buffers:
+   350   000447 af                  xor a
+   351   000448 3232fb              ld  (PTR_BUF_SIO0_RX_READ), a
+   352   00044b 3233fb              ld  (PTR_BUF_SIO0_RX_WRITE), a
+   353   00044e 3234fb              ld  (PTR_BUF_SIO1_RX_READ), a
+   354   000451 3235fb              ld  (PTR_BUF_SIO1_RX_WRITE), a
+   355                          ;
+   356   000454 c9                  ret
+   357                          
+   358                          putAreg2chrs:   ; A register -> 2 characters, and put SIO0
+   359   000455 f5                  push    af
+   360   000456 cb3f                srl a
+   361   000458 cb3f                srl a
+   362   00045a cb3f                srl a
+   363   00045c cb3f                srl a
+   364   00045e 215000              ld  hl, Hexadecimal
+   365   000461 85                  add l
+   366   000462 6f                  ld  l, a
+   367   000463 7e                  ld  a, (hl)
+   368   000464 cda403              call    putchar_SIO0
+   369                          ;
+   370   000467 f1                  pop af
+   371   000468 e60f                and 0Fh
+   372   00046a 215000              ld  hl, Hexadecimal
+   373   00046d 85                  add l
+   374   00046e 6f                  ld  l, a
+   375   00046f 7e                  ld  a, (hl)
+   376   000470 cda403              call    putchar_SIO0
+   377                          
+m_loader.asm:
+   535                          
+   536                          endif
+   537                          ;
+   538                          ;
+   539                          
+   540                          ;
+   541                          ;; common ISR subroutune: counter decrement
+   542                          ;
+   543                          int_counter_dec:
+   544                          int_counter_16: ;;  decrement 16bit value
+   545   000473 2a02fb              ld  hl, (V_CNT_16)
+   546   000476 2b                  dec hl
+   547   000477 3003                jr  nc, int_counter_16_end
+   548   000479 210000              ld  hl, 0
+   549                          int_counter_16_end:
+   550   00047c 2202fb              ld  (V_CNT_16), hl
+   551                          ;
+   552                          int_counter_8: ;;  decrement 8bit value
+   553   00047f 3a04fb              ld  a, (V_CNT_8A)
+   554   000482 3d                  dec a
+   555   000483 3001                jr  nc, int_counter_8B
+   556   000485 af                  xor a
+   557                          int_counter_8B:
+   558   000486 3204fb              ld  (V_CNT_8A), a
+   559                          ;
+   560   000489 3a05fb              ld  a, (V_CNT_8B)
+   561   00048c 3d                  dec a
+   562   00048d 3001                jr  nc, int_counter_8_end
+   563   00048f af                  xor a
+   564                          int_counter_8_end:
+   565   000490 3205fb              ld  (V_CNT_8B), a
+   566                          ;
+   567                          ;; and drive 7seg
+   568   000493 cdc504              call    drv_7seg
+   569                          ;
+   570                          ;; exit
+   571   000496 c9                  ret
+   572                          
+   573                          ;   --------------------------------------------------------------------------
+   574                          ;;
+   575                          ;;; configure I/O devices, Memory, etc
+   576                          ;;
+   577                          ;   --------------------------------------------------------------------------
+   578                          
+   579                          ;;
+   580                          ;;; configure System Memory
+   581                          ;;
+   582                          conf_sysmem:
+   583   000497 3e80                ld  a, 10000000b
+   584                                          ; set anode line 5(Magic!)
+   585   000499 cd1f05              call    out_PO_2
+   586                          ;
+   587                          ;;  config SEG memories
+   588   00049c 3e00                ld  a, S_SEG_0
+   589   00049e 3210fb              ld  (SEG_STATE), a
+   590   0004a1 3e00                ld  a, 0            ; Position 0 start
+   591   0004a3 3211fb              ld  (SEG_POS), a    ; POSition 0 to 5
+   592   0004a6 3e02                ld  a, 00000010b    ; 7seg display data
+   593   0004a8 3212fb              ld  (SEG_0), a
+   594   0004ab 3213fb              ld  (SEG_1), a
+   595   0004ae 3214fb              ld  (SEG_2), a
+   596   0004b1 3215fb              ld  (SEG_3), a
+   597   0004b4 3216fb              ld  (SEG_4), a
+   598   0004b7 3217fb              ld  (SEG_5), a
+   599                          ;;  config SIO Status flag
+   600   0004ba af                  xor a
+   601   0004bb 3230fb              ld  (F_STAT_SIO0), a
+   602   0004be 3231fb              ld  (F_STAT_SIO1), a
+   603                          ;
+   604                          ;;  config SIO buffers
+   605   0004c1 cd4704              call    init_SIO_buffers
+   606                          ;
+   607   0004c4 c9                  ret
+   608                          
+   609                          ;   --------------------------------------------------------------------------
+   610                          ;;
+   611                          ;;; I/O subroutines
+   612                          ;;
+   613                          ;   --------------------------------------------------------------------------
+   614                          
+   615                          ;;
+   616                          ;;; drv_*: Proto2 7seg device drive
+   617                          ;;
+   618                          drv_7seg: ;;  switch state ... ahh, dirty code.
+   619   0004c5 af                  xor a
+   620   0004c6 47                  ld  b, a
+   621   0004c7 3a10fb              ld  a, (SEG_STATE)
+   622   0004ca 4f                  ld  c, a
+   623                          ;
+   624   0004cb fe00                cp  S_SEG_0
+   625   0004cd 2806                jr  z, drv_7seg_S0
+   626   0004cf fe05                cp  S_SEG_5
+   627   0004d1 2834                jr  z, drv_7seg_S2
+   628   0004d3 3829                jr  c, drv_7seg_S1
+   629                          
+   630                          drv_7seg_S0:    ; output 7seg
+   631   0004d5 3a00fb              ld  a, (PO_2_BUP)   ;; get 7seg anode line
+   632   0004d8 cd1f05              call    out_PO_2
+   633   0004db e6fc                and 11111100b
+   634   0004dd cb27                sla a
+   635   0004df 3002                jr  nc, drv_7seg_S0_1
+   636   0004e1 3e04                ld  a, 00000100b
+   637                                          ; set anode line 0
+   638                          drv_7seg_S0_1: ;; 7seg anode line set(post)
+   639   0004e3 4f                  ld  c, a
+   640   0004e4 3a00fb              ld  a, (PO_2_BUP)
+   641   0004e7 e603                and 00000011b
+   642                                          ; erase anode line
+   643   0004e9 b1                  or  c       ; set new anode line
+   644   0004ea cd1f05              call    out_PO_2
+   645                          ;
+   646                          ;;  getting cathode data ... get anode line,
+   647   0004ed 3a11fb              ld  a, (SEG_POS)
+   648   0004f0 0600                ld  b, 0    ; already
+   649   0004f2 4f                  ld  c, a
+   650                          ;;  set display data pointer,
+   651   0004f3 dd2112fb            ld  ix, SEG_0
+   652   0004f7 dd09                add ix, bc
+   653                          ;;  get cathode data, and output
+   654   0004f9 dd7e00              ld  a, (ix)
+   655   0004fc d301                out (PO_1), a
+   656                                          ; OUTPUT cathode line
+   657                          
+   658                          drv_7seg_S1:    ; do nothing
+   659   0004fe dd2110fb            ld  ix, SEG_STATE
+   660   000502 dd3400              inc (ix)
+   661   000505 1817                jr  drv_7seg_end
+   662                          
+   663                          drv_7seg_S2:    ; 7seg blanking
+   664   000507 af                  xor a
+   665   000508 d301                out (PO_1), a
+   666                          ;
+   667   00050a dd2110fb            ld  ix, SEG_STATE
+   668   00050e dd360000            ld (ix), S_SEG_0
+   669                          
+   670                          drv_7seg_exit: ;;  inclease anode line number
+   671   000512 3a11fb              ld  a, (SEG_POS)
+   672   000515 3c                  inc a
+   673   000516 fe06                cp  6
+   674   000518 3801                jr  c, drv_7seg_S0_ex2
+   675                          ;;  reset anode line
+   676   00051a af                  xor a
+   677                          drv_7seg_S0_ex2:
+   678   00051b 3211fb              ld  (SEG_POS), a
+   679                          ;
+   680                          drv_7seg_end:
+   681   00051e c9                  ret
+   682                          
+   683                          out_PO_2:
+   684   00051f d302                out (PO_2), a
+   685                                          ; OUTPUT anode line
+   686   000521 3200fb              ld  (PO_2_BUP), a
+   687                                          ; BACKUP PO_2
+   688                          ;
+   689   000524 c9                  ret
+   690                          
+   691                          ;;
+   692                          ;;; 7seg subroutines
+   693                          ;;
+   694                          drv_7seg_sub_disp4: ;; HL = disp. "  hhll", destroy AF
+   695   000525 c5                  push    bc
+   696   000526 e5                  push    hl
+   697                          ;
+   698   000527 7c                  ld  a, h
+   699   000528 e6f0                and 11110000b
+   700   00052a cb3f                srl a
+   701   00052c cb3f                srl a
+   702   00052e cb3f                srl a
+   703   000530 cb3f                srl a
+   704   000532 4f                  ld  c, a
+   705   000533 cdd805              call    get_SEG_CHR
+   706   000536 3214fb              ld  (SEG_2), a
+   707                          ;
+   708   000539 7c                  ld  a, h
+   709   00053a e60f                and 00001111b
+   710   00053c 4f                  ld  c, a
+   711   00053d cdd805              call    get_SEG_CHR
+   712   000540 3215fb              ld  (SEG_3), a
+   713                          ;
+   714   000543 7d                  ld  a, l
+   715                          ;
+   716                          ;   falldown to drv_7seg_sub_disp2_2
+   717   000544 1802                jr  drv_7seg_sub_disp2_2
+   718                          
+   719                          drv_7seg_sub_disp2: ;; A = disp. "    aa", destroy AF
+   720   000546 c5                  push    bc
+   721   000547 e5                  push    hl
+   722                          drv_7seg_sub_disp2_2:
+   723   000548 6f                  ld  l, a
+   724                          ;
+   725   000549 e6f0                and 11110000b
+   726   00054b cb3f                srl a
+   727   00054d cb3f                srl a
+   728   00054f cb3f                srl a
+   729   000551 cb3f                srl a
+   730   000553 4f                  ld  c, a
+   731   000554 cdd805              call    get_SEG_CHR
+   732   000557 3216fb              ld  (SEG_4), a
+   733                          ;
+   734   00055a 7d                  ld  a, l
+   735   00055b e60f                and 00001111b
+   736   00055d 4f                  ld  c, a
+   737   00055e cdd805              call    get_SEG_CHR
+   738   000561 3217fb              ld  (SEG_5), a
+   739                          ;
+   740   000564 e1                  pop hl
+   741   000565 c1                  pop bc
+   742   000566 c9                  ret
+   743                          
+   744                              include "../Z80proto_dbg.asm"
+../Z80proto_dbg.asm:
+     1                          ;;  Z80proto_dbg.asm
+     2                          
+     3                              PUBLIC  debug_rst08
+     4                              PUBLIC  debug_rst10
+     5                              PUBLIC  debug_rst18
+     6                              PUBLIC  DEBUGBREAK
+     7                              PUBLIC  DEBUGSTOP
+     8                          
+     9                          ;;
+    10                          ;;; for debug routines
+    11                          ;;
+    12                          debug_rst08:
+    13   000567 3e60                ld  a, 01100000b    ; 1
+    14   000569 d301                out (PO_1), a
+    15   00056b 180c                jr  debug_rst_exit
+    16                          
+    17                          debug_rst10:
+    18   00056d 3eda                ld  a, 11011010b    ; 2
+    19   00056f d301                out (PO_1), a
+    20   000571 1806                jr  debug_rst_exit
+    21                          
+    22                          debug_rst18:
+    23   000573 3ef2                ld  a, 11110010b    ; 3
+    24   000575 d301                out (PO_1), a
+    25   000577 1800                jr  debug_rst_exit
+    26                          
+    27                          debug_rst_exit:
+    28   000579 3e04                ld  a, 00000100b    ; anode line 0
+    29   00057b d302                out (PO_2), a
+    30                          ;
+    31   00057d dde1                pop ix
+    32   00057f dd22ecfb            ld  (BUF_BREAKPOINT_ADDR), ix
+    33   000583 76                  halt
+    34                          ;
+    35   000584 c9                  ret
+    36                          
+    37                          DEBUGBREAK:
+    38   000585 dd22f8fb            ld  (REG_BUF+8), ix
+    39   000589 fd22fafb            ld  (REG_BUF+10), iy
+    40   00058d fde1                pop iy
+    41   00058f dde1                pop ix
+    42   000591 dd22fcfb            ld  (REG_BUF+12), ix ; PC continue addr
+    43   000595 dde5                push ix
+    44   000597 ed73fefb            ld  (REG_BUF+14), sp
+    45   00059b dde1                pop ix  ; readout
+    46   00059d f5                  push    af
+    47   00059e dde1                pop ix
+    48   0005a0 dd22f0fb            ld  (REG_BUF), ix ; AF
+    49   0005a4 ed43f2fb            ld  (REG_BUF+2), bc
+    50   0005a8 ed53f4fb            ld  (REG_BUF+4), de
+    51   0005ac 22f6fb              ld  (REG_BUF+6), hl
+    52                              ;
+    53   0005af c3d700              jp  loader_cons_oneliner
+    54                          
+    55                          DEBUGSTOP:
+    56                              ; *** DEBUG ***
+    57   0005b2 cdd805              call    get_SEG_CHR
+    58   0005b5 d301                out (PO_1), a
+    59   0005b7 18c0                jr  debug_rst_exit
+    60                              ; *** DEBUG ***
+    61                          
+    62                          get_PC:
+    63   0005b9 e1                  pop hl              ; HL = PC + 2
+    64   0005ba e5                  push    hl          ; push back
+    65   0005bb 2b                  dec hl
+    66   0005bc 2b                  dec hl
+    67                          ;
+    68   0005bd c9                  ret
+    69                          
+m_loader.asm:
+   745                              include "../Z80proto_misc.asm"
+../Z80proto_misc.asm:
+     1                          ;;  Z80proto_misc.asm
+     2                          
+     3                              PUBLIC  sloop
+     4                              PUBLIC  loop
+     5                              PUBLIC  get_SEG_CHR
+     6                          ;;
+     7                          ;;; Misc. Subroutines
+     8                          ;;
+     9                          sloop: ;; simple short loop, BC = loop counts
+    10   0005be f5                  push    af
+    11   0005bf 0b              	dec bc
+    12   0005c0 79              	ld a,c
+    13   0005c1 b0              	or b
+    14   0005c2 20fa            	jr nz,sloop
+    15                          ;
+    16   0005c4 f1                  pop af
+    17   0005c5 c9                  ret
+    18                          
+    19                          loop: ;; simple long loop, destroy BC
+    20   0005c6 f5                  push    af
+    21                          sub_05e4h:
+    22   0005c7 016587          	ld bc,8765h
+    23                          l05e8h:
+    24   0005ca 0b              	dec bc
+    25   0005cb 79              	ld a,c
+    26   0005cc e60f                and 00001111b
+    27   0005ce fe0f                cp  00001111b
+    28   0005d0 2000                jr  nz, l05e8h_2
+    29                          l05e8h_2:
+    30   0005d2 79              	ld a,c
+    31   0005d3 b0              	or b
+    32   0005d4 20f4            	jr nz,l05e8h
+    33                          ;
+    34   0005d6 f1                  pop af
+    35   0005d7 c9                  ret
+    36                          
+    37                          get_SEG_CHR: ; C = character code(SEG_CHR_?), destroy A
+    38   0005d8 dde5                push    ix
+    39   0005da 0600                ld  b, 0
+    40                          ;   ld  c, SEG_CHR_?
+    41   0005dc dd21e805            ld  ix, numbers
+    42   0005e0 dd09                add ix, bc
+    43   0005e2 dd7e00              ld  a, (ix)
+    44                          ;
+    45   0005e5 dde1                pop ix
+    46   0005e7 c9                  ret
+    47                          
+    48                          numbers:
+    49   0005e8 fc                  defb    11111100b   ;   0
+    50   0005e9 60                  defb    01100000b   ;   1
+    51   0005ea da                  defb    11011010b   ;   2
+    52   0005eb f2                  defb    11110010b   ;   3
+    53   0005ec 66                  defb    01100110b   ;   4
+    54   0005ed b6                  defb    10110110b   ;   5
+    55   0005ee be                  defb    10111110b   ;   6
+    56   0005ef e4                  defb    11100100b   ;   7
+    57   0005f0 fe                  defb    11111110b   ;   8
+    58   0005f1 f6                  defb    11110110b   ;   9
+    59   0005f2 ee                  defb    11101110b   ;   A
+    60   0005f3 3e                  defb    00111110b   ;   b
+    61   0005f4 9c                  defb    10011100b   ;   C
+    62   0005f5 7a                  defb    01111010b   ;   d
+    63   0005f6 9e                  defb    10011110b   ;   E
+    64   0005f7 8e                  defb    10001110b   ;   F
+    65   0005f8 6e                  defb    01101110b   ;   H
+    66   0005f9 20                  defb    00100000b   ;   i
+    67   0005fa 70                  defb    01110000b   ;   J
+    68   0005fb 1c                  defb    00011100b   ;   L
+    69   0005fc 2a                  defb    00101010b   ;   n
+    70   0005fd 3a                  defb    00111010b   ;   o
+    71   0005fe ce                  defb    11001110b   ;   P
+    72   0005ff 0a                  defb    00001010b   ;   r
+    73   000600 1e                  defb    00011110b   ;   t
+    74   000601 7d                  defb    01111101b   ;   U
+    75   000602 b9                  defb    10111001b   ;   v
+    76   000603 ab                  defb    10101011b   ;   x
+    77   000604 77                  defb    01110111b   ;   y
+    78   000605 93                  defb    10010011b   ;   Z
+    79   000606 02                  defb    00000010b   ;   -
+    80   000607 c5                  defb    11000101b   ;   noun
+    81   000608 47                  defb    01000111b   ;   verb
+    82   000609 00                  defb    0           ;   blank / null termination
+    83                          
+m_loader.asm:
+   746                              include "../ascii_misc.asm"
+../ascii_misc.asm:
+     1                          ;;  ascii_misc.asm -- ascii <-> binary converion subroutines
+     2                          
+     3                              PUBLIC  p_ix2bc
+     4                              PUBLIC  nibble2a
+     5                              PUBLIC  a2nibble
+     6                              PUBLIC  asc2bin
+     7                          p_ix2bc: ; IX=*(4chrs buffer) to BC, destroy AF
+     8   00060a e5                  push    hl
+     9   00060b 2121fb              ld  hl, BUF_ASC2BIN ; for a2nibble(use rld)
+    10                          ;
+    11                          ; BUF_CON+3 -> 4 nibbles
+    12   00060e cd3706              call    a2nibble
+    13   000611 cd3706              call    a2nibble
+    14   000614 3a21fb              ld  a, (BUF_ASC2BIN)    ; 2 nibbles
+    15   000617 47                  ld  b, a
+    16   000618 cd3706              call    a2nibble
+    17   00061b cd3706              call    a2nibble
+    18   00061e 3a21fb              ld  a, (BUF_ASC2BIN)    ; 2 nibbles
+    19   000621 4f                  ld  c, a
+    20                          ;
+    21   000622 e1                  pop hl
+    22                          ;
+    23   000623 c9                  ret
+    24                          
+    25                          nibble2a: ; 1 nibble -> 1 Hex Char. use HL(rld buffer), destroy IY, BC = char *
+    26   000624 ed6f                rld
+    27                          
+    28   000626 c5                  push    bc
+    29   000627 fd215000            ld  iy, Hexadecimal
+    30   00062b 0600                ld  b, 0
+    31   00062d 4f                  ld  c, a
+    32   00062e fd09                add iy, bc
+    33   000630 c1                  pop bc
+    34   000631 fd7e00              ld  a, (iy)
+    35                          
+    36   000634 02                  ld  (bc), a
+    37   000635 03                  inc bc
+    38                          ;
+    39   000636 c9                  ret
+    40                          
+    41                          a2nibble: ; 1 Hex char. -> 1 nibble, use HL(set rld buffer *), IX = char *
+    42   000637 dd7e00              ld  a, (ix)
+    43   00063a cd4206              call    asc2bin
+    44                          ; and store to BUF_ASC2BIN & rotate
+    45   00063d ed6f                rld
+    46   00063f dd23                inc ix
+    47                          ;
+    48   000641 c9                  ret
+    49                          
+    50                          asc2bin: ; A = Conversion ASCII Chr., return binary
+    51   000642 fe40                cp  'A' - 1
+    52   000644 3003                jr  nc, asc2bin_A2F
+    53                          ; not A~F
+    54   000646 d630                sub '0'
+    55                          ;
+    56   000648 c9                  ret
+    57                          ;
+    58                          asc2bin_A2F:
+    59   000649 d641                sub 'A'
+    60   00064b c60a                add 10
+    61                          ;
+    62   00064d c9                  ret
+    63                          
+m_loader.asm:
+   747                              include "../Z80proto_spi.asm"
+../Z80proto_spi.asm:
+     1                          ;;  Z80proto_spi.asm -- SPI routines for Z80proto
+     2                              PUBLIC  spi_dev_sel
+     3                              PUBLIC  spi_dev_unsel
+     4                              PUBLIC  spi_read_8bit
+     5                              PUBLIC  spi_write_8bit
+     6                          ;;
+     7                          ;;; SPI routines
+     8                          ;;
+     9                          SCLK    EQU 3
+    10                          MISO    EQU 4
+    11                          MOSI    EQU 4
+    12                          
+    13                          ;;
+    14                          spi_dev_sel:
+    15   00064e c5                  push    bc
+    16                          ;
+    17   00064f 3a06fb              ld  a, (SPI_SELD_DEV)
+    18   000652 4f                  ld  c, a
+    19                          ;
+    20   000653 db0c                in  a, (PI_0)
+    21   000655 e603                and 00000011b
+    22   000657 b1                  or  c
+    23   000658 d300                OUT (PO_0), a
+    24                          ;
+    25   00065a c1                  pop bc
+    26   00065b c9                  ret
+    27                          
+    28                          ;;
+    29                          spi_dev_unsel:
+    30   00065c 3e00                ld  a, SPI_DEVID_NULL
+    31   00065e 3206fb              ld  (SPI_SELD_DEV), a
+    32   000661 18eb                jr  spi_dev_sel
+    33                          
+    34                          ;;
+    35                          spi_read_8bit:
+    36   000663 cd4e06              call    spi_dev_sel
+    37                          ;
+    38   000666 c5                  push    bc
+    39   000667 d5                  push    de
+    40                          ;
+    41                          ;;  read sequence
+    42   000668 0608                ld  b, 8
+    43   00066a 1e00                ld  e, 0
+    44                          ;
+    45                          spi_read_8bit_2:
+    46   00066c cb23                sla e
+    47                          ;;  clock 'H'
+    48                          ;;  A reg = (PI_0) AND 00000011b OR SPI_SELD_DEV
+    49   00066e cbdf                set SCLK, a
+    50   000670 d300                out (PO_0), a
+    51   000672 4f                  ld  c, a
+    52                          ;
+    53                          ;;  read MISO
+    54   000673 db0c                in  a, (PI_0)
+    55   000675 cb67                bit MISO, a
+    56   000677 2804                jr  z, spi_read_8bit_L
+    57                          spi_read_8bit_H:
+    58   000679 cbc3                set 0, e
+    59   00067b 1802                jr  spi_read_8bit_3
+    60                          spi_read_8bit_L:
+    61   00067d cb83                res 0, e
+    62                          ;;
+    63                          spi_read_8bit_3:
+    64   00067f 79                  ld  a, c ;; clock 'L'
+    65   000680 cb9f                res SCLK, a
+    66   000682 d300                out (PO_0), a
+    67                          ;
+    68                          ;;  repeat
+    69   000684 10e6                djnz    spi_read_8bit_2
+    70                          ;
+    71                          spi_read_8bit_end:
+    72   000686 7b                  ld  a, e
+    73                          ;
+    74   000687 d1                  pop de
+    75   000688 c1                  pop bc
+    76                          ;
+    77   000689 c9                  ret
+    78                          
+    79                          ;;
+    80                          spi_write_8bit:
+    81   00068a d5                  push    de
+    82   00068b 5f                  ld  e, a
+    83                          ;
+    84   00068c cd4e06              call    spi_dev_sel
+    85                          ;
+    86   00068f f5                  push    af
+    87   000690 c5                  push    bc
+    88                          ;
+    89                          ;;  write sequence
+    90   000691 0608                ld  b, 8
+    91                          spi_write_8bit_2: ;;  write MOSI
+    92   000693 cb7b                bit 7, e
+    93   000695 2804                jr  z, spi_write_8bit_L
+    94                          spi_write_8bit_H:
+    95   000697 cbe7                set MOSI, a
+    96   000699 1802                jr  spi_write_8bit_3
+    97                          spi_write_8bit_L:
+    98   00069b cba7                res MOSI, a
+    99                          ;;
+   100                          spi_write_8bit_3:
+   101   00069d d300                out (PO_0), a
+   102                          ;;  clock 'H'
+   103                          ;;  A reg = (PI_0) AND 00000011b OR SPI_SELD_DEV
+   104   00069f cbdf                set SCLK, a
+   105                          ;
+   106   0006a1 d300                out (PO_0), a
+   107                          ;
+   108                          ;;  clock 'L'
+   109   0006a3 cb9f                res SCLK, a
+   110   0006a5 d300                out (PO_0), a
+   111                          ;;  repeat
+   112   0006a7 cb23                sla e
+   113   0006a9 10e8                djnz    spi_write_8bit_2
+   114                          ;
+   115                          spi_write_8bit_end:
+   116   0006ab c1                  pop bc
+   117   0006ac f1                  pop af
+   118   0006ad d1                  pop de
+   119                          ;
+   120   0006ae c9                  ret
+   121                          
+   122                          spi_read_16bit:
+   123                          spi_write_16bit:
+   124   0006af c9                  ret
+   125                          
+m_loader.asm:
+   748                          
+   749                          SEG_TITLE_PROTO2:
+   750   0006b0 ce                  defb    11001110b   ;   P
+   751   0006b1 0a                  defb    00001010b   ;   r
+   752   0006b2 3a                  defb    00111010b   ;   o
+   753   0006b3 1e                  defb    00011110b   ;   t
+   754   0006b4 3a                  defb    00111010b   ;   o
+   755   0006b5 da                  defb    11011010b   ;   2
+   756                          
+   757                          SEG_TITLE_LOADER:
+   758   0006b6 1c                  defb    00011100b   ;   L
+   759   0006b7 7a                  defb    01111010b   ;   d
+   760   0006b8 0a                  defb    00001010b   ;   r
+   761   0006b9 00                  defb    0           ;   blank
+   762   0006ba 00                  defb    0           ;   blank
+   763   0006bb 00                  defb    0           ;   blank
+   764                          
+   765                          SEG_TITLE_CONS:
+   766   0006bc 9c                  defb    10011100b   ;   C
+   767   0006bd 3a                  defb    00111010b   ;   o
+   768   0006be 2a                  defb    00101010b   ;   n
+   769   0006bf 02                  defb    00000010b   ;   -
+   770   0006c0 fc                  defb    11111100b   ;   0
+   771   0006c1 fc                  defb    11111100b   ;   0
+   772                          
+   773                          STR_loader_title:
+   774   0006c2 0d0a0d0a0d0a4d69    defm    "\x0D\x0A\x0D\x0A\x0D\x0AMiniLoader"
+                6e694c6f61646572
+   775   0006d2 0d                  defb    CR
+   776   0006d3 0a                  defb    LF
+   777   0006d4 00                  defb    NULL
+   778                          
+   779                          STR_loader_prompt:
+   780   0006d5 3e3e3e              defm    ">>>"
+   781   0006d8 00                  defb    NULL
+   782                          

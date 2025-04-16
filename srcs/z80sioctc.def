@@ -1,0 +1,29 @@
+;	z80sioctc.def
+
+	DEFC	CTC_Ch0 = 20h
+	DEFC	CTC_Ch1 = 21h
+	DEFC	CTC_Ch2 = 22h
+	DEFC	CTC_Ch3 = 23h
+	DEFC	SIO_Ch0_D = 24h
+	DEFC	SIO_Ch0_C = 25h
+	DEFC	SIO_Ch1_D = 26h
+	DEFC	SIO_Ch1_C = 27h
+;
+; SCI Control Characters
+	DEFC	NULL = 0
+	DEFC	BELL = 07h
+	DEFC	CR = 0Dh
+	DEFC	LF = 0Ah
+	DEFC	DELETE = 7Fh
+	DEFC	BACKSPACE = 08h
+
+; Flags F_STAT_SIOn
+	DEFC	F_STAT_ALLSENT = 0
+	DEFC	F_STAT_BREAK   = 1
+	DEFC	F_STAT_RECEIVE = 2
+	DEFC	F_STAT_TXEMPTY = 3
+;
+;;	external address
+	extern	INTSIO
+	extern	INTCTC
+	extern	putAreg2chrs

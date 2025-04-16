@@ -1,0 +1,953 @@
+/tmp/tmpXXylXQJt.asm:
+     1                          MODULE memtest_asm
+     2                          LINE 0, "memtest.asm"
+memtest.asm:
+                                
+     1                          ;   memtest.asm -- Memory Test for Z80proto
+     2                          ;   (C)2024 yasunoxx▼Julia
+     3                          ;   assemble: zcc +embedded --no-crt memtest.asm -o memtest.bin
+     4                          
+     5                          i8253_C0    EQU 10h
+     6                          i8253_C1    EQU 11h
+     7                          i8253_C1_LSB    EQU 40h
+     8                          i8253_C1_MSB    EQU 9Ch
+     9                          i8253_C2    EQU 12h
+    10                          i8253_CC    EQU 13h
+    11                          
+    12                          CTC_Ch0     EQU 20h
+    13                          CTC_Ch1     EQU 21h
+    14                          CTC_Ch2     EQU 22h
+    15                          CTC_Ch3     EQU 23h
+    16                          SIO_Ch0_D   EQU 24h
+    17                          SIO_Ch0_C   EQU 25h
+    18                          SIO_Ch1_D   EQU 26h
+    19                          SIO_Ch1_C   EQU 27h
+    20                          ;
+    21                          PO_0        EQU 00h
+    22                          PO_1        EQU 01h
+    23                          PO_2        EQU 02h
+    24                          ROMSEL      EQU 08h
+    25                          PAGE1       EQU 09h
+    26                          PI_0        EQU 0Ch
+    27                          ;
+    28                          SYSMEM_TOP  EQU 0F000h
+    29                          PO_2_BUP   EQU 0F800h
+    30                          PROG_PLACE  EQU 0F801h
+    31                          V_CNT_16    EQU 0F802h
+    32                          V_CNT_8A    EQU 0F804h
+    33                          V_CNT_8B    EQU 0F805h
+    34                          ;
+    35                          SEG_STATE   EQU 0F810h
+    36                          SEG_POS     EQU 0F811h
+    37                          SEG_0       EQU 0F812h
+    38                          SEG_1       EQU 0F813h
+    39                          SEG_2       EQU 0F814h
+    40                          SEG_3       EQU 0F815h
+    41                          SEG_4       EQU 0F816h
+    42                          SEG_5       EQU 0F817h
+    43                          
+    44                          S_SEG_0     EQU 0
+    45                          S_SEG_1     EQU 1
+    46                          S_SEG_2     EQU 2
+    47                          S_SEG_3     EQU 3
+    48                          S_SEG_4     EQU 4
+    49                          S_SEG_5     EQU 5
+    50                          
+    51                          SEG_CHR_0   EQU 0
+    52                          SEG_CHR_1   EQU 1
+    53                          SEG_CHR_2   EQU 2
+    54                          SEG_CHR_3   EQU 3
+    55                          SEG_CHR_4   EQU 4
+    56                          SEG_CHR_5   EQU 5
+    57                          SEG_CHR_6   EQU 6
+    58                          SEG_CHR_7   EQU 7
+    59                          SEG_CHR_8   EQU 8
+    60                          SEG_CHR_9   EQU 9
+    61                          SEG_CHR_A   EQU 10
+    62                          SEG_CHR_B   EQU 11
+    63                          SEG_CHR_C   EQU 12
+    64                          SEG_CHR_D   EQU 13
+    65                          SEG_CHR_E   EQU 14
+    66                          SEG_CHR_F   EQU 15
+    67                          SEG_CHR_H   EQU 16
+    68                          SEG_CHR_I   EQU 17
+    69                          SEG_CHR_J   EQU 18
+    70                          SEG_CHR_L   EQU 19
+    71                          SEG_CHR_N   EQU 20
+    72                          SEG_CHR_O   EQU 21
+    73                          SEG_CHR_P   EQU 22
+    74                          SEG_CHR_R   EQU 23
+    75                          SEG_CHR_T   EQU 24
+    76                          SEG_CHR_U   EQU 25
+    77                          SEG_CHR_V   EQU 26
+    78                          SEG_CHR_X   EQU 27
+    79                          SEG_CHR_Y   EQU 28
+    80                          SEG_CHR_Z   EQU 29
+    81                          SEG_CHR_HYPEN   EQU 30
+    82                          SEG_CHR_NOUN    EQU 31
+    83                          SEG_CHR_VERB    EQU 32
+    84                          SEG_CHR_BLANK   EQU 33
+    85                          
+    86                          ;;
+    87                          ;;;
+    88                          ;;
+    89                          ;   Run on ROM
+    90                          ;    ORG 0h
+    91                          ;   Run on RAM with ipl0.bin
+    92                              ORG 0E000h
+    93                          ;   Run on RAM with MiniLoader
+    94                          ;    ORG 0D800h
+    95                          ;
+    96   000000 310000              ld sp, 0h
+    97                          ;    im 1
+    98   000003 ed5e                im  2
+    99                          ;
+   100   000005 c39000              jp main
+   101                          
+   102                          rst08:
+   103   000008 c3cc03              jp  debug_rst08
+   104                          ;
+   105   00000b 0000000000          defs    5
+   106                          
+   107                          rst10:
+   108   000010 c3d603              jp  debug_rst10
+   109                          ;
+   110   000013 0000000000          defs    5
+   111                          
+   112                          rst18:
+   113   000018 c3e003              jp  debug_rst18
+   114                          ;
+   115   00001b 0000000000          defs    5
+   116                          
+   117                          rst20:
+   118   000020 00                  nop
+   119   000021 c9                  ret
+   120                          ;
+   121   000022 000000000000        defs    6
+   122                          
+   123                          rst28:
+   124   000028 00                  nop
+   125   000029 c9                  ret
+   126                          ;
+   127   00002a 000000000000        defs    6
+   128                          
+   129                          rst30:
+   130   000030 00                  nop
+   131   000031 c9                  ret
+   132                          ;
+   133   000032 000000000000        defs    6
+   134                          
+   135                          ;
+   136                          ; im1 Interrupts
+   137                          ;
+   138                          rst38:
+   139                          isr:
+   140                          ;    ORG 0038h
+   141                          ;
+   142                          ;    ex af, af'
+   143                          ;    exx
+   144   000038 f5                  push    af
+   145   000039 c5                  push    bc
+   146   00003a d5                  push    de
+   147   00003b e5                  push    hl
+   148                          
+   149                          ;;  guess who?
+   150   00003c cd8202              call    int_sci
+   151   00003f cd8402              call    int_i8253
+   152                          
+   153                          isr_end:
+   154                          ;;  end ISR
+   155                          ;    exx
+   156                          ;    ex af, af'
+   157   000042 e1                  pop hl
+   158   000043 d1                  pop de
+   159   000044 c1                  pop bc
+   160   000045 f1                  pop af
+   161                          ;
+   162   000046 fb                  ei
+   163   000047 ed4d                reti
+   164                          
+   165                          
+   166                          ;    defs    33
+   167   000049 0000000000000000    defs    29
+                0000000000000000
+                0000000000000000
+                0000000000      
+   168                          
+   169                          ;   NMI
+   170                          ;    ORG 0066h
+   171                          nmi:
+   172                          ;    retn
+   173   000066 c3ea03              jp  DEBUGSTOP
+   174   000069 76                  halt
+   175                          
+   176   00006a 000000000000        defs    6
+   177                          
+   178                          Vectors:
+   179                          ;   0070h~  CTC
+   180   000070 8802                defw    int_counter
+   181   000072 b802                defw    int_void
+   182   000074 b802                defw    int_void
+   183   000076 b802                defw    int_void
+   184                          ;   0078h~  SIO
+   185   000078 b802                defw    int_void
+   186   00007a b802                defw    int_void
+   187   00007c b802                defw    int_void
+   188   00007e b802                defw    int_void
+   189   000080 b802                defw    int_void
+   190   000082 b802                defw    int_void
+   191                          
+   192   000084 0000000000000000    defs    12
+                00000000        
+   193                          
+   194                          ;
+   195                          ;   Main routine ?
+   196                          ;
+   197                          main:
+   198   000090 af                  xor a
+   199   000091 d300                out (PO_0), a
+   200   000093 d301                out (PO_1), a
+   201   000095 d302                out (PO_2), a
+   202                              ; pre ROMKICK
+   203   000097 d308                out (ROMSEL), a
+   204   000099 d309                out (PAGE1), a
+   205                          ;
+   206   00009b 3e04                ld  a, 00000100b    ; Initial PO_2 value
+   207   00009d cd0003              call    out_PO_2
+   208                          
+   209                          main1:
+   210                          ;;
+   211                          ;;; Evaluate: ROMKICK(for Z80proto2)
+   212                          ;;
+   213                          ;;  ROMKICK
+   214   0000a0 3e01                ld  a, 00000001b
+   215   0000a2 d300                out (PO_0), a
+   216   0000a4 d308                out (ROMSEL), a
+   217   0000a6 af                  xor a
+   218   0000a7 d300                out (PO_0), a
+   219                          ;
+   220                          ;; switch to "run on RAM"
+   221                          ;; copy Head block
+   222                          ;; no effect when ROM boot
+   223                          PAYLOAD     EQU 0E000h
+   224                          SIZE        EQU 90h
+   225                          IPL0AREA    EQU 00000h
+   226   0000a9 2100e0              ld  hl, PAYLOAD
+   227   0000ac 110000              ld  de, IPL0AREA
+   228   0000af 019000              ld  bc, SIZE
+   229   0000b2 edb0                ldir
+   230   0000b4 1800                jr  init
+   231                          ;;
+   232                          
+   233                          ;; initialize system devices
+   234                          init:
+   235   0000b6 018907              ld  bc, 0789h
+   236   0000b9 cd3e02              call    sloop
+   237                          ;
+   238                          ;;  for im2
+   239   0000bc cd0603              call    conf_CTC
+   240   0000bf cd3203              call    conf_SIO
+   241                          ;;  for im1
+   242                          ;    call    conf_timer1
+   243                          ;    call    conf_timer_other
+   244                          ;
+   245   0000c2 cddc02              call    conf_sysmem
+   246                          ;
+   247   0000c5 fb                  ei
+   248                          
+   249                          ;;
+   250                          ;;; Proto2 title
+   251   0000c6 0e16                ld  c, SEG_CHR_P
+   252   0000c8 cd5402              call    get_SEG_CHR
+   253   0000cb 3212f8              ld  (SEG_0), a
+   254   0000ce 0e17                ld  c, SEG_CHR_R
+   255   0000d0 cd5402              call    get_SEG_CHR
+   256   0000d3 3213f8              ld  (SEG_1), a
+   257   0000d6 0e15                ld  c, SEG_CHR_O
+   258   0000d8 cd5402              call    get_SEG_CHR
+   259   0000db 3214f8              ld  (SEG_2), a
+   260   0000de 0e18                ld  c, SEG_CHR_T
+   261   0000e0 cd5402              call    get_SEG_CHR
+   262   0000e3 3215f8              ld  (SEG_3), a
+   263   0000e6 0e15                ld  c, SEG_CHR_O
+   264   0000e8 cd5402              call    get_SEG_CHR
+   265   0000eb 3216f8              ld  (SEG_4), a
+   266   0000ee 0e1b                ld  c, SEG_CHR_X
+   267   0000f0 cd5402              call    get_SEG_CHR
+   268   0000f3 3217f8              ld  (SEG_5), a
+   269                          
+   270   0000f6 cd4402              call    loop
+   271                          ;
+   272                          ;; Jump to the Application
+   273   0000f9 c3fe00              jp  memtest80
+   274                          
+   275                          ;; or Halt stop
+   276   0000fc 00                  nop
+   277   0000fd 76                  halt
+   278                          
+   279                          
+   280                          ;;
+   281                          ;;  memtest80 -- Memory Test(0080h to 0DFFFh)
+   282                          ;;
+   283                          
+   284                          TEST_START_ADDR EQU 0090h
+   285                          TEST_END_ADDR   EQU 0E000h
+   286                          TEST_END_ADDR_MSB   EQU 0E0h
+   287                          
+   288                          memtest80:
+   289                          ;;  title
+   290   0000fe 0e18                ld  c, SEG_CHR_T
+   291   000100 cd5402              call    get_SEG_CHR
+   292   000103 3212f8              ld  (SEG_0), a
+   293   000106 0e0e                ld  c, SEG_CHR_E
+   294   000108 cd5402              call    get_SEG_CHR
+   295   00010b 3213f8              ld  (SEG_1), a
+   296   00010e 0e05                ld  c, SEG_CHR_5
+   297   000110 cd5402              call    get_SEG_CHR
+   298   000113 3214f8              ld  (SEG_2), a
+   299   000116 0e18                ld  c, SEG_CHR_T
+   300   000118 cd5402              call    get_SEG_CHR
+   301   00011b 3215f8              ld  (SEG_3), a
+   302   00011e 0e08                ld  c, SEG_CHR_8
+   303   000120 cd5402              call    get_SEG_CHR
+   304   000123 3216f8              ld  (SEG_4), a
+   305   000126 0e00                ld  c, SEG_CHR_0
+   306   000128 cd5402              call    get_SEG_CHR
+   307   00012b 3217f8              ld  (SEG_5), a
+   308                          
+   309   00012e cd4402              call    loop
+   310                          
+   311                          memtest80_1:
+   312   000131 219000              ld  hl, TEST_START_ADDR
+   313                          ;; disp. Start address
+   314   000134 0e18                ld  c, SEG_CHR_T
+   315   000136 cd5402              call    get_SEG_CHR
+   316   000139 3212f8              ld  (SEG_0), a
+   317   00013c 0e1e                ld  c, SEG_CHR_HYPEN
+   318   00013e cd5402              call    get_SEG_CHR
+   319   000141 3213f8              ld  (SEG_1), a
+   320                          ;
+   321   000144 cd7d01              call    memtest80_3_sub
+   322                          ;
+   323                          ;    ld  c, SEG_CHR_0
+   324                          ;    call    get_SEG_CHR
+   325                          ;    ld  (SEG_2), a
+   326                          ;    ld  c, SEG_CHR_0
+   327                          ;    call    get_SEG_CHR
+   328                          ;    ld  (SEG_3), a
+   329                          ;    ld  c, SEG_CHR_8
+   330                          ;    call    get_SEG_CHR
+   331                          ;    ld  (SEG_4), a
+   332                          ;    ld  c, SEG_CHR_0
+   333                          ;    call    get_SEG_CHR
+   334                          ;    ld  (SEG_5), a
+   335                          
+   336                          ;
+   337                          ;; test -- write and read compare
+   338                          memtest80_2:
+   339   000147 3eaa                ld  a, 0AAh
+   340   000149 77                  ld  (hl), a
+   341   00014a 7e                  ld  a, (hl)
+   342   00014b feaa                cp  0AAh
+   343   00014d c2fc01              jp  nz, memtest80_err
+   344                          ;
+   345   000150 3e55                ld  a, 55h
+   346   000152 77                  ld  (hl), a
+   347   000153 7e                  ld  a, (hl)
+   348   000154 fe55                cp  55h
+   349   000156 c2fc01              jp  nz, memtest80_err
+   350                          ;
+   351   000159 3e3c                ld  a, 3Ch
+   352   00015b 77                  ld  (hl), a
+   353   00015c 7e                  ld  a, (hl)
+   354   00015d fe3c                cp  3Ch
+   355   00015f c2fc01              jp  nz, memtest80_err
+   356                          ;
+   357   000162 3ec3                ld  a, 0C3h
+   358   000164 77                  ld  (hl), a
+   359   000165 7e                  ld  a, (hl)
+   360   000166 fec3                cp  0C3h
+   361   000168 c2fc01              jp  nz, memtest80_err
+   362                          ;
+   363   00016b af                  xor a
+   364   00016c 77                  ld  (hl), a
+   365                          ;;  usable??
+   366   00016d 23                  inc hl
+   367   00016e 7c                  ld  a, h
+   368   00016f fee0                cp  TEST_END_ADDR_MSB
+   369   000171 2843                jr  z, memtest80_completed
+   370                          ;
+   371   000173 7d                  ld  a, l
+   372   000174 fe00                cp  0       ; check addr. is xx00h?
+   373   000176 20cf                jr  nz, memtest80_2  ; no
+   374                          ;
+   375                          memtest80_3:
+   376   000178 cd7d01              call    memtest80_3_sub
+   377   00017b 18ca                jr  memtest80_2
+   378                          
+   379                          memtest80_3_sub:
+   380                          ;; disp. xx00h
+   381   00017d 7c                  ld  a, h
+   382   00017e e6f0                and 11110000b
+   383   000180 cb3f                srl a
+   384   000182 cb3f                srl a
+   385   000184 cb3f                srl a
+   386   000186 cb3f                srl a
+   387   000188 4f                  ld  c, a
+   388   000189 cd5402              call    get_SEG_CHR
+   389   00018c 3214f8              ld  (SEG_2), a
+   390                          ;
+   391   00018f 7c                  ld  a, h
+   392   000190 e60f                and 00001111b
+   393   000192 4f                  ld  c, a
+   394   000193 cd5402              call    get_SEG_CHR
+   395   000196 3215f8              ld  (SEG_3), a
+   396                          ;
+   397   000199 7d                  ld  a, l
+   398   00019a e6f0                and 11110000b
+   399   00019c cb3f                srl a
+   400   00019e cb3f                srl a
+   401   0001a0 cb3f                srl a
+   402   0001a2 cb3f                srl a
+   403   0001a4 4f                  ld  c, a
+   404   0001a5 cd5402              call    get_SEG_CHR
+   405   0001a8 3216f8              ld  (SEG_4), a
+   406                          ;
+   407   0001ab 7d                  ld  a, l
+   408   0001ac e60f                and 00001111b
+   409   0001ae 4f                  ld  c, a
+   410   0001af cd5402              call    get_SEG_CHR
+   411   0001b2 3217f8              ld  (SEG_5), a
+   412                          ;
+   413   0001b5 c9                  ret
+   414                          
+   415                          memtest80_completed:
+   416                          ;; disp. end addr
+   417   0001b6 0e0c                ld  c, SEG_CHR_C
+   418   0001b8 cd5402              call    get_SEG_CHR
+   419   0001bb 3212f8              ld  (SEG_0), a
+   420   0001be 0e0d                ld  c, SEG_CHR_D
+   421   0001c0 cd5402              call    get_SEG_CHR
+   422                          ;
+   423   0001c3 2b                  dec hl
+   424   0001c4 cd7d01              call memtest80_3_sub
+   425                          ;    ld  (SEG_2), a
+   426                          ;    ld  c, SEG_CHR_F
+   427                          ;    call    get_SEG_CHR
+   428                          ;    ld  (SEG_3), a
+   429                          ;    ld  c, SEG_CHR_F
+   430                          ;    call    get_SEG_CHR
+   431                          ;    ld  (SEG_4), a
+   432                          ;    ld  c, SEG_CHR_F
+   433                          ;    call    get_SEG_CHR
+   434                          ;    ld  (SEG_5), a
+   435                          ;
+   436                          memtest80_loop:
+   437                          ;; blink HYPEN on SEG_2
+   438   0001c7 f3                  di
+   439   0001c8 3ef9                ld  a, 249
+   440   0001ca 3204f8              ld  (V_CNT_8A), a
+   441   0001cd fb                  ei
+   442                          memtest80_completed_zombie:
+   443   0001ce 3a04f8              ld  a, (V_CNT_8A)
+   444   0001d1 fe00                cp  0
+   445   0001d3 20f9                jr  nz, memtest80_completed_zombie
+   446                          ;
+   447   0001d5 f3                  di
+   448   0001d6 3ef9                ld  a, 249
+   449   0001d8 3204f8              ld  (V_CNT_8A), a
+   450   0001db fb                  ei
+   451   0001dc 0e21                ld  c, SEG_CHR_BLANK
+   452   0001de cd5402              call    get_SEG_CHR
+   453   0001e1 3213f8              ld  (SEG_1), a
+   454                          ;
+   455                          memtest80_completed_zombie2:
+   456   0001e4 3a04f8              ld  a, (V_CNT_8A)
+   457   0001e7 fe00                cp  0
+   458   0001e9 20f9                jr  nz, memtest80_completed_zombie2
+   459                          ;
+   460   0001eb f3                  di
+   461   0001ec 3ef9                ld  a, 249
+   462   0001ee 3204f8              ld  (V_CNT_8A), a
+   463   0001f1 fb                  ei
+   464   0001f2 0e1e                ld  c, SEG_CHR_HYPEN
+   465   0001f4 cd5402              call    get_SEG_CHR
+   466   0001f7 3213f8              ld  (SEG_1), a
+   467                          ;
+   468   0001fa 18d2                jr  memtest80_completed_zombie
+   469                          
+   470                          memtest80_err:
+   471                          ;; disp. err addr.
+   472   0001fc 0e0e                ld  c, SEG_CHR_E
+   473   0001fe cd5402              call    get_SEG_CHR
+   474   000201 3212f8              ld  (SEG_0), a
+   475   000204 7c                  ld  a, h
+   476   000205 e6f0                and 11110000b
+   477   000207 cb3f                srl a
+   478   000209 cb3f                srl a
+   479   00020b cb3f                srl a
+   480   00020d cb3f                srl a
+   481   00020f 4f                  ld  c, a
+   482   000210 cd5402              call    get_SEG_CHR
+   483   000213 3214f8              ld  (SEG_2), a
+   484   000216 7c                  ld  a, h
+   485   000217 e60f                and 00001111b
+   486   000219 4f                  ld  c, a
+   487   00021a cd5402              call    get_SEG_CHR
+   488   00021d 3215f8              ld  (SEG_3), a
+   489   000220 7d                  ld  a, l
+   490   000221 e6f0                and 11110000b
+   491   000223 cb3f                srl a
+   492   000225 cb3f                srl a
+   493   000227 cb3f                srl a
+   494   000229 cb3f                srl a
+   495   00022b 4f                  ld  c, a
+   496   00022c cd5402              call    get_SEG_CHR
+   497   00022f 3216f8              ld  (SEG_4), a
+   498   000232 7d                  ld  a, l
+   499   000233 e60f                and 00001111b
+   500   000235 4f                  ld  c, a
+   501   000236 cd5402              call    get_SEG_CHR
+   502   000239 3217f8              ld  (SEG_5), a
+   503                          ;
+   504   00023c 1889                jr  memtest80_loop
+   505                          
+   506                          ;;
+   507                          ;;;
+   508                          ;;;;
+   509                          ;;;;; Subroutines
+   510                          ;;;;
+   511                          ;;;
+   512                          ;;
+   513                          sloop:
+   514                              ;; simple loop(BC = loop counts, AF broken)
+   515   00023e 0b              	dec bc
+   516   00023f 79              	ld a,c
+   517   000240 b0              	or b
+   518   000241 20fb            	jr nz,sloop
+   519                          ;
+   520   000243 c9                  ret
+   521                          
+   522                          loop:
+   523                              ;; simple loop
+   524                          sub_05e4h:
+   525   000244 016587          	ld bc,8765h
+   526                          l05e8h:
+   527   000247 0b              	dec bc
+   528   000248 79              	ld a,c
+   529   000249 e60f                and 00001111b
+   530   00024b fe0f                cp  00001111b
+   531   00024d 2000                jr  nz, l05e8h_2
+   532                          l05e8h_2:
+   533   00024f 79              	ld a,c
+   534   000250 b0              	or b
+   535   000251 20f4            	jr nz,l05e8h
+   536                          ;
+   537   000253 c9                  ret
+   538                          
+   539                          get_SEG_CHR:
+   540   000254 0600                ld  b, 0
+   541                          ;   ld  c, SEG_CHR_?
+   542   000256 dd216002            ld  ix, numbers
+   543   00025a dd09                add ix, bc
+   544   00025c dd7e00              ld  a, (ix)
+   545   00025f c9                  ret
+   546                          
+   547                          numbers:
+   548   000260 fc                  defb    11111100b   ;   0
+   549   000261 60                  defb    01100000b   ;   1
+   550   000262 da                  defb    11011010b   ;   2
+   551   000263 f2                  defb    11110010b   ;   3
+   552   000264 66                  defb    01100110b   ;   4
+   553   000265 b6                  defb    10110110b   ;   5
+   554   000266 be                  defb    10111110b   ;   6
+   555   000267 e4                  defb    11100100b   ;   7
+   556   000268 fe                  defb    11111110b   ;   8
+   557   000269 f6                  defb    11110110b   ;   9
+   558   00026a ee                  defb    11101110b   ;   A
+   559   00026b 3e                  defb    00111110b   ;   b
+   560   00026c 9c                  defb    10011100b   ;   C
+   561   00026d 7a                  defb    01111010b   ;   d
+   562   00026e 9e                  defb    10011110b   ;   E
+   563   00026f 8e                  defb    10001110b   ;   F
+   564   000270 6e                  defb    01101110b   ;   H
+   565   000271 20                  defb    00100000b   ;   i
+   566   000272 70                  defb    01110000b   ;   J
+   567   000273 1c                  defb    00011100b   ;   L
+   568   000274 2a                  defb    00101010b   ;   n
+   569   000275 3a                  defb    00111010b   ;   o
+   570   000276 ce                  defb    11001110b   ;   P
+   571   000277 0a                  defb    00001010b   ;   r
+   572   000278 1e                  defb    00011110b   ;   t
+   573   000279 7d                  defb    01111101b   ;   U
+   574   00027a b9                  defb    10111001b   ;   v
+   575   00027b ab                  defb    10101011b   ;   x
+   576   00027c 77                  defb    01110111b   ;   y
+   577   00027d 93                  defb    10010011b   ;   Z
+   578   00027e 02                  defb    00000010b   ;   -
+   579   00027f c5                  defb    11000101b   ;   noun
+   580   000280 47                  defb    01000111b   ;   verb
+   581   000281 00                  defb    0           ;   blank / null termination
+   582                          
+   583                          ;;
+   584                          ;;; Interrupt Service Routines
+   585                          ;;
+   586                          int_sci:
+   587                          ;;  check SCI
+   588   000282 00                  nop
+   589   000283 c9                  ret
+   590                          
+   591                          int_i8253:
+   592                          ;;  time is up(maybe), re-set counter
+   593   000284 cdbc02              call    conf_timer1
+   594   000287 c9                  ret
+   595                          
+   596                          int_counter:    ; im2
+   597                          ;;
+   598                          int_counter_16:
+   599   000288 f5                  push    af
+   600   000289 c5                  push    bc
+   601   00028a e5                  push    hl
+   602   00028b dde5                push    ix
+   603                          ;;  decrement 16bit value
+   604   00028d 2a02f8              ld  hl, (V_CNT_16)
+   605   000290 2b                  dec hl
+   606   000291 3003                jr  nc, int_counter_16_end
+   607   000293 210000              ld  hl, 0
+   608                          int_counter_16_end:
+   609   000296 2202f8              ld  (V_CNT_16), hl
+   610                          ;
+   611                          int_counter_8:
+   612                          ;;  decrement 8bit value
+   613   000299 3a04f8              ld  a, (V_CNT_8A)
+   614   00029c 3d                  dec a
+   615   00029d 3001                jr  nc, int_counter_8B
+   616   00029f af                  xor a
+   617                          int_counter_8B:
+   618   0002a0 3204f8              ld  (V_CNT_8A), a
+   619                          ;
+   620   0002a3 3a05f8              ld  a, (V_CNT_8B)
+   621   0002a6 3d                  dec a
+   622   0002a7 3001                jr  nc, int_counter_8_end
+   623   0002a9 af                  xor a
+   624                          int_counter_8_end:
+   625   0002aa 3205f8              ld  (V_CNT_8B), a
+   626                          ;; and drive 7seg
+   627   0002ad cd7203              call    drv_7seg
+   628                          ;; exit
+   629   0002b0 dde1                pop ix
+   630   0002b2 e1                  pop hl
+   631   0002b3 c1                  pop bc
+   632   0002b4 f1                  pop af
+   633   0002b5 fb                  ei
+   634   0002b6 ed4d                reti
+   635                          
+   636                          int_void:   ; im2
+   637                          ;; do nothing
+   638   0002b8 00                  nop
+   639   0002b9 fb                  ei
+   640   0002ba ed4d                reti
+   641                          
+   642                          ;;
+   643                          ;;; configure I/O devices
+   644                          ;;
+   645                          conf_timer1:
+   646   0002bc 3e70                ld a, 01110000b
+   647                                          ; Counter #1
+   648                                          ; Read/Write LSB before MSB
+   649                                          ; Counter Mode 0
+   650                                          ; Hexadecimal count
+   651   0002be d313                out (i8253_CC), a
+   652                          ;
+   653   0002c0 3e40                ld a, i8253_C1_LSB
+   654   0002c2 d311                out (i8253_C1), a
+   655   0002c4 3e9c                ld a, i8253_C1_MSB
+   656   0002c6 d311                out (i8253_C1), a
+   657                          ;
+   658   0002c8 c9                  ret
+   659                          
+   660                          conf_timer_other:
+   661   0002c9 3e30                ld a, 00110000b
+   662                                          ; Counter #0
+   663                                          ; Read/Write LSB before MSB
+   664                                          ; Counter Mode 0
+   665                                          ; Hexadecimal count
+   666   0002cb d313                out (i8253_CC), a
+   667                          ;
+   668   0002cd af                  xor a
+   669   0002ce d310                out (i8253_C0), a
+   670   0002d0 d310                out (i8253_C0), a
+   671                          ;
+   672   0002d2 3eb0                ld a, 10110000b
+   673                                          ; Counter #2
+   674                                          ; Read/Write LSB before MSB
+   675                                          ; Counter Mode 0
+   676                                          ; Hexadecimal count
+   677   0002d4 d313                out (i8253_CC), a
+   678                          ;
+   679   0002d6 af                  xor a
+   680   0002d7 d312                out (i8253_C2), a
+   681   0002d9 d312                out (i8253_C2), a
+   682                          ;
+   683   0002db c9                  ret
+   684                          
+   685                          ;;
+   686                          ;;; configure System Memory
+   687                          ;;
+   688                          conf_sysmem:
+   689   0002dc 3e80                ld  a, 10000000b
+   690                                          ; set anode line 5(Magic!)
+   691   0002de cd0003              call    out_PO_2
+   692                          ;
+   693                          ;;  config SEG memories
+   694   0002e1 3e00                ld  a, S_SEG_0
+   695   0002e3 3210f8              ld  (SEG_STATE), a
+   696   0002e6 3e00                ld  a, 0            ; Position 0 start
+   697   0002e8 3211f8              ld  (SEG_POS), a    ; POSition 0 to 5
+   698   0002eb 3e02                ld  a, 00000010b    ; 7seg display data
+   699   0002ed 3212f8              ld  (SEG_0), a
+   700   0002f0 3213f8              ld  (SEG_1), a
+   701   0002f3 3214f8              ld  (SEG_2), a
+   702   0002f6 3215f8              ld  (SEG_3), a
+   703   0002f9 3216f8              ld  (SEG_4), a
+   704   0002fc 3217f8              ld  (SEG_5), a
+   705                          ;;
+   706   0002ff c9                  ret
+   707                          
+   708                          ;;
+   709                          ;;; configure Peripherals
+   710                          ;;
+   711                          out_PO_2:
+   712   000300 d302                out (PO_2), a
+   713                                          ; OUTPUT anode line
+   714   000302 3200f8              ld  (PO_2_BUP), a
+   715                                          ; BACKUP PO_2
+   716                          ;
+   717   000305 c9                  ret
+   718                          
+   719                          conf_CTC:
+   720   000306 3e03                ld  a, 3    ; Ch. Reset
+   721   000308 d320                out(CTC_Ch0), a
+   722   00030a d321                out(CTC_Ch1), a
+   723   00030c d322                out(CTC_Ch2), a
+   724   00030e d323                out(CTC_Ch3), a
+   725                          ;
+   726   000310 af                  xor a       ; Interrupt Vector MSB
+   727   000311 ed47                ld  i, a
+   728   000313 3e70                ld  a, 70h  ; Interrupt Vector LSB
+   729   000315 d320                out(CTC_Ch0), a
+   730                          ;
+   731                          conf_CTC_Ch0:
+   732   000317 3e87                ld  a, 10000111b
+   733                                          ; Ch0
+   734                                          ; Interrupt Enable
+   735                                          ; Timer Mode
+   736                                          ; Prescaler 1/16φ
+   737                                          ; Down Edge
+   738                                          ; No Trigger Start
+   739                                          ; Next: Time Constant
+   740                                          ; Reset Enable, Timer start when write Time Constant
+   741                                          ; This is configuration, not Interrupt Vector
+   742   000319 d320                out(CTC_Ch0), a
+   743   00031b 3efa                ld  a, 250  ; (16*250)/4000000 = 4000, 1msec/Interrupt
+   744   00031d d320                out(CTC_Ch0), a
+   745                          ;
+   746   00031f c9                  ret
+   747                          ;
+   748                          conf_CTC_Ch1:
+   749                          ;; call from conf_SIO_Ch0
+   750   000320 3e47                ld  a, 01000111b
+   751                                          ; Ch1
+   752                                          ; Interrupt Disable
+   753                                          ; Counter Mode
+   754                                          ; Down Edge
+   755                                          ; Next: Time Constant
+   756                                          ; Reset Enable, Counter start when write Time Constant
+   757                                          ; This is configuration, not Interrupt Vector
+   758   000322 d321                out(CTC_Ch1), a
+   759   000324 3e0d                ld  a, 13  ; 13/2000000
+   760   000326 d321                out(CTC_Ch1), a
+   761                          ;
+   762   000328 c9                  ret
+   763                          
+   764                          conf_CTC_Ch2:
+   765                          ;; call from conf_SIO_Ch1
+   766   000329 3e47                ld  a, 01000111b
+   767                                          ; Ch2
+   768                                          ; same as Ch1
+   769   00032b d322                out(CTC_Ch2), a
+   770   00032d 3e0d                ld  a, 13  ; 13/2000000
+   771   00032f d322                out(CTC_Ch2), a
+   772                          ;
+   773   000331 c9                  ret
+   774                          
+   775                          conf_SIO:
+   776                          ;;  channel reset
+   777   000332 3e18                ld  a, 00011000b
+   778   000334 d325                out (SIO_Ch0_C), a
+   779   000336 d327                out (SIO_Ch1_C), a
+   780                          ;
+   781                          ;;  Ch0 configure
+   782                          ;   Set CTC_Ch1
+   783   000338 cd2003              call    conf_CTC_Ch1
+   784                              ;   13 counts, SIO prescale is 16, (13*16)/2000000 = 9615.38bps
+   785                          ;   WR1
+   786   00033b 3e01                ld  a, 1
+   787   00033d d325                out (SIO_Ch0_C), a
+   788   00033f af                  xor a
+   789   000340 d325                out (SIO_Ch0_C), a
+   790                          ;   WR2
+   791   000342 3e02                ld  a, 2
+   792   000344 d325                out (SIO_Ch0_C), a
+   793   000346 af                  xor a
+   794   000347 d325                out (SIO_Ch0_C), a
+   795                          ;   WR4
+   796   000349 3e04                ld  a, 4
+   797   00034b d325                out (SIO_Ch0_C), a
+   798   00034d 3e44                ld  a, 44h
+   799   00034f d325                out (SIO_Ch0_C), a
+   800                          ;   WR5~7
+   801   000351 3e05                ld  a, 5
+   802   000353 d325                out (SIO_Ch0_C), a
+   803   000355 af                  xor a
+   804   000356 d325                out (SIO_Ch0_C), a
+   805   000358 3e06                ld  a, 6
+   806   00035a d325                out (SIO_Ch0_C), a
+   807   00035c af                  xor a
+   808   00035d d325                out (SIO_Ch0_C), a
+   809   00035f 3e07                ld  a, 7
+   810   000361 d325                out (SIO_Ch0_C), a
+   811   000363 af                  xor a
+   812   000364 d325                out (SIO_Ch0_C), a
+   813                          ;   WR3
+   814   000366 3e03                ld  a, 3
+   815   000368 d325                out (SIO_Ch0_C), a
+   816   00036a 3ec1                ld  a, 0C1h
+   817   00036c d325                out (SIO_Ch0_C), a
+   818                          ;
+   819                          ;;  Ch1 configure
+   820                          ;   Set CTC_Ch2
+   821   00036e cd2903              call    conf_CTC_Ch2
+   822                              ;   13 counts, SIO prescale is 16, (13*16)/2000000 = 9615.38bps
+   823                          ;
+   824   000371 c9                  ret
+   825                          
+   826                          ;;
+   827                          ;;; Proto2 7seg device drive
+   828                          ;;
+   829                          drv_7seg:
+   830                          ;;  switch state ... ahh, dirty code.
+   831   000372 af                  xor a
+   832   000373 47                  ld  b, a
+   833   000374 3a10f8              ld  a, (SEG_STATE)
+   834   000377 4f                  ld  c, a
+   835                          ;
+   836   000378 fe00                cp  S_SEG_0
+   837   00037a 2806                jr  z, drv_7seg_S0
+   838   00037c fe05                cp  S_SEG_5
+   839   00037e 2834                jr  z, drv_7seg_S2
+   840   000380 3829                jr  c, drv_7seg_S1
+   841                          
+   842                          drv_7seg_S0:    ; output 7seg
+   843                          ;;  get 7seg anode line
+   844   000382 3a00f8              ld  a, (PO_2_BUP)
+   845   000385 cd0003              call    out_PO_2
+   846   000388 e6fc                and 11111100b
+   847   00038a cb27                sla a
+   848   00038c 3002                jr  nc, drv_7seg_S0_1
+   849   00038e 3e04                ld  a, 00000100b
+   850                                          ; set anode line 0
+   851                          drv_7seg_S0_1:
+   852                          ;;  7seg anode line set(post)
+   853   000390 4f                  ld  c, a
+   854   000391 3a00f8              ld  a, (PO_2_BUP)
+   855   000394 e603                and 00000011b
+   856                                          ; erase anode line
+   857   000396 b1                  or  c       ; set new anode line
+   858   000397 cd0003              call    out_PO_2
+   859                          ;
+   860                          ;;  getting cathode data ... get anode line,
+   861   00039a 3a11f8              ld  a, (SEG_POS)
+   862   00039d 0600                ld  b, 0    ; already
+   863   00039f 4f                  ld  c, a
+   864                          ;;  set display data pointer,
+   865   0003a0 dd2112f8            ld  ix, SEG_0
+   866   0003a4 dd09                add ix, bc
+   867                          ;;  get cahode data, and output
+   868   0003a6 dd7e00              ld  a, (ix)
+   869   0003a9 d301                out (PO_1), a
+   870                                          ; OUTPUT cathode line
+   871                          
+   872                          drv_7seg_S1:    ; do nothing
+   873                          ;
+   874   0003ab dd2110f8            ld  ix, SEG_STATE
+   875   0003af dd3400              inc (ix)
+   876   0003b2 1817                jr  drv_7seg_end
+   877                          
+   878                          drv_7seg_S2:    ; 7seg blanking
+   879   0003b4 af                  xor a       ; before blanking
+   880   0003b5 d301                out (PO_1), a
+   881                          ;
+   882   0003b7 dd2110f8            ld  ix, SEG_STATE
+   883   0003bb dd360000            ld (ix), S_SEG_0
+   884                          
+   885                          drv_7seg_exit:
+   886                          ;;  inclease anode line number
+   887   0003bf 3a11f8              ld  a, (SEG_POS)
+   888   0003c2 3c                  inc a
+   889   0003c3 fe06                cp  6
+   890   0003c5 3801                jr  c, drv_7seg_S0_ex2
+   891                          ;;  reset anode line
+   892   0003c7 af                  xor a
+   893                          drv_7seg_S0_ex2:
+   894   0003c8 3211f8              ld  (SEG_POS), a
+   895                          ;
+   896                          drv_7seg_end:
+   897   0003cb c9                  ret
+   898                          
+   899                          ;;
+   900                          ;;; for debug routines
+   901                          ;;
+   902                          debug_rst08:
+   903   0003cc 3e60                ld  a, 01100000b    ; 1
+   904   0003ce d301                out (PO_1), a
+   905   0003d0 3e04                ld  a, 00000100b    ; anode line 0
+   906   0003d2 d302                out (PO_2), a
+   907   0003d4 76                  halt
+   908   0003d5 c9                  ret
+   909                          
+   910                          debug_rst10:
+   911   0003d6 3eda                ld  a, 11011010b    ; 2
+   912   0003d8 d301                out (PO_1), a
+   913   0003da 3e08                ld  a, 00001000b    ; anode line 1
+   914   0003dc d302                out (PO_2), a
+   915   0003de 76                  halt
+   916   0003df c9                  ret
+   917                          
+   918                          debug_rst18:
+   919   0003e0 3ef2                ld  a, 11110010b    ; 3
+   920   0003e2 d301                out (PO_1), a
+   921   0003e4 3e10                ld  a, 00010000b    ; anode line 2
+   922   0003e6 d302                out (PO_2), a
+   923   0003e8 76                  halt
+   924   0003e9 c9                  ret
+   925                          
+   926                          DEBUGSTOP:
+   927                              ; *** DEBUG ***
+   928   0003ea 3a10f8              ld  a, (SEG_STATE)
+   929   0003ed d301                out (PO_1), a
+   930   0003ef 3e04                ld  a, 00000100b
+   931   0003f1 d302                out (PO_2), a
+   932   0003f3 76                  halt
+   933                              ; *** DEBUG ***
+   934   0003f4 18f4                jr  DEBUGSTOP       ; ignore it.
+   935                          
+   936                          get_PC:
+   937   0003f6 dde1                pop ix              ; IX = PC
+   938   0003f8 dde5                push    ix          ; push back
+   939   0003fa dd2b                dec ix
+   940   0003fc dd2b                dec ix
+   941   0003fe dd2b                dec ix
+   942                          ;
+   943   000400 c9                  ret
+   944                          

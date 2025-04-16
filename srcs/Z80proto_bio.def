@@ -1,0 +1,23 @@
+;;  Z80proto_bio.def -- definition for Z80proto Basic I/O devices
+
+i8253_C0    EQU 10h
+i8253_C1    EQU 11h
+i8253_C1_LSB    EQU 40h
+i8253_C1_MSB    EQU 9Ch
+i8253_C2    EQU 12h
+i8253_CC    EQU 13h
+;
+PO_0        EQU 00h
+PI_0        EQU 0Ch
+ROMSEL      EQU 08h
+PAGE1       EQU 09h
+;
+; SPI device addr.
+SPI_DEVID_NULL  EQU 00000000b
+SPI_DEVID_Ch0   EQU 00100000b
+SPI_DEVID_Ch1   EQU 01000000b
+SPI_DEVID_Ch2   EQU 01100000b
+
+; 25FL016A command
+SPIROM_CMD_WRSR EQU 01h
+SPIROM_CMD_FAST_READ    EQU 0Bh
