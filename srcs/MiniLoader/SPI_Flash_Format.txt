@@ -10,7 +10,7 @@ ex:25F016(セクタサイズ64kB)の場合：
 1F4000～1FFFFF：システム予約(ボードチェッカー等)
 
 ・ファイルアロケーションテーブル構造
-union SPI_Flash_FAT // ←Cならtypedef struct
+union SPI_Flash_FAT
 {
     union char FAT[ 16 ];
     struct  FAT_struct
@@ -25,7 +25,7 @@ union SPI_Flash_FAT // ←Cならtypedef struct
         u_char pad:7;        // reserved(not used)
         bool executive:1;    // load and exec.
 
-	    // store & exec addr., read length, sector name
+        // store & exec addr., read length, sector name
         void *addr_head;     // 2bytes(big endian)
         u_short length;      // 2bytes(big endian)
         void *addr_exec;     // 2bytes(big endian)

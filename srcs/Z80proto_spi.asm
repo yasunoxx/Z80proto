@@ -14,11 +14,11 @@ MOSI    EQU 4
 spi_dev_sel:
     push    bc
 ;
-    ld  a, (SPI_SELD_DEV)
+    ld  a, (SPI_SELD_DEV) ; FIXME
     ld  c, a
 ;
     in  a, (PI_0)
-    and 00000011b
+    and 11000011b
     or  c
     OUT (PO_0), a
 ;
@@ -28,7 +28,7 @@ spi_dev_sel:
 ;;
 spi_dev_unsel:
     ld  a, SPI_DEVID_NULL
-    ld  (SPI_SELD_DEV), a
+    ld  (SPI_SELD_DEV), a ; FIXME
     jr  spi_dev_sel
 
 ;;
@@ -45,7 +45,7 @@ spi_read_8bit:
 spi_read_8bit_2:
     sla e
 ;;  clock 'H'
-;;  A reg = (PI_0) AND 00000011b OR SPI_SELD_DEV
+;;  A reg = (PI_0) AND 11000011b OR 
     set SCLK, a
     out (PO_0), a
     ld  c, a
@@ -100,7 +100,7 @@ spi_write_8bit_L:
 spi_write_8bit_3:
     out (PO_0), a
 ;;  clock 'H'
-;;  A reg = (PI_0) AND 00000011b OR SPI_SELD_DEV
+;;  A reg = (PI_0) AND 11000011b OR SPI_SELD_DEV
     set SCLK, a
 ;
     out (PO_0), a

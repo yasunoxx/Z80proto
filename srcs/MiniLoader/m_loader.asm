@@ -3,11 +3,6 @@
 ;   assemble: zcc +embedded --no-crt m_loader.asm -o m_loader.bin -m --list
 ;             (or 'make')
 
-    include "../Z80proto_bio.def"
-    include "../z80sioctc.def"
-    include "../Z80proto_seg.def"
-    include "../memmap.def"
-
 ;;
 ;;; Program
 ;;
@@ -19,7 +14,17 @@ rst00:
     include "config.asm"
 ;
     jp main
-
+;
+    include "../Z80proto_bio.def"
+if TARGET_Z80PROTO == 2
+    include "../z80sioctc.def"
+endif
+if (TARGET_SAKI80 == 1|TARGET_Z84C01X == 1)
+    include "../saki80sioctc.def"
+endif
+    include "../Z80proto_seg.def"
+    include "../memmap.def"
+;
     include "../crt_z80_rsts.asm"
 
 ; ----------------------------------------------------------------------------
@@ -29,6 +34,20 @@ rst00:
 ; ----------------------------------------------------------------------------
 ;
 main:
+if (TARGET_SAKI80 == 1|TARGET_Z84C01X == 1)
+    ; disable WDT()
+WDTER   EQU 0F0h
+WDTCR   EQU 0F1h
+    ld  a, 01111011b
+    out (WDTER), a
+    ld  a, 0B1h
+    out (WDTCR), a
+    ld  a, 4Eh
+    out (WDTCR), a
+    ; for debug
+    in  a, (WDTER)
+endif
+    ;
     xor a
     out (PO_0), a
     out (PO_1), a
@@ -42,7 +61,7 @@ main:
 
 ;; initialize system devices
 init:
-    ld  bc, 0789h
+    ld  bc, 0FEDCh
     call    sloop
 ;
 if INTERRUPT_MODE == 2
@@ -54,6 +73,10 @@ if INTERRUPT_MODE == 1
 ;;  for im1
     call    conf_timer1
     call    conf_timer_other
+endif
+;
+if DEBUG_PPIOUT == 1
+    call    DEBUG_PPIOUT_SETUP
 endif
 ;
     call    conf_sysmem
@@ -83,6 +106,8 @@ loader: ; Loader title
     ld  de, SEG_0
     ld  bc, 6
     ldir
+;
+;
 
 ;; Loader title to SIO0
     ld  hl, STR_loader_title
@@ -92,8 +117,9 @@ loader: ; Loader title
     in  a, (PI_0)
     bit 2, a
 ;; branch here
-    jp  z, spirom_read00
+;    jp  z, spirom_read00
 
+;
 ;;
 ;;;
 ;;;; Console Mode
@@ -105,6 +131,7 @@ loader_cons: ; Console title
     ld  bc, 6
     ldir
 ;
+    PUBLIC  loader_cons_oneliner
 loader_cons_oneliner: ; Startup Console one line
     ld  hl, STR_loader_prompt
     call    puts_SIO0
@@ -114,6 +141,7 @@ loader_cons_oneliner: ; Startup Console one line
     xor a
     ld  (hl), a
     call    gets_SIO0
+;
 
 parse_cons: ;; parse command
 parse_cons_2:
@@ -139,10 +167,12 @@ parse_cons_3:
     cp  'J'
     jp  z, jump_cons
     ; Jnnnn : jump
-;
-;   cp  'M'
-;   jp  z, modify_cons
-;   ; Mnnnn : modify memory
+    cp  'M'
+    jp  z, modify_cons
+    ; Mnnnnxx : modify memory data xx to address nnnn
+    cp  ':'
+    jp  z, ihex_load
+    ; :nnnn.... : Intel HEX format text load and store
 ;   cp  'S'
 ;   jp  z, upload_srec_1line
 ;   ; Sxxxx... : S-record type memory modify
@@ -165,98 +195,22 @@ parse_cons_3:
 ;   cp  'O'
 ;   jp  z, output_srec
 ;   ; O : output S-record format
+;   cp  'T'
+;   jp  z, test_mode
+;   ; T : for test usage
 ;   cp  'N'
 ;   jp  z, noun_verb_mode
 ;   ; N : for debug mode ...
 ;
     jp  loader_cons_oneliner
 
-jump_cons: ;   jump addr
-    ld  ix, BUF_CON
-    inc ix
-    call    p_ix2bc
-;
-    ld  ix, bc  ; dump start address
-    jp  (ix)
+    extern  jump_cons           ; command_j.asm
+    extern  modify_cons         ; command_m.asm
+    extern  dump_cons           ; command_d.asm
+    extern  ihex_load           ; command_i.asm
 
-dump_cons: ;   dump 128 bytes
-    ld  ix, BUF_CON
-    inc ix
-    call    p_ix2bc
-;
-    ld  de, bc  ; dump start address
-;
-; dump 128 bytes, 16 bytes x 8 lines
-    ld  b, 8
-dump_cons_loop: ; Address
-    call    dump_cons2      ; as de2buf_sio0tx
-    push    hl
-    ld  hl, BUF_SIO0TX
-    call    puts_SIO0
-    pop hl
-;
-    ld  a, ':'
-    call    putchar_SIO0
-; output 16 bytes and Increment
-    call    dump_cons3
-    push    hl
-    ld  hl, 16
-    add hl, de
-    ex  de, hl
-    pop hl
-    djnz    dump_cons_loop
-;
-    jp  loader_cons_oneliner
+    PUBLIC  de2buf_sio0tx
 
-dump_cons3: ; output 4bytes x 4
-    push    bc
-    push    de
-    push    ix
-;
-dump_cons3_2:
-    ld  b, 8
-    ld  ix, de
-
-dump_cons3_3:
-    ld  a, (ix)
-    ld  d, a
-    inc ix
-    ld  a, (ix)
-    ld  e, a
-    inc ix
-;
-    call    dump_cons2      ; as de2buf_sio0tx
-    push    hl
-    ld  hl, BUF_SIO0TX
-    call    puts_SIO0
-    pop hl
-;
-    ld  a, b
-    cp  7
-    jr  z, dump_cons3_4
-    cp  5
-    jr  z, dump_cons3_4
-    cp  3
-    jr  z, dump_cons3_4
-    jr  dump_cons3_5
-dump_cons3_4:
-    ld  a, ' '
-    call    putchar_SIO0
-dump_cons3_5:
-    djnz    dump_cons3_3
-;
-    ld  a, CR
-    call    putchar_SIO0
-    ld  a, LF
-    call    putchar_SIO0
-;
-    pop ix
-    pop de
-    pop bc
-;
-    ret
-
-dump_cons2:
 de2buf_sio0tx: ; DE(4 nibbles) -> BUF_SIO0TX
     push    bc
     push    hl
@@ -277,7 +231,6 @@ de2buf_sio0tx: ; DE(4 nibbles) -> BUF_SIO0TX
     xor a
     call    nibble2a
 ;
-dump_cons2_end:
     ld  a, NULL
     ld  (bc), a
 ;
@@ -299,19 +252,18 @@ spirom_loadIndex:
 ;; exit
     jp  loader_cons_oneliner
 
-;; spirom_read00 -- Autoboot: Read Sector 00 and execute
+;; spirom_read00 -- Autoboot: Read Sector 31 and execute
 spirom_read00:
     call    spirom_setWRSR
 ;
     ld  a, SPI_DEVID_Ch1
-    ld  (SPI_SELD_DEV), a
+    ld  (SPI_SELD_DEV), a ; FIXME
     call    spi_dev_sel
 ;
     ld  ix, 1F00h   ; FAT block 0~15
     call    spirom_setAddr
     call    spirom_read256toBUF
 ;
-;;  for debug: display addresses
     ld  de, (BUF_SPIROM + 2)    ; Destination Address
     call    de2buf_sio0tx
     ld  hl, BUF_SIO0TX
@@ -339,7 +291,7 @@ spirom_read00:
 ;   reset ROM
     call    spi_dev_unsel
     ld  a, SPI_DEVID_Ch1
-    ld  (SPI_SELD_DEV), a
+    ld  (SPI_SELD_DEV), a ; FIXME
     call    spi_dev_sel
 ;
     ld  ix, 0       ; sector 0 / block 0
@@ -370,7 +322,7 @@ spirom_readIndex:
     call    spirom_setWRSR
 ;
     ld  a, SPI_DEVID_Ch1
-    ld  (SPI_SELD_DEV), a
+    ld  (SPI_SELD_DEV), a ; FIXME
     call    spi_dev_sel
 ;
 ;    ld  ix, 1F01h   ; FAT block 16~31
@@ -403,7 +355,7 @@ spirom_read256_loop:
 
 spirom_setWRSR: ; read on fast read data mode, destroy AF
     ld  a, SPI_DEVID_Ch1
-    ld  (SPI_SELD_DEV), a
+    ld  (SPI_SELD_DEV), a ; FIXME
     call    spi_dev_sel
 ;
     ld  a, SPIROM_CMD_WRSR
@@ -489,8 +441,7 @@ int_SIO:
     push    ix
     ld  ix, F_STAT_SIO0
     bit F_STAT_RECEIVE, (ix)
-    jr  nz, int_SIO_Ch0_RCA
-    jr  int_SIO_exit
+    jr  z, int_SIO_exit
 ;
 int_SIO_Ch0_RCA:
     res F_STAT_RECEIVE, (ix)
@@ -638,7 +589,7 @@ drv_7seg_S0:    ; output 7seg
 drv_7seg_S0_1: ;; 7seg anode line set(post)
     ld  c, a
     ld  a, (PO_2_BUP)
-    and 00000011b
+    and 11000011b
                 ; erase anode line
     or  c       ; set new anode line
     call    out_PO_2
@@ -772,10 +723,29 @@ SEG_TITLE_CONS:
 
 STR_loader_title:
     defm    "\x0D\x0A\x0D\x0A\x0D\x0AMiniLoader"
+if TARGET_Z80PROTO == 1
+    defm    "/Proto1"
+endif
+if TARGET_Z80PROTO == 2
+    defm    "/Proto2"
+endif
+if TARGET_SAKI80 == 1
+    defm    "/SAKI80"
+endif
+if TARGET_Z84C01X == 1
+    defm    "/Z84C01x"
+endif
     defb    CR
     defb    LF
     defb    NULL
 
 STR_loader_prompt:
     defm    ">>>"
+    defb    NULL
+
+    PUBLIC  STR_error
+STR_error:
+    defm    "Error.\x0D\x0A"
+    defb    CR
+    defb    LF
     defb    NULL

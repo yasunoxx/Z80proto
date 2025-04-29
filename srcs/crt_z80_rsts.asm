@@ -105,6 +105,7 @@ nmi:
 
     defs    4
 
+if INTERRUPT_MODE == 2
         defs    $0070-ASMPC
 Vectors:
 ;   0070h~  CTC
@@ -124,5 +125,6 @@ INTSIO:
 ;   007Ah   DMA
 INTDMA:
     defw    int_void
+endif
 
         defs    $0080-ASMPC

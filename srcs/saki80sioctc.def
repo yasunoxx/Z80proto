@@ -1,0 +1,37 @@
+;	saki80sioctc.def -- for Super AKI-80
+
+	DEFC	CTC_Ch0 = 10h
+	DEFC	CTC_Ch1 = 11h
+	DEFC	CTC_Ch2 = 12h
+	DEFC	CTC_Ch3 = 13h
+	DEFC	SIO_Ch0_D = 18h
+	DEFC	SIO_Ch0_C = 19h
+	DEFC	SIO_Ch1_D = 1Ah
+	DEFC	SIO_Ch1_C = 1Bh
+;
+	; SIO clock: 9600bps nearly = 52/2000000
+	; (26 counts * 16(timer mode!), SIO prescale is 1, (52*16*1)/8000000 = 9615.38bps)
+	DEFC	CTC_SIO0_PRESC = 52
+	DEFC	CTC_SIO1_PRESC = 52
+;
+; SCI Control Characters
+	DEFC	NULL = 0
+	DEFC	BELL = 07h
+	DEFC	CR = 0Dh
+	DEFC	LF = 0Ah
+	DEFC	DELETE = 7Fh
+	DEFC	BACKSPACE = 08h
+
+; Flags F_STAT_SIOn
+	DEFC	F_STAT_ALLSENT = 0
+	DEFC	F_STAT_BREAK   = 1
+	DEFC	F_STAT_RECEIVE = 2
+	DEFC	F_STAT_TXEMPTY = 3
+;
+;;	external address
+;	extern	INTSIO
+;	extern	INTCTC
+	extern	putAreg2chrs
+;
+;	INTPR(Interrupt Priority), WDTER & WDTPR(Watchdog timer + HALT mode) are defaults.
+;	configure in user application if you desire use WDT and HALT mode. -- yasunoxx

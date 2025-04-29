@@ -21,29 +21,46 @@ conf_CTC:
 ;
     xor a       ; Interrupt Vector MSB
     ld  i, a
-    ld  a, INTCTC - rst00  ; Interrupt Vector LSB
+    ld  a, INTCTC & 00FFh  ; Interrupt Vector LSB
     out(CTC_Ch0), a
 ;
 conf_CTC_Ch0:
+if TARGET_Z80PROTO == 2
     ld  a, 10000111b
                 ; Ch0
                 ; Interrupt Enable
                 ; Timer Mode
-                ; Prescaler 1/16φ
+                ; Prescaler SYSCLK/16
                 ; Down Edge
                 ; No Trigger Start
                 ; Next: Time Constant
                 ; Reset Enable, Timer start when write Time Constant
                 ; This is configuration, not Interrupt Vector
     out(CTC_Ch0), a
-    ld  a, 250  ; (16*250)/4000000 = 4000, 1msec/Interrupt
+    ld  a, 250  ; 1/((16*250)/4000000) = 1000, 1msec/Interrupt
+endif
+if (TARGET_SAKI80 == 1|TARGET_Z84C01X == 1)
+    ld  a, 10100111b
+                ; Ch0
+                ; Interrupt Enable
+                ; Timer Mode
+                ; Prescaler SYSCLK/256
+                ; Down Edge
+                ; No Trigger Start
+                ; Next: Time Constant
+                ; Reset Enable, Timer start when write Time Constant
+                ; This is configuration, not Interrupt Vector
+    out(CTC_Ch0), a
+    ld  a, 31  ; 1/((256*31)/8000000) = 1008.064, 1msec/Interrupt
+endif
     out(CTC_Ch0), a
 ;
     ret
 ;
+
+if TARGET_Z80PROTO == 2
 conf_CTC_Ch1: ;; call from conf_SIO_Ch0
     ld  a, 01000111b
-                ; Ch1
                 ; Interrupt Disable
                 ; Counter Mode
                 ; Down Edge
@@ -51,39 +68,62 @@ conf_CTC_Ch1: ;; call from conf_SIO_Ch0
                 ; Reset Enable, Counter start when write Time Constant
                 ; This is configuration, not Interrupt Vector
     out(CTC_Ch1), a
-    ld  a, 13  ; 13/2000000
+    ld  a, CTC_SIO0_PRESC
     out(CTC_Ch1), a
 ;
     ret
 
 conf_CTC_Ch2: ;; call from conf_SIO_Ch1
     ld  a, 01000111b
-                ; Ch2
-                ; same as Ch1
+                ; same as CTC_Ch1
     out(CTC_Ch2), a
-    ld  a, 13  ; 13/2000000
+    ld  a, CTC_SIO0_PRESC
     out(CTC_Ch2), a
 ;
     ret
+endif
 
-conf_SIO: ;;  Ch0 configure
+if TARGET_SAKI80 == 1
+conf_CTC_Ch3: ;; call from conf_SIO_Ch0
+    ld  a, 00000111b
+                ; Interrupt Disable
+                ; Timer Mode
+                ; Prescaler SYSCLK/16
+                ; Negative edge start, begins rising edge of T2
+                ; Next: Time Constant
+                ; Reset Enable, Counter start when write Time Constant
+                ; This is configuration, not Interrupt Vector
+    out(CTC_Ch3), a
+    ld  a, CTC_SIO0_PRESC
+    out(CTC_Ch3), a
+;
+    ret
+endif
+
+conf_SIO:
+;;  Ch0 configure
+if TARGET_Z80PROTO == 2
     call    conf_CTC_Ch1
-    ;   13 counts, SIO prescale is 16, (13*16)/2000000 = 9615.38bps
+endif
+if TARGET_SAKI80 == 1
+    call    conf_CTC_Ch3
+endif
 ;
     ld  b, 12
     ld  c, SIO_Ch0_C
     ld  hl, SIO0_CONF
     otir
 ;
+if TARGET_Z80PROTO == 2
 ;;  Ch1 configure
 ;   Set CTC_Ch2
     call    conf_CTC_Ch2
-    ;   13 counts, SIO prescale is 16, (13*16)/2000000 = 9615.38bps
 ;
     ld  b, 6
     ld  c, SIO_Ch1_C
     ld  hl, SIO1_CONF
     otir
+endif
 ;
     ret
 
@@ -93,7 +133,7 @@ SIO1_CONF:
     defb    00011000b
 ;   WR2, Interrupt Vector
     defb    2
-    defb    INTSIO - rst00
+    defb    INTSIO & 00FFh
 ;   WR1, Wait/Ready functions and Interrupt behavior
     defb    1
     defb    0           ; disable all(TORIAEZU)
@@ -105,24 +145,33 @@ SIO0_CONF:
 ;   WR2, Interrupt Vector(but Ch0 is not effect)
     defb    2
     defb    0
+if TARGET_Z80PROTO == 2
 ;   WR4, Rx and Tx control
     defb    4
-    defb    01000100b    ; x16 clock, Async. Mode 1 stop bit, non parity
+    defb    01000100b   ; x16 clock, Async. Mode 1 stop bit, non parity
+endif
+if (TARGET_SAKI80 == 1|TARGET_Z84C01X == 1)
+;   WR4, Rx and Tx control
+    defb    4
+    defb    00000100b   ; x1 clock, Async. Mode 1 stop bit, non parity
+endif
 ;   WR3, Receiver Logic control
     defb    3
-    defb    11000001b    ; Rx 8bit, not Auto Enables, Rx enable
-;    defb    11100001b    ; Rx 8bit, Auto Enables, Rx enable
+    defb    11000001b   ; Rx 8bit, not Auto Enables, Rx enable
 ;   WR5, Transmit control
     defb    5
-    defb    01101000b    ; Tx 8bit, Tx enable
+    defb    01101000b   ; Tx 8bit, Tx enable
 ;   WR1, Wait/Ready functions and Interrupt behavior
     defb    1
-    defb    00011100b    ; Wait/Ready disable, Rx INT on All receive character,
-                        ; but parity error is not sp. condx., use Status Affects Vector,
+if SIO_RX_INT == 0
+    defb    00000000b   ; Wait/Ready disable, no Rx INT
                         ; Tx INT & Ext./Stat. INT disable
-;    defb    00001100b    ; Wait/Ready disable, Rx INT on First receive character,
-;                        ; set Status Affects Vector(but ignore it),
-;                        ; Tx INT & Ext./Stat. INT disable
+endif
+if SIO_RX_INT == 1
+    defb    00011000b   ; Wait/Ready disable, Rx INT on All receive character,
+                        ; but parity error is not sp. condx.,
+                        ; Tx INT & Ext./Stat. INT disable
+endif
 
 analyze_SIO0:   ;; get status flags, and reset error
     push    af
@@ -213,6 +262,7 @@ analyze_SIO0_end:
 ;
     ret
 
+    PUBLIC  putchar_SIO0
 putchar_SIO0: ;;  A = Transmit Character
     push    af
     push    ix
@@ -234,8 +284,17 @@ putchar_SIO0_2:
     ret
 
 getchar_SIO0: ;;  A = Receive Character
-    push    af
     push    bc
+if SIO_RX_INT == 0
+    xor a
+    out (SIO_Ch0_C), a
+    in  a, (SIO_Ch0_C)
+    bit 0, a
+    jr  z, getchar_SIO0_norecv
+    in  a, (SIO_Ch0_D)
+    ld  (BUF_GETCHAR_SIO0), a
+endif
+if SIO_RX_INT == 1
 ; Compare Read Pointer and Write Pointer
     ld  a, (PTR_BUF_SIO0_RX_READ)
     ld  b, 0
@@ -258,6 +317,7 @@ getchar_SIO0: ;;  A = Receive Character
     inc a
     and 00111111b
     ld  (PTR_BUF_SIO0_RX_READ), a
+endif
 ;
     jr  getchar_SIO0_exit
 ;
@@ -267,7 +327,6 @@ getchar_SIO0_norecv:
 ;
 getchar_SIO0_exit:
     pop bc
-    pop af
     ld  a, (BUF_GETCHAR_SIO0)
 ;
     ret
@@ -355,7 +414,10 @@ init_SIO_buffers:
 ;
     ret
 
+    PUBLIC  putAreg2chrs
 putAreg2chrs:   ; A register -> 2 characters, and put SIO0
+    push    af
+    push    hl
     push    af
     srl a
     srl a
@@ -374,3 +436,7 @@ putAreg2chrs:   ; A register -> 2 characters, and put SIO0
     ld  l, a
     ld  a, (hl)
     call    putchar_SIO0
+;
+    pop hl
+    pop af
+    ret

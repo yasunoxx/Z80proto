@@ -9,6 +9,11 @@
 	DEFC	SIO_Ch1_D = 26h
 	DEFC	SIO_Ch1_C = 27h
 ;
+	; SIO clock: 9600bps nearly = 13/2000000
+	; (13 counts, SIO prescale is 16, (13*16)/2000000 = 9615.38bps)
+	DEFC	CTC_SIO0_PRESC = 13
+	DEFC	CTC_SIO1_PRESC = 13
+;
 ; SCI Control Characters
 	DEFC	NULL = 0
 	DEFC	BELL = 07h
@@ -24,6 +29,6 @@
 	DEFC	F_STAT_TXEMPTY = 3
 ;
 ;;	external address
-	extern	INTSIO
-	extern	INTCTC
+;	extern	INTSIO
+;	extern	INTCTC
 	extern	putAreg2chrs
