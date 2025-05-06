@@ -8,8 +8,7 @@ CP/M-68kなどの移植を視野に入れて、CP/M80を動かす事をゴール
 ## Environment(動作環境)
 Tool                    | Description
 :-----------------------|:---------------------------------------------------
-**target**              | Z80(Z80proto2), Z84C(SAKI80), and other Z80 compat.
-                        | see sch[Z80proto2/sch](https://github.com/yasunoxx/Z80proto2/sch) folder
+**target**              | Z80(Z80proto2), Z84C(SAKI80), and other Z80 compat. see sch[Z80proto2/sch](https://github.com/yasunoxx/Z80proto2/sch) folder
 **z88dk**               | v19766-9ffe2042c-20220723
 **make**                | GNU Make 4.3, Built for x86_64-pc-linux-gnu
 **CAD**                 | KiCad Version (6.0.11), release build
@@ -22,7 +21,7 @@ Z80proto2 SAKI80(AKA Super AKI-80)サポート基板 -> 設計完了, 試作回�
 Software:
 ipl0 -> デバッグ完了。たぶんSAKI80でも動く
 memtest80 -> デバッグ完了。7seg表示必須(ゆえにSAKI80非対応)
-Miniloader -> フレームワークは完了, 機能追加と細かい仕様を詰めている
+Miniloader -> フレームワークは完了, 機能追加と細かい仕様を詰めている。kermitデバッグ中
 MiniMon, MiniMon-C -> MiniLoaderの拡張バージョン。ゆえにstatusはMiniLoaderと同様。機能追加中(FDC関連)&SAKI80対応作業中
 
 Additional(その他):
@@ -30,7 +29,7 @@ MSP430_SPI_LCD40x4 -> 設計完了, SPIターゲット機能デバッグ中
 freertos -> 実験的実装(EXPERIMENTAL), 動作は保証しません
 
 ## TODO(今後修正・追加すべきモノゴトと細かい話)
-0. SIOフロー制御の追加
+0. SIOフロー制御の追加 -> DTR*をアサート/ネゲートするだけの機能追加
 1. 回路構成の説明書作成 -> プログラムの読解が困難と考えられるため早急に
 2. TC6367コンパチビリティ廃止によるUW2の削除 -> FIXしたつもりだけれども慎重に確認が必要 -> Proto2基板によりロングランテストで確認中
 3. TMPZ84C015BのSIO受信割込 -> 受信割込有効後1byteでフリーズする問題の原因特定と解決(後述)
@@ -42,12 +41,13 @@ freertos -> 実験的実装(EXPERIMENTAL), 動作は保証しません
 ## Known Problem(既知の問題)
 TMPZ84C015BのSIOAにおいて、受信割込有効後1byteでフリーズする問題が起きています。現在、開発に使用しているデバイス単体の問題なのか、仕様の違いによる問題なのかの特定が出来ていません。そのため、getchar_SIO0サブルーチン(z80sio_sub.asm)でポーリング受信をしています。Z80SIOの受信バッファは3bytesなので、他の重い処理を行っている時にバッファオーバーランする可能性があります。この問題はZ80proto2基板(LH0085使用)では起きていません。
 SAKI80サポート基板において、現在の設計では使用部品の個体差(ゲート遅延など)によってRead/Writeが間に合わない場合があります。WAIT回路の追加を慎重に検討しています。現状では、アクセス時間の短いROM/RAMを選択する(55nsecでギリギリ？)、ゲート遅延の短いバッファを使用する(HCよりもVHCやABTがオススメ)などを検討してください。
-SIO送受信において、フロー制御が実装されていません。現状、ポーリング受信では取りこぼしや文字化けが発生します。ターミナル側で送信遅延(10~20msec/char)を調整すると良いようです。proto2用SIO＆CTCモジュールとSAKI80にはRTS/CTS配線が存在するので、ハードフローを実装する予定です。
+SIO送受信において、フロー制御が実装されていません。現状、ポーリング受信では取りこぼしや文字化けが発生します。ターミナル側で送信遅延(10~20msec/char)を調整すると良いようです。proto2用SIO＆CTCモジュールとSAKI80にはDTR/DSR配線が存在するので、ハードフローを実装する予定です。
 
 ## LICENSE(ライセンス)
 ソースツリーには、FreeRTOS-Kernel(FreeRTOSv202406.01-LTS)の一部が含まれています。
 [FreeRTOS/FreeRTOS](https://github.com/FreeRTOS/FreeRTOS)
 使用しているデバイスについて、メーカーがデータシートなどで開示している技術情報は、各社に工業所有権があります。
+kermit.cは、Frank da Cruz氏によるkermit.basをCに移植したものです。
 "Super AKI-80"、"スーパーAKI-80"は、株式会社秋月電子通商の商標です。
 私(yasunoxx▼Julia)が書いたプログラムは、MITライセンスで開示しています。
 本プログラム[Z80proto2](https://github.com/yasunoxx/Z80proto2)を使用した/使用しない事による全ての結果について、上記権利者と私は何の保証も賠償も致しません。

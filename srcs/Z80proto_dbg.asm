@@ -95,12 +95,15 @@ LCD_RW  EQU 7
 DEBUG_PPIOUT_SETUP_2:
     ld  a, (hl)
     inc hl
+    res LCD_RW, a
     out (c), a
     nop
     set LCD_ES, a
     out (c), a
+    nop
     res LCD_ES, a
     out (c), a
+    nop
     ;
     push    bc
     ld  bc, 4F0h ; approx. 1.5msec/8MHz
@@ -115,12 +118,15 @@ DEBUG_PPIOUT_SETUP_2:
 DEBUG_PPIOUT_SETUP_3:
     ld  a, (hl)
     inc hl
+    res LCD_RW, a
     out (c), a
     nop
     set LCD_ES, a
     out (c), a
+    nop
     res LCD_ES, a
     out (c), a
+    nop
     ;
     push    bc
     ld  bc, 1CCh ; approx. 6.9msec/8MHz
@@ -146,28 +152,31 @@ HD44780INIT_2:
 DEBUG_PBOUT: ; A = output
     di
     ;
-    out (DEBUG_PPIPB), a
-    ei
-    ret
-    ;
     push    af
     srl a
     srl a
     srl a
     srl a
+    res LCD_RW, a
     set LCD_RS, a
     out (DEBUG_PPIPB), a
+    nop
     set LCD_ES, a
     out (DEBUG_PPIPB), a
+    nop
     res LCD_ES, a
     out (DEBUG_PPIPB), a
-    pop af
+    nop
     ;
+    pop af
     and 0Fh
+    res LCD_RW, a
     set LCD_RS, a
     out (DEBUG_PPIPB), a
+    nop
     set LCD_ES, a
     out (DEBUG_PPIPB), a
+    nop
     res LCD_ES, a
     out (DEBUG_PPIPB), a
     ;

@@ -21,6 +21,14 @@
 	DEFC	LF = 0Ah
 	DEFC	DELETE = 7Fh
 	DEFC	BACKSPACE = 08h
+	DEFC	DC1 = 11h
+	DEFC	DC3 = 13h
+	DEFC	XON = 11h
+	DEFC	XOFF = 13h
+
+; Control bits to host DTE
+	DEFC	BIT_DTR = 7
+	DEFC	BIT_RTS = 1
 
 ; Flags F_STAT_SIOn
 	DEFC	F_STAT_ALLSENT = 0

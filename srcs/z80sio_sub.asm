@@ -1,5 +1,5 @@
 ;;
-;;; SIO subroutines
+;;; SIO & CTTC subroutines
 ;;
 ;    include "../z80sioctc.def"
 ;    include "../memmap.def"
@@ -160,6 +160,8 @@ endif
     defb    11000001b   ; Rx 8bit, not Auto Enables, Rx enable
 ;   WR5, Transmit control
     defb    5
+    PUBLIC  SIO0_WR5
+SIO0_WR5:
     defb    01101000b   ; Tx 8bit, Tx enable
 ;   WR1, Wait/Ready functions and Interrupt behavior
     defb    1
@@ -291,8 +293,47 @@ if SIO_RX_INT == 0
     in  a, (SIO_Ch0_C)
     bit 0, a
     jr  z, getchar_SIO0_norecv
+getchar_SIO0_2:
+;    ld  a, 5
+;    out (SIO_Ch0_C), a
+getchar_SIO0_2_2:
+;    ; Send XOFF
+;    in  a, (SIO_Ch0_C)
+;    bit 2, a
+;    jr  z, getchar_SIO0_2_2
+;    ld  a, XOFF
+;    out (SIO_Ch0_D), a
+    ; Set RTS(RFR) or DTR
+    ld  a, 5
+    out (SIO_Ch0_C), a
+    ld  a, (SIO0_WR5)
+    set BIT_RTS, a
+    set BIT_DTR, a
+    out (SIO_Ch0_C), a
+
+    ; data receive and analyze
     in  a, (SIO_Ch0_D)
     ld  (BUF_GETCHAR_SIO0), a
+    call    analyze_SIO0
+
+    push    af
+;    ; Send XON
+;    ld  a, 5
+;    out (SIO_Ch0_C), a
+getchar_SIO0_2_3:
+;    in  a, (SIO_Ch0_C)
+;    bit 2, a
+;    jr  z, getchar_SIO0_2_3
+;    ld  a, XON
+;    call    putchar_SIO0
+    ; Reset RTS(RFR) or DTR
+    ld  a, 5
+    out (SIO_Ch0_C), a
+    ld  a, (SIO0_WR5)
+    res BIT_RTS, a
+    res BIT_DTR, a
+    out (SIO_Ch0_C), a
+    pop af
 endif
 if SIO_RX_INT == 1
 ; Compare Read Pointer and Write Pointer

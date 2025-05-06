@@ -210,7 +210,6 @@ parse_cons_3:
     extern  ihex_load           ; command_i.asm
 
     PUBLIC  de2buf_sio0tx
-
 de2buf_sio0tx: ; DE(4 nibbles) -> BUF_SIO0TX
     push    bc
     push    hl
@@ -436,6 +435,15 @@ int_CTC:
 
 int_SIO:
     push    af
+
+    ; Set RTS(RFR) or DTR
+    ld  a, 5
+    out (SIO_Ch0_C), a
+    ld  a, (SIO0_WR5)
+    set BIT_RTS, a
+    set BIT_DTR, a
+    out (SIO_Ch0_C), a
+
     call    analyze_SIO0    ; Get stat and Error Recovery
 ;
     push    ix
@@ -469,6 +477,15 @@ int_SIO_Ch1:
 
 int_SIO_exit:
     pop ix
+
+    ; Reset RTS(RFR) or DTR
+    ld  a, 5
+    out (SIO_Ch0_C), a
+    ld  a, (SIO0_WR5)
+    res BIT_RTS, a
+    res BIT_DTR, a
+    out (SIO_Ch0_C), a
+
     pop af
 ;
     ei
