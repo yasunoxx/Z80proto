@@ -8,7 +8,7 @@ CP/M-68kなどの移植を視野に入れて、CP/M80を動かす事をゴール
 ## Environment(動作環境)
 Tool                    | Description
 :-----------------------|:---------------------------------------------------
-**target**              | Z80(Z80proto2), Z84C(SAKI80), and other Z80 compat. see sch[Z80proto2/sch](https://github.com/yasunoxx/Z80proto2/sch) folder
+**target**              | Z80(Z80proto2), Z84C(SAKI80), and other Z80 compat. see sch [Z80proto/sch](https://github.com/yasunoxx/Z80proto/sch) folder
 **z88dk**               | v19766-9ffe2042c-20220723
 **make**                | GNU Make 4.3, Built for x86_64-pc-linux-gnu
 **CAD**                 | KiCad Version (6.0.11), release build
