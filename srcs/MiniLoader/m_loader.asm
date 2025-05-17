@@ -158,9 +158,11 @@ parse_cons_2:
     ld  a, (hl)
 ;
 parse_cons_3:
+if WITH_SPI == 1
     cp  'L'
     jp  z, spirom_loadIndex
     ; L : load FAT0(0x1F0000~) into buffer
+endif
     cp  'D'
     jp  z, dump_cons
     ; Dnnnn : memory dump nnnn~+127 bytes
@@ -169,17 +171,27 @@ parse_cons_3:
     ; Jnnnn : jump
     cp  'M'
     jp  z, modify_cons
-    ; Mnnnnxx : modify memory data xx to address nnnn
+    ; Mnnnnxx : modify memory data 0x0xx to address 0x0nnnn
     cp  ':'
     jp  z, ihex_load
     ; :nnnn.... : Intel HEX format text load and store
+if WITH_KERMIT == 1
+;   cp  'K'
+;   jp  z, receive_kermit
+;   ; Knnnn : receive kermit protocol, store to 0x0nnnn
+endif
+if WITH_XYMODEM == 1
+;   cp  'X'
+;   jp  z, receive_XYMODEM
+;   ; Xnnnn : receive X/YMODEM protocol, store to 0x0nnnn
+endif
 ;   cp  'S'
 ;   jp  z, upload_srec_1line
 ;   ; Sxxxx... : S-record type memory modify
 ;   ; (accept S1, S2, S3 record, ignore other records)
 ;   cp  'C'
 ;   jp  z, command_to_spidev
-;   ; Cnnxx : send command address 'nn' data 'xx' to device 2
+;   ; Cnnxx : send command address 0x0nn data 0x0xx to device 2
 ;   cp  'R'
 ;   jp  z, read_in_spibuf
 ;   ; Rnnnn : read ROM 0xnnnn00~+255 bytes to buffer
@@ -188,10 +200,10 @@ parse_cons_3:
 ;   ; Wnnnn : write buffer to ROM 0xnnnn00~+255 bytes
 ;   cp  'P'
 ;   jp  z, in_port_cons
-;   ; Pnn : read I/O address 'nn'
+;   ; Pnn : read I/O address 0x0nn
 ;   cp  'Q'
 ;   jp  z, out_port_cons
-;   ; Pnnxx : write I/O address 'nn' data 'xx'
+;   ; Qnnxx : write I/O address 0x0nn data 0x0xx
 ;   cp  'O'
 ;   jp  z, output_srec
 ;   ; O : output S-record format
@@ -208,6 +220,12 @@ parse_cons_3:
     extern  modify_cons         ; command_m.asm
     extern  dump_cons           ; command_d.asm
     extern  ihex_load           ; command_i.asm
+if WITH_KERMIT == 1
+    extern  receive_kermit      ; command_k.asm
+endif
+if WITH_XYMODEM == 1
+    extern  receive_xymodem     ; command_x.asm
+endif
 
     PUBLIC  de2buf_sio0tx
 de2buf_sio0tx: ; DE(4 nibbles) -> BUF_SIO0TX
@@ -238,6 +256,7 @@ de2buf_sio0tx: ; DE(4 nibbles) -> BUF_SIO0TX
 ;
     ret
 
+if WITH_SPI == 1
 ;;
 ;;;
 ;;;; SPI loader Mode
@@ -381,7 +400,7 @@ spirom_setAddr: ; IX = read/wrte addr MSB 16bit(nnnn00h), destroy AF, HL
 ;
     ret
 ;
-
+endif
 
 ;;
 ;;; Interrupt Service Routines, and Peripherals subroutines
@@ -506,7 +525,7 @@ endif
 ;
 
 ;
-;; common ISR subroutune: counter decrement
+;; common ISR subroutune: counter decrement & SlowTick
 ;
 int_counter_dec:
 int_counter_16: ;;  decrement 16bit value
@@ -532,8 +551,27 @@ int_counter_8B:
 int_counter_8_end:
     ld  (V_CNT_8B), a
 ;
+if WITH_7SEG == 1
 ;; and drive 7seg
     call    drv_7seg
+endif
+;
+int_SysTick_16:
+    ld  hl, (SysTick)
+    inc hl
+    ld  (SysTick), hl
+int_SlowTick_16:
+    ld  hl, (SlowTick_B)
+    inc hl
+    bit 1, h
+    jr  z, int_SlowTick_16_end
+    ;
+    ld  hl, (SlowTick)
+    inc hl
+    ld  (SlowTick), hl
+    ld  hl, 0
+int_SlowTick_16_end:
+    ld  (SlowTick_B), hl
 ;
 ;; exit
     ret
@@ -580,6 +618,7 @@ conf_sysmem:
 ;;
 ;   --------------------------------------------------------------------------
 
+if WITH_7SEG == 1
 ;;
 ;;; drv_*: Proto2 7seg device drive
 ;;
@@ -648,14 +687,6 @@ drv_7seg_S0_ex2:
 drv_7seg_end:
     ret
 
-out_PO_2:
-    out (PO_2), a
-                ; OUTPUT anode line
-    ld  (PO_2_BUP), a
-                ; BACKUP PO_2
-;
-    ret
-
 ;;
 ;;; 7seg subroutines
 ;;
@@ -708,6 +739,16 @@ drv_7seg_sub_disp2_2:
     pop hl
     pop bc
     ret
+endif
+
+out_PO_2:
+    out (PO_2), a
+                ; OUTPUT anode line
+    ld  (PO_2_BUP), a
+                ; BACKUP PO_2
+;
+    ret
+
 
     include "../Z80proto_dbg.asm"
     include "../Z80proto_misc.asm"

@@ -25,28 +25,55 @@
 #define LF  11
 #define DEL 127
 
-#define print_console
-#define uint8_t unsigned char
+#include <stdint.h>
+#include <stdbool.h>
 
 uint8_t N, L, CHK, SEQ, EOL, CTL, TYP;
 uint8_t SNDBUF[ 128 ], RCVBUF[ 128 ], PKTDAT[ 100 ];
 
 void kermit_init( void );
-uint8_t kermit_sendinit( void );
+uint8_t kermit_receiveinit( void );
 uint8_t kermit_gethdrpkt( void );
 uint8_t kermit_getdatapkt( void );
 char kermit_getpkt( void );
-void kermit_putpkt( uint8_t );
+void kermit_putpkt( uint8_t * );
 uint8_t kermit_readpkt( void );
 uint8_t kermit_len( uint8_t * );
 void kermit_sendack( uint8_t * );
 uint8_t kermit_senderr( uint8_t * );
 
+#if defined evLPC2388 || defined evADuC7129
+#include "lpc2300.h"
+#include "uart.h"
+#include "xprintf.h"
+#include "lcd1602.h"
+extern uint8_t vic_SlowTick;
+//#define print_console xprintf
+#define print_console
+#else
+#define LCD_Clear
+#define LCD_SetCursorPos
+#define LCD_Puts
+#endif
+
 uint8_t kermit_main()
 {
     kermit_init();
-    if( 0 != kermit_sendinit() ) return 0x0FF;
-    kermit_getpkt();
+    LCD_Clear();
+    if( 0 != kermit_receiveinit() ) return 0x0FF;
+    LCD_Puts("receiveinit",16);
+    LCD_SetCursorPos(0, 1);
+    LCD_Clear();
+    TYP = 'Y';  // ACK
+    kermit_putpkt( NUL );
+    LCD_Puts("putpkt()",16);
+    LCD_SetCursorPos(0, 1);
+    while( 1 )
+    {
+        uint8_t buf[ 10 ];
+        xsprintf( buf, "%02X", uart0_getc() );
+        LCD_Puts( buf, 2 );
+    }
 //    while( 1 )
     {
         if( 0 != kermit_gethdrpkt() ) return 0x0FF;
@@ -71,7 +98,7 @@ void kermit_init()
 // 1020 OPEN "COM1:1200,N,8,,CS,DS" AS #1
 }
 
-uint8_t kermit_sendinit()
+uint8_t kermit_receiveinit()
 {
     char stat;
 // 2000 ' Get Send Initialization packet, exchange parameters.
@@ -80,11 +107,11 @@ uint8_t kermit_sendinit()
 // 2020 GOSUB 5000
     stat = kermit_getpkt();
 // 2030 IF TYP$ <> "S" THEN D$ = TYP$+" Packet in S State" : GOTO 9500
-    if( stat != 'S' )
+    if( stat != 'T' ) // AdHoc
     {
-        uint8_t str[] = "  Packet in S State";
+        uint8_t str[] = "  Packet in Initial State";
         str[ 0 ] = ( uint8_t )stat;
-        kermit_senderr( stat );
+        kermit_senderr( str );
         return 0x0FF;
     }
 // 2040 IF LEN(PKTDAT$) > 4 THEN EOL=ASC(MID$(PKTDAT$,5,1))-32 ELSE EOL=13
@@ -97,7 +124,7 @@ uint8_t kermit_sendinit()
         EOL = 13;
     }
 // 2050 IF LEN(PKTDAT$) > 5 THEN CTL=ASC(MID$(PKTDAT$,6,1)) ELSE CTL=ASC("#")
-    if( 5 < kermit_len( PKTDAT ) )
+    if( 5 == kermit_len( PKTDAT ) )
     {
         CTL = PKTDAT[ 5 ];
     }
@@ -106,7 +133,7 @@ uint8_t kermit_sendinit()
         CTL = '#';
     }
 // 2070 D$ = "H* @-#N1" : GOSUB 8020
-    kermit_sendack( ( uint8_t )"H* @-#N1" );
+    kermit_sendack( ( uint8_t * )"H* @-#N1" );
     return 0;
 } // next: kermit_gethdrpkt()
 
@@ -119,23 +146,23 @@ uint8_t kermit_gethdrpkt()
 // 3020 IF TYP$ = "B" THEN GOSUB 8000 : GOTO 9900
     if( stat == 'B' )
     {
-        kermit_sendack( ( uint8_t )"" );
+        kermit_sendack( ( uint8_t * )"" );
         return 0x0FF;
     }
 // 3030 IF TYP$ <> "F" THEN D$ = TYP$+" Packet in F State" : GOTO 9500
-    if( stat != 'S' )
+    if( stat != 'F' )
     {
-        uint8_t str[] = "  Packet in S State";
+        uint8_t str[] = "  Packet in F State";
         str[ 0 ] = ( uint8_t )stat;
-        kermit_senderr( stat );
+        kermit_senderr( str );
         return 0x0FF;
     }
 // 3040 PRINT "Receiving "; MID$(PKTDAT$,1,L);
     print_console( "Receiving\n" );
 // 3050 OPEN MID$(PKTDAT$,1,L) FOR OUTPUT AS #2
-    // ... write file ...
+    // ... write file name ...
 // 3060 GOSUB 8000
-    kermit_sendack( ( uint8_t )"" );
+    kermit_sendack( ( uint8_t * )"" );
 // next: kermit_getdatapkt()
     return 0;
 }
@@ -151,7 +178,7 @@ uint8_t kermit_getdatapkt()
 // 4020 IF TYP$ = "Z" THEN CLOSE #2 : GOSUB 8000 : PRINT "(OK)" : GOTO 3000
         if( stat == 'Z' )
         {
-            kermit_sendack( ( uint8_t )"" );
+            kermit_sendack( ( uint8_t * )"" );
             print_console( "(OK)\n" );
             break; // next: kermit_gethdrpkt()
         }
@@ -168,7 +195,7 @@ uint8_t kermit_getdatapkt()
 // 4040 PRINT #2, MID$(PKTDAT$,1,P);
     // ... write file ...
 // 4060 GOSUB 8000
-        kermit_sendack( ( uint8_t )"" );
+        kermit_sendack( ( uint8_t * )"" );
 // 4070 GOTO 4000
     }
     return 0;
@@ -180,36 +207,55 @@ char kermit_getpkt()
 // 5000 ' Try to get a valid packet with the desired sequence number.
 // 5010 GOSUB 7000
 // 5020 FOR TRY = 1 TO 5
-    for( loop = 0; loop < 5; loop++ )
+//    for( loop = 0; loop < 5; loop++ )
+    while( 1 )
     {
-// 5030   IF SEQ = N AND TYP$ <> "Q" THEN RETURN
-        if( 'Q' != kermit_readpkt() && SEQ == N )
+        // 5030   IF SEQ = N AND TYP$ <> "Q" THEN RETURN
+        char result = kermit_readpkt();
+
+        if( 'Q' != result && SEQ == N )
         {
             return 'Q';
         }
+        else
+        {
+            return result;
+        }
 // 5040   PRINT #1, SNDBUF$;
         // ... send data ...
+#ifdef WITH_TXFIFO
+#else
+//        uart0_puts( ( char * )SNDBUF );
+#endif
 // 5050   PRINT "%";
         print_console( "%" );
 // 5060   GOSUB 7000
+//        kermit_readpkt();
 // 5070 NEXT TRY
     }
 // 5080 TYP$ = "T" : RETURN
     return 'T';
+//    return kermit_readpkt();
 }
 
-void kermit_putpkt( uint8_t D )
+void kermit_putpkt( uint8_t *D )
 {
     uint8_t loop, CHKSUM;
 // 6000 ' Send a packet with data D$ of length L, type TYP$, sequence #N.
 // 6010 SNDBUF$ = CHR$(1)+CHR$(L+35)+CHR$(N+32)+TYP$+D$+" "+CHR$(EOL)
     SNDBUF[ 0 ] = SOH;
     SNDBUF[ 1 ] = L + 35;
-    SNDBUF[ 2 ] = N + 32;
+    SNDBUF[ 2 ] = ( N + 32 ) % 64;
     SNDBUF[ 3 ] = TYP;
-    SNDBUF[ 4 ] = D;
-    SNDBUF[ 5 ] = " ";
-    SNDBUF[ 6 ] = EOL;
+    loop = 4;
+    while( 1 )
+    {
+        if( D[ loop - 4 ] == NUL ) break;
+        SNDBUF[ loop ] = D[ loop - 4 ];
+        loop++;
+    }
+    SNDBUF[ loop++ ] = ' ';
+    SNDBUF[ loop++ ] = EOL;
 // 6020 CHKSUM = 0
     CHKSUM = 0;
 // 6030 FOR I = 2 TO L+4
@@ -222,26 +268,64 @@ void kermit_putpkt( uint8_t D )
 // 6060 CHKSUM = (CHKSUM + ((CHKSUM AND 192) \ 64)) AND 63
     CHKSUM = ( CHKSUM + (( CHKSUM & 192 ) / 64 ) & 63 );
 // 6070 MID$(SNDBUF$,L+5) = CHR$(CHKSUM + 32)
-    SNDBUF[ ++loop ] = CHKSUM + 32;
+    SNDBUF[ ++loop ] = CHKSUM + 32; // tochar()
     SNDBUF[ ++loop ] = NUL;
 // 6080 PRINT #1, SNDBUF$;
     // ... send data ...
+#ifdef WITH_TXFIFO
+#else
+    uart0_puts( ( char * )SNDBUF );
+#endif
 // 6100 RETURN
 }
 
-uint8_t kermit_instr( uint8_t *search, uint8_t target )
+int16_t kermit_instr( uint8_t *search, uint8_t target )
+// INSTR statement is find target in search[]
+// if use Receive buffer's pointer, search = pointer.
+// if not use buffer, should return Receive Data.
 {
     uint8_t count = 0;
 
+    {
+#ifndef WITH_RXBUF
+        uint8_t prevTick = SlowTick;
+        while( 1 )
+        {
+            uint8_t recv;
+            while( ( U0LSR & 0x1 ) == 0L )
+            {
+                if( SlowTick >= prevTick + 2 )  // watchcat 1sec.
+                {
+                    return -1;
+                }
+            }
+            recv = U0RBR;
+
+            search[ count++ ] = recv;
+            search[ count-- ] = NUL;
+            if( recv == CR || recv == LF )
+            {
+                break;
+            }
+            count++;
+        }
+#else
+        // copy RxBuf or RxFIFO to scratchpad ...
+#endif
+    }
+
+    count = 0;
     while( 1 )
     {
-        if( search[ count ] == CR || search[ count ] == LF )
+        if( search[ count ] == CR || search[ count ] == LF ||
+            search[ count ] == NUL )
         {
-            return 0;
+            return -1;
         }
         if( search[ count ] == target )
         {
-            return target;
+//            return target;
+            return count;
         }
         count++;
     }
@@ -249,34 +333,51 @@ uint8_t kermit_instr( uint8_t *search, uint8_t target )
 
 uint8_t kermit_readpkt()
 {
+    int16_t instr;
     uint8_t SOHpos, T, P, FLAG, loop;
 // 7000 ' Routine to Read and Decode a Packet.
 // 7010 LINE INPUT #1, RCVBUF$
 // 7020 I = INSTR(RCVBUF$,CHR$(1))
 // 7030 IF I = 0 THEN TYP$ = "Q" : RETURN
-    SOHpos = kermit_instr( RCVBUF, SOH );
-    if( 0 == SOHpos )
+    while( 1 )
     {
-        return 'Q';
+        instr = kermit_instr( RCVBUF, SOH );
+        if( instr >= 0 ) break;
     }
+    SOHpos = kermit_instr( RCVBUF, SOH );
 
+    // RCVBUF[](Raw Packet) is SOH, LEN, SEQ, (TYP, DAT), CHECK
+    // but TeraTerm kermit is initate transfer:
+    // LEN, 0x2C, 0x40, CR ... LEN = 0x2C are Wrong.
+    // SEQ = 0x40 looks like valid.
+    // 
+    //MARK, TYP and DAT is required, what is "REQUIRED?"
+    loop = 0;
+    while( 1 )
+    {
+        if( RCVBUF[ loop++ ] == NUL ) break;
+    }
+    // RCVBUF[ --loop ] is CHECK;
 // 7100 CHK   = ASC(MID$(RCVBUF$,I+1,1)) : L   = CHK - 35
-    CHK = RCVBUF[ SOHpos + 1 ];
-    L = CHK - 35;
+    L = RCVBUF[ SOHpos + 1 ];   // LEN
 // 7110 T     = ASC(MID$(RCVBUF$,I+2,1)) : SEQ = T - 32 : CHK = CHK + T
-    T = RCVBUF[ SOHpos + 2 ];
+    T = RCVBUF[ SOHpos + 2 ];   // SEQ
     SEQ = T - 32;
     CHK += T;
 // 7120 TYP$  =     MID$(RCVBUF$,I+3,1)  : CHK = CHK + ASC(TYP$)
-    TYP = RCVBUF[ SOHpos + 3 ];
+    TYP = RCVBUF[ SOHpos + 3 ]; // TYP
     CHK += TYP;
 
-// 7130 P = 0 : FLAG = 0 : PKTDAT$ = STRING$(100,32)
+    if( L < 2 ) return 'T'; //AdHoc
+    // FIXME: ホントはTYPを観たいけれども、無いんだから仕方がない
+    // 
+
+    // 7130 P = 0 : FLAG = 0 : PKTDAT$ = STRING$(100,32)
     P = 0;
     FLAG = 0;
     for( loop = 0; loop < 100; loop++)
     {
-        PKTDAT[ loop ] = SPC;
+        PKTDAT[ loop ] = NUL;
     }
 // 7200 FOR J = I+4 TO I+3+L
     for( loop = ( SOHpos + 4 ); loop < ( SOHpos + 3 + L ); loop++ )
@@ -312,6 +413,7 @@ uint8_t kermit_readpkt()
         }
 // 7400 NEXT J
 L7400:
+        ;
     }
 // 7420 CHK = (CHK + ((CHK AND 192) \ 64)) AND 63
 //  check = tochar((s + ((s AND 192)/64)) AND 63)
@@ -331,11 +433,11 @@ uint8_t kermit_len( uint8_t *str )
     uint8_t count = 0;
     while( 1 )
     {
-        count++;
         if( str[ count ] == NUL )
         {
             return count;
         }
+        count++;
     }
 }
 
@@ -345,7 +447,8 @@ void kermit_sendack( uint8_t *str )
 // 8010 D$ = ""
 // 8020 TYP$ = "Y" : L = LEN(D$) : GOSUB 6000
     L = kermit_len( str );
-    kermit_putpkt( 'Y' );
+    TYP = 'Y';
+    kermit_putpkt( str );
 // 8030 N = (N + 1) AND 63
     N = ( N + 1 ) & 63;
 // 8040 IF (N AND 3) = 0 THEN PRINT ".";
@@ -365,7 +468,8 @@ uint8_t kermit_senderr( uint8_t *str )
 // 9500 ' Error packet sender...
 // 9520 L = LEN(D$) : TYP$ = "E" : GOSUB 6000
     L = kermit_len( str );
-    kermit_putpkt( 'E' );
+    TYP = 'E';
+    kermit_putpkt( str );
     return 'E';
 }
 

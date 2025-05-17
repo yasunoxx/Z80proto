@@ -6,11 +6,12 @@ ASMSRC = $(TARGET).asm
 ASMOBJ = $(TARGET).o
 BIN = $(TARGET).bin
 OBJS = $(ASMOBJ) command_j.o command_d.o command_m.o command_i.o \
-	command_x.o xymodem.o
+command_k.o kermit.o
 MAP = $(TARGET).map
-ASFLAGS = -DWITH_XYMODEM=0 -DWITH_KERMIT=0 -DWITH_7SEG=1 -DWITH_SPI=1
+ASFLAGS = -DWITH_KERMIT=1 -DWITH_7SEG=0 -DWITH_SPI=0
 CFLAGS = +embedded
 LDFLAGS = +embedded --no-crt -m 
+#-Llib2 -lembedded_clib2
 
 .PHONY:	all $(OBJS)
 
@@ -18,8 +19,8 @@ all: $(OBJS)
 	$(AS) $(ASFLAGS) $(ASMSRC) -o$(ASMOBJ)
 	$(CC) $(LDFLAGS) $(OBJS) -o $(BIN)
 
-xymodem.o:
-	$(CC) $(CFLAGS) -c xymodem.c
+kermit.o:
+	$(CC) $(CFLAGS) -c kermit.c
 
 clean:
 	rm -f $(BIN) $(OBJS) $(MAP) *.lis

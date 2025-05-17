@@ -1,4 +1,4 @@
-;; command_m.asm -- 'M' command implement for MiniMon
+;; command_d.asm -- 'd' command implement for MiniMon/MiniLoader
 ;
     include "../z80sioctc.def"
     include "../memmap.def"
@@ -8,6 +8,7 @@
     EXTERN  de2buf_sio0tx
     EXTERN  putchar_SIO0
     EXTERN  puts_SIO0
+    EXTERN  putCRLF
     EXTERN  loader_cons_oneliner
 dump_cons:
 ; Dnnnn : memory dump nnnn~+127 bytes
@@ -76,10 +77,7 @@ dump_cons3_4:
 dump_cons3_5:
     djnz    dump_cons3_3
 ;
-    ld  a, CR
-    call    putchar_SIO0
-    ld  a, LF
-    call    putchar_SIO0
+    call    putCRLF
 ;
     pop ix
     pop de

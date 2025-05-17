@@ -266,6 +266,8 @@ analyze_SIO0_end:
 
     PUBLIC  putchar_SIO0
 putchar_SIO0: ;;  A = Transmit Character
+    PUBLIC  _putchar_SIO0
+_putchar_SIO0:
     push    af
     push    ix
     ld  ix, F_STAT_SIO0
@@ -287,6 +289,10 @@ putchar_SIO0_2:
 
 getchar_SIO0: ;;  A = Receive Character
     push    bc
+    ld  b, a
+    xor a
+    ld  (BUF_GETCHAR_SIO0+1), a
+    ld  a, b
 if SIO_RX_INT == 0
     xor a
     out (SIO_Ch0_C), a
@@ -365,11 +371,28 @@ endif
 getchar_SIO0_norecv:
     ld  a, NULL
     ld  (BUF_GETCHAR_SIO0), a
+    ld  a, 0FFh
+    ld  (BUF_GETCHAR_SIO0+1), a
 ;
 getchar_SIO0_exit:
     pop bc
     ld  a, (BUF_GETCHAR_SIO0)
 ;
+    ret
+
+    PUBLIC  _getchar_SIO0
+_getchar_SIO0:
+; as uint16_t getchar_SIO0( void )
+    call    getchar_SIO0
+    ld  a, (BUF_GETCHAR_SIO0+1)
+    cp  0FFh
+    jr  nz, _getchar_SIO0_2
+    ;
+    ld  h, a
+    ld  l, a    ; HL = 0FFFFh = -1
+    ret
+_getchar_SIO0_2:
+    ld  hl, (BUF_GETCHAR_SIO0)  ; HL = 0000h to 00FFh
     ret
 
 puts_SIO0: ;;  HL = String Addr.(NULL Term.)
@@ -480,4 +503,12 @@ putAreg2chrs:   ; A register -> 2 characters, and put SIO0
 ;
     pop hl
     pop af
+    ret
+
+    PUBLIC  putCRLF
+putCRLF:
+    ld  a, CR
+    call    putchar_SIO0
+    ld  a, LF
+    call    putchar_SIO0
     ret

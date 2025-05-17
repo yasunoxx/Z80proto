@@ -1,4 +1,4 @@
-;; command_m.asm -- 'M' command implement for MiniMon
+;; command_m.asm -- 'M' command implement for MiniMon/MiniLoader
 ;
     include "../memmap.def"
 
