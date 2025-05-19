@@ -55,6 +55,10 @@ xymodem.cは、Chuck Forsberg氏による10-14-88版ドキュメントより作�
 
 "Super AKI-80"、"スーパーAKI-80"は、株式会社秋月電子通商の商標です。
 
+lcdlib.cは、Sakazume氏(http://219.117.208.26/~saka/ham/LCD2/)による実装です。
+
+xprintf.cは、CHaN氏(http://elm-chan.org/fsw.html)による実装の一部を利用させて頂きました。
+
 私(yasunoxx▼Julia)が書いたプログラムは、MITライセンスで開示しています。本プログラム[Z80proto2](https://github.com/yasunoxx/Z80proto2)を使用した/使用しない事による全ての結果について、上記権利者と私は何の保証も賠償も致しません。
 
 ## FAQ(よくあるしつもん、そしてツッコミ)

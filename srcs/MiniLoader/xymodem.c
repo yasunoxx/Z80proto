@@ -32,21 +32,31 @@ uint16_t CRC;
 #if defined evLPC2388 || defined evADuC7129
 #include "lpc2300.h"
 #include "uart.h"
-#include "xprintf.h"
-#include "lcd1602.h"
 extern volatile uint16_t vic_SlowTick;
 #define SlowTick vic_SlowTick
 #define _NOP() LCD_NOP()
-#else   // Z80poto
-#define LCD_Clear()
-#define LCD_SetCursorPos()
-#define LCD_Puts()
-#define _NOP()
+#define USE_LCD 1
+#define LCD_initIO()
+#else   // Z80proto
+void _NOP()
+{
+#asm
+    nop
+#endasm
+}
 extern volatile uint16_t SlowTick;
 extern  uint16_t getchar_SIO0( void );
 extern  void putchar_SIO0( uint8_t );
+extern  void puts_SIO0( uint8_t * );
 #define uart0_getc()    getchar_SIO0()
 #define uart0_putc(x)   putchar_SIO0(x)
+#define USE_LCD 1
+#define LCD_initIO() DEBUG_PPIOUT_SETUP()
+#endif
+
+#if USE_LCD
+#include "xprintf.h"
+#include "lcd1602.h"
 #endif
 
 void xymodem_init( void );
@@ -64,7 +74,10 @@ uint8_t xymodem_main()
 {
     uint8_t result = false, result2 = false, retryCount = 0;
 
+#if USE_LCD
+    LCD_initIO();
     LCD_Clear();
+#endif
     xymodem_init();
     while( 1 )
     {
@@ -82,7 +95,7 @@ uint8_t xymodem_main()
         }
         else
         {
-#if defined evLPC2388 || defined evADuC7129
+#if USE_LCD
             LCD_SetCursorPos(0, 1);
             LCD_Puts("R/NAK",16);
 #endif
@@ -90,7 +103,7 @@ uint8_t xymodem_main()
         if( result2 == true )
 #endif
         {
-#if defined evLPC2388 || defined evADuC7129
+#if USE_LCD
             LCD_SetCursorPos(0, 1);
             LCD_Puts("R/ACK",16);
 #endif
@@ -107,7 +120,7 @@ uint8_t xymodem_main()
         }
         else
         {
-#if defined evLPC2388 || defined evADuC7129
+#if USE_LCD
             LCD_SetCursorPos(0, 1);
             LCD_Puts("R/NAK",16);
 #endif
@@ -151,7 +164,7 @@ int16_t get_SIO0_polling( void )
         return -1;
     }
 #else   // Z80proto
-
+        return getchar_SIO0();
 #endif
 }
 
@@ -236,7 +249,7 @@ uint8_t xymodem_receive( uint16_t wait )
             return NAK;
     }
     limit += 5;
-#if defined evLPC2388 || defined evADuC7129
+#if USE_LCD
     {
         uint8_t cbuf[ 10 ];
         LCD_SetCursorPos(0, 0);
@@ -265,7 +278,7 @@ uint8_t xymodem_receive( uint16_t wait )
         }
         if( count >= limit ) // receive succeed(maybe)
         {
-#if defined evLPC2388 || defined evADuC7129
+#if USE_LCD
             {
                 uint8_t cbuf[ 10 ];
                 xsprintf( cbuf, "->%4d", count );
@@ -278,7 +291,7 @@ uint8_t xymodem_receive( uint16_t wait )
         }
         if( SlowTick > prevTick + wait )
         {
-#if defined evLPC2388 || defined evADuC7129
+#if USE_LCD
             {
                 uint8_t cbuf[ 10 ];
                 xsprintf( cbuf, "-X%4d", count );

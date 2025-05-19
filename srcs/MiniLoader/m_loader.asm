@@ -361,10 +361,12 @@ spirom_read256_loop:
     call    spi_read_8bit
     ld  (ix), a
     inc ix
+if WITH_7SEG == 1
 ;; disp readdata
     ld  a, b
-    cpl a
+    cpl a   ; ???
     call    drv_7seg_sub_disp2
+endif
 ;
     djnz    spirom_read256_loop
 ;

@@ -264,10 +264,12 @@ analyze_SIO0_end:
 ;
     ret
 
-    PUBLIC  putchar_SIO0
-putchar_SIO0: ;;  A = Transmit Character
     PUBLIC  _putchar_SIO0
 _putchar_SIO0:
+    ld  a, l
+;
+    PUBLIC  putchar_SIO0
+putchar_SIO0: ;;  A = Transmit Character
     push    af
     push    ix
     ld  ix, F_STAT_SIO0
@@ -395,6 +397,8 @@ _getchar_SIO0_2:
     ld  hl, (BUF_GETCHAR_SIO0)  ; HL = 0000h to 00FFh
     ret
 
+    PUBLIC  _puts_SIO0
+_puts_SIO0:
 puts_SIO0: ;;  HL = String Addr.(NULL Term.)
     push    af
 ;

@@ -1,14 +1,16 @@
 CC = zcc
 AS = z88dk-z80asm
+DASM = z88dk-dis
 TARGET = m_loader
 
 ASMSRC = $(TARGET).asm
 ASMOBJ = $(TARGET).o
 BIN = $(TARGET).bin
 OBJS = $(ASMOBJ) command_j.o command_d.o command_m.o command_i.o \
-	command_x.o xymodem.o
+	command_x.o xymodem.o \
+	lcdlib.o xprintf.o
 MAP = $(TARGET).map
-ASFLAGS = -DWITH_XYMODEM=0 -DWITH_KERMIT=0 -DWITH_7SEG=1 -DWITH_SPI=1
+ASFLAGS = -DWITH_XYMODEM=1 -DWITH_KERMIT=0 -DWITH_7SEG=0 -DWITH_SPI=1
 CFLAGS = +embedded
 LDFLAGS = +embedded --no-crt -m 
 
@@ -17,9 +19,16 @@ LDFLAGS = +embedded --no-crt -m
 all: $(OBJS)
 	$(AS) $(ASFLAGS) $(ASMSRC) -o$(ASMOBJ)
 	$(CC) $(LDFLAGS) $(OBJS) -o $(BIN)
+	$(DASM) -x $(MAP) $(BIN) > $(TARGET).lst
 
 xymodem.o:
 	$(CC) $(CFLAGS) -c xymodem.c
 
+lcdlib.o:
+	$(CC) $(CFLAGS) -c lcdlib.c
+
+xprintf.o:
+	$(CC) $(CFLAGS) -c xprintf.c
+
 clean:
-	rm -f $(BIN) $(OBJS) $(MAP) *.lis
+	rm -f $(BIN) $(OBJS) $(MAP) *.lis *.lst
