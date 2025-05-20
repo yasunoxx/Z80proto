@@ -7,10 +7,10 @@ ASMSRC = $(TARGET).asm
 ASMOBJ = $(TARGET).o
 BIN = $(TARGET).bin
 OBJS = $(ASMOBJ) command_j.o command_d.o command_m.o command_i.o \
-	command_x.o xymodem.o \
-	lcdlib.o xprintf.o
+	command_x.o xymodem.o
+#	lcdlib.o xprintf.o
 MAP = $(TARGET).map
-ASFLAGS = -DWITH_XYMODEM=1 -DWITH_KERMIT=0 -DWITH_7SEG=0 -DWITH_SPI=1
+ASFLAGS = -DWITH_XYMODEM=1 -DWITH_7SEG=0 -DWITH_SPI=1
 CFLAGS = +embedded
 LDFLAGS = +embedded --no-crt -m 
 

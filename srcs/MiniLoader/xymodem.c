@@ -50,7 +50,7 @@ extern  void putchar_SIO0( uint8_t );
 extern  void puts_SIO0( uint8_t * );
 #define uart0_getc()    getchar_SIO0()
 #define uart0_putc(x)   putchar_SIO0(x)
-#define USE_LCD 1
+#define USE_LCD 0
 #define LCD_initIO() DEBUG_PPIOUT_SETUP()
 #endif
 

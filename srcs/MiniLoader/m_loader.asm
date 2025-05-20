@@ -49,6 +49,10 @@ WDTCR   EQU 0F1h
 endif
     ;
     xor a
+if WITH_SPI == 1
+    out (PO_0), a
+endif
+if SUPMOD == 1
     out (PO_0), a
     out (PO_1), a
     out (PO_2), a
@@ -58,11 +62,12 @@ endif
 ;
     ld  a, 00000100b    ; Initial PO_2 value
     call    out_PO_2
+endif
 
 ;; initialize system devices
 init:
-    ld  bc, 0FEDCh
-    call    sloop
+    ld  bc, 0FEDCh  ; long wait
+    call    sloop   ; BC = wait loop count
 ;
 if INTERRUPT_MODE == 2
 ;;  for im2
@@ -75,13 +80,11 @@ if INTERRUPT_MODE == 1
     call    conf_timer_other
 endif
 ;
-if DEBUG_PPIOUT == 1
-    call    DEBUG_PPIOUT_SETUP
-endif
-;
     call    conf_sysmem
 ;
+if SUPMOD == 1
     call    spi_dev_unsel
+endif
 ;
     ei
 
