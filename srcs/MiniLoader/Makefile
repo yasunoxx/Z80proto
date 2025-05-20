@@ -11,7 +11,7 @@ OBJS = $(ASMOBJ) command_j.o command_d.o command_m.o command_i.o \
 #	lcdlib.o xprintf.o
 MAP = $(TARGET).map
 ASFLAGS = -DWITH_XYMODEM=1 -DWITH_7SEG=0 -DWITH_SPI=1
-CFLAGS = +embedded
+CFLAGS = +embedded -DUSE_LCD=0
 LDFLAGS = +embedded --no-crt -m 
 
 .PHONY:	all $(OBJS)

@@ -266,11 +266,14 @@ analyze_SIO0_end:
 
     PUBLIC  _putchar_SIO0
 _putchar_SIO0:
+    push    af
     ld  a, l
+    jr  putchar_SIO0_0
 ;
     PUBLIC  putchar_SIO0
 putchar_SIO0: ;;  A = Transmit Character
     push    af
+putchar_SIO0_0:
     push    ix
     ld  ix, F_STAT_SIO0
 putchar_SIO0_1:

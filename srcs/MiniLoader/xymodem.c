@@ -25,7 +25,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-uint8_t TxBuf[ 64 ], RxBuf[ 1034 ];
+uint8_t RxBuf[ 1034 ]; // FIXME: allocate MiniLoader/MiniMon side@Z80proto
 uint8_t Serial, CRCH, CRCL;
 uint16_t CRC;
 
@@ -35,7 +35,7 @@ uint16_t CRC;
 extern volatile uint16_t vic_SlowTick;
 #define SlowTick vic_SlowTick
 #define _NOP() LCD_NOP()
-#define USE_LCD 1
+//#define USE_LCD 1 // set/reset in Makefile
 #define LCD_initIO()
 #else   // Z80proto
 void _NOP()
@@ -50,7 +50,7 @@ extern  void putchar_SIO0( uint8_t );
 extern  void puts_SIO0( uint8_t * );
 #define uart0_getc()    getchar_SIO0()
 #define uart0_putc(x)   putchar_SIO0(x)
-#define USE_LCD 0
+//#define USE_LCD 0 // set/reset in Makefile
 #define LCD_initIO() DEBUG_PPIOUT_SETUP()
 #endif
 

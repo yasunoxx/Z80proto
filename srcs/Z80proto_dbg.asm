@@ -74,111 +74,15 @@ get_PC:
     ret
 
 if DEBUG_PPIOUT == 1
+_DEBUG_PPIOUT_SETUP:
 DEBUG_PPIOUT_SETUP:
     di
     ;
     push    af
-    push    bc
-    push    hl
     ld a, 10011001b ; Group A&B mode0, PB = OUTPUT
     out (DEBUG_PPICTRL), a
-;   
-
-LCD_ES  EQU 5
-LCD_RS  EQU 6
-LCD_RW  EQU 7
-; DB4~7 EQU 0123
-    ld  hl, HD44780INIT
-    ld  c, DEBUG_PPIPB
-    ;
-    ld  b, 3
-DEBUG_PPIOUT_SETUP_2:
-    ld  a, (hl)
-    inc hl
-    res LCD_RW, a
-    out (c), a
-    nop
-    set LCD_ES, a
-    out (c), a
-    nop
-    res LCD_ES, a
-    out (c), a
-    nop
-    ;
-    push    bc
-    ld  bc, 4F0h ; approx. 1.5msec/8MHz
-    call    sloop
-    pop bc
-    ;
-    djnz    DEBUG_PPIOUT_SETUP_2
-
-    ;
-    ld  hl, HD44780INIT_2
-    ld  b, 12
-DEBUG_PPIOUT_SETUP_3:
-    ld  a, (hl)
-    inc hl
-    res LCD_RW, a
-    out (c), a
-    nop
-    set LCD_ES, a
-    out (c), a
-    nop
-    res LCD_ES, a
-    out (c), a
-    nop
-    ;
-    push    bc
-    ld  bc, 1CCh ; approx. 6.9msec/8MHz
-    call    sloop
-    pop bc
-    ;
-    djnz    DEBUG_PPIOUT_SETUP_3
-    ;
-    pop hl
-    pop bc
-    pop af
-    ;
-    ei
-    ret
-
-HD44780INIT:
-    defb    0000b, 0011b, 0011b
-HD44780INIT_2:
-    defb    0011b, 0010b, 0010b, 1000b
-    defb    0000b, 1000b, 0000b, 0001b 
-    defb    0000b, 0110b, 0000b, 1100b
-
-DEBUG_PBOUT: ; A = output
-    di
-    ;
-    push    af
-    srl a
-    srl a
-    srl a
-    srl a
-    res LCD_RW, a
-    set LCD_RS, a
-    out (DEBUG_PPIPB), a
-    nop
-    set LCD_ES, a
-    out (DEBUG_PPIPB), a
-    nop
-    res LCD_ES, a
-    out (DEBUG_PPIPB), a
-    nop
     ;
     pop af
-    and 0Fh
-    res LCD_RW, a
-    set LCD_RS, a
-    out (DEBUG_PPIPB), a
-    nop
-    set LCD_ES, a
-    out (DEBUG_PPIPB), a
-    nop
-    res LCD_ES, a
-    out (DEBUG_PPIPB), a
     ;
     ei
     ret

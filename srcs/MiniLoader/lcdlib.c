@@ -224,21 +224,19 @@ void LCD_ShiftCursor(signed int n)
 }
 
 /* ----------------------------------------------------------------------- /
-/  以下はハードウェア依存部分の実装                                           /
-/  ここではCQ-FRK-NXP-ARMマイコン用マザーボードに合わせた内容になっている       /
+/  以下はSAKI80ハードウェア依存部分の実装                                     /
 /  LCD Pin Assign4..7                                                      /
-/     D[4..7]  P0[]                                                        /
-/     RS       P0[9]                                                       /
-/     R/W      P0[0] not used                                              /
-/     EN       P0[8]                                                       /
+/     D[4..7]  PPI0-B Bit[0..3]                                            /
+/     RS       PPI0-B Bit[5]                                               /
+/     R/W      not used                                                    /
+/     EN       PPI0-B Bit[7]                                               /
 / ----------------------------------------------------------------------- */
 
 /* wait 100 nano second or more */
 static void _lcd_wait_100ns(void)
 {
 #asm
-    nop
-    nop
+    nop ; 4sysclk = 500nsec@16MHz
 #endasm
 }
 
@@ -247,10 +245,6 @@ static void _lcd_wait_100ns(void)
 static void _lcd_wait_300ns(void)
 {
 #asm
-    nop
-    nop
-    nop
-    nop
     nop
     nop
 #endasm
@@ -285,7 +279,7 @@ void _OUT_LCD( unsigned char val )
 */
 static void _lcd_write_no_busy_check(unsigned char rs, unsigned char data)
 {
-    unsigned char LCD;
+    unsigned char LCD = 0;
 
     LCD &= ~( 1<<LCD_EN );
     _OUT_LCD( LCD );
