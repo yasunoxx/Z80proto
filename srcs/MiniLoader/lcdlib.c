@@ -226,10 +226,10 @@ void LCD_ShiftCursor(signed int n)
 /* ----------------------------------------------------------------------- /
 /  以下はSAKI80ハードウェア依存部分の実装                                     /
 /  LCD Pin Assign4..7                                                      /
-/     D[4..7]  PPI0-B Bit[0..3]                                            /
-/     RS       PPI0-B Bit[5]                                               /
+/     D[4..7]  PIO0-B Bit[0..3]                                            /
+/     RS       PIO0-B Bit[5]                                               /
 /     R/W      not used                                                    /
-/     EN       PPI0-B Bit[7]                                               /
+/     EN       PIO0-B Bit[7]                                               /
 / ----------------------------------------------------------------------- */
 
 /* wait 100 nano second or more */
@@ -247,9 +247,9 @@ static void _lcd_wait_300ns(void)
 #asm
     nop
     nop
+    nop
 #endasm
 }
-
 
 /* wait T micro second or more */
 static void _lcd_wait_usec(unsigned int t)
@@ -257,22 +257,17 @@ static void _lcd_wait_usec(unsigned int t)
 	/* 1us = 72 clock cycles @ 72MHz */
     unsigned long i;
     i = t;
-    i <<= 3;            /* t = t * 8; */
+    i <<= 1;            /* t = t * 2; */
     while(i) {          /* 'while' takes ? cycles */
         _lcd_wait_300ns();
         i--;            /* 'i--' takes ? cycle */
 	}
 }
 
+extern unsigned char DEBUG_PIOA_DATA;
+extern void DEBUG_PIOOUT( void );
+#define _OUT_LCD(val) DEBUG_PIOA_DATA=val;DEBUG_PIOOUT();
 
-void _OUT_LCD( unsigned char val )
-{
-    register unsigned char LCD;
-#asm
-    DEFC PORTB = 31h
-    out ( PORTB ), a
-#endasm
-}
 /* write to LCD without BusyFlag check
 
  ENABLE cycle period needs minimum 1200 nsec.
@@ -281,22 +276,18 @@ static void _lcd_write_no_busy_check(unsigned char rs, unsigned char data)
 {
     unsigned char LCD = 0;
 
-    LCD &= ~( 1<<LCD_EN );
+//    LCD &= ~( 1<<LCD_EN );
     _OUT_LCD( LCD );
-    if( rs == 0 )
+    if( rs == 1 )
     {
         LCD |= 1<<LCD_RS;
-    }
-    else
-    {
-        LCD &= ~( 1<<LCD_RS );
     }
     _OUT_LCD( LCD );
     _lcd_wait_300ns();
 
     /* write data to D[4..7] */
-    LCD &= ~( 0b1111<<LCD_DATA );
-    LCD |= data<<LCD_DATA;
+//    LCD |= ( data<<LCD_DATA ) & 0x0F;
+    LCD |= ( data & 0x0F );
     _OUT_LCD( LCD );
     _lcd_wait_300ns();
     _lcd_wait_300ns();
@@ -326,10 +317,10 @@ static unsigned char _lcd_read_no_busy_check(unsigned char rs)
 }
 #endif /* _LCD_READ_SUPPORT_ */
 
-extern void DEBUG_PPIOUT_SETUP();
+extern void DEBUG_PIOOUT_SETUP();
 static void _lcd_init_hw_specific(void)
 {
-    DEBUG_PPIOUT_SETUP();
+    DEBUG_PIOOUT_SETUP();
 }
 
 /* ------------------------------------------------------------------------------ */

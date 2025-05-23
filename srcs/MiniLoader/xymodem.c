@@ -25,40 +25,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-uint8_t RxBuf[ 1034 ]; // FIXME: allocate MiniLoader/MiniMon side@Z80proto
-uint8_t Serial, CRCH, CRCL;
-uint16_t CRC;
-
-#if defined evLPC2388 || defined evADuC7129
-#include "lpc2300.h"
-#include "uart.h"
-extern volatile uint16_t vic_SlowTick;
-#define SlowTick vic_SlowTick
-#define _NOP() LCD_NOP()
-//#define USE_LCD 1 // set/reset in Makefile
-#define LCD_initIO()
-#else   // Z80proto
-void _NOP()
-{
-#asm
-    nop
-#endasm
-}
-extern volatile uint16_t SlowTick;
-extern  uint16_t getchar_SIO0( void );
-extern  void putchar_SIO0( uint8_t );
-extern  void puts_SIO0( uint8_t * );
-#define uart0_getc()    getchar_SIO0()
-#define uart0_putc(x)   putchar_SIO0(x)
-//#define USE_LCD 0 // set/reset in Makefile
-#define LCD_initIO() DEBUG_PPIOUT_SETUP()
-#endif
-
-#if USE_LCD
-#include "xprintf.h"
-#include "lcd1602.h"
-#endif
-
 void xymodem_init( void );
 uint8_t xymodem_receive( uint16_t );   // act receiving w/timeout
 uint8_t xymodem_chkcrc();
@@ -66,18 +32,67 @@ uint16_t updcrc( uint8_t );
 #define xymodem_startpkt() uart0_putc( 'C' );
 #define xymodem_sendack() uart0_putc( ACK );
 #define xymodem_sendnak() uart0_putc( NAK );
+typedef struct {
+uint8_t Serial, CRCH, CRCL;
+uint16_t CRC;
 uint8_t S_xymodem_state;
 uint8_t S_xymodem_EOTstate;
 uint8_t F_firstack;
+} _XYMODEM_WORK_t;
+
+#if defined evLPC2388 || defined evADuC7129
+    #include "lpc2300.h"
+    #include "uart.h"
+    uint8_t RxBuf[ 1034 ];
+    uint8_t cbuf[ 32 ];
+    extern volatile uint16_t vic_SlowTick;
+    volatile _XYMODEM_WORK_t XYW;
+    #define SlowTick vic_SlowTick
+    #define _NOP() LCD_NOP()
+    #define puts_SIO0 uart0_puts
+#else   // Z80proto
+    void _NOP()
+    {
+    #asm
+        nop
+    #endasm
+    }
+    extern volatile uint16_t SlowTick;
+    extern volatile _XYMODEM_WORK_t XYW;
+    extern volatile uint8_t BUF_SIO128_0[ 128 ];
+    extern volatile uint8_t BUF_SIO128_1[ 128 ];
+    #define RxBuf BUF_SIO128_0
+    #define cbuf BUF_SIO128_1
+    extern  int16_t getchar_SIO0( void );
+    extern  void putchar_SIO0( uint8_t );
+    extern  void puts_SIO0( uint8_t * );
+    #define uart0_getc()    getchar_SIO0()
+    #define uart0_putc(x)   putchar_SIO0(x)
+#endif
+
+#if USE_LCD
+    #if defined evLPC2388 || defined evADuC7129
+        #include "xprintf.h"
+    #else
+        #include <stdio.h>
+        #define xsprintf sprintf
+    #endif
+    #include "lcd1602.h"
+#endif
+
 
 uint8_t xymodem_main()
 {
-    uint8_t result = false, result2 = false, retryCount = 0;
+    register uint8_t result = false, result2 = false, retryCount = 0;
 
 #if USE_LCD
-    LCD_initIO();
+    LCD_Init();
     LCD_Clear();
 #endif
+    {
+        xsprintf( ( char * )cbuf, "xymodem.c, send anything\r\n" );
+        puts_SIO0( cbuf );
+    }
     xymodem_init();
     while( 1 )
     {
@@ -87,32 +102,31 @@ uint8_t xymodem_main()
         {
             result2 = xymodem_chkcrc();
             {
-                uint8_t buf[ 10 ];
-                xsprintf( buf, "%04X=%02X:%02X", CRC, CRCH, CRCL );
-                LCD_Puts( buf, 16 );
-                LCD_SetCursorPos(0, 1);
+                xsprintf( cbuf, "%04X=%02X:%02X", CRC, CRCH, CRCL );
+                LCD_Puts( cbuf, 10 );
+                LCD_SetCursorPos( 0, 1 );
             }
         }
         else
         {
-#if USE_LCD
-            LCD_SetCursorPos(0, 1);
-            LCD_Puts("R/NAK",16);
-#endif
+    #if USE_LCD
+            LCD_SetCursorPos( 0, 1 );
+            LCD_Puts( ( uint8_t * )"R/NAK", 16 );
+    #endif
         }
         if( result2 == true )
 #endif
         {
 #if USE_LCD
-            LCD_SetCursorPos(0, 1);
-            LCD_Puts("R/ACK",16);
+            LCD_SetCursorPos( 0, 1 );
+            LCD_Puts( ( uint8_t * )"R/ACK", 16 );
 #endif
-            Serial--;
-            if( S_xymodem_state != 3 )  // not EOT
+            XYW.Serial--;
+            if( XYW.S_xymodem_state != 3 )  // not EOT
             {
-                S_xymodem_state = 2;
+                XYW.S_xymodem_state = 2;
             }
-            else if( S_xymodem_EOTstate == 2 )
+            else if( XYW.S_xymodem_EOTstate == 2 )
             {
                 // transfer completed
                 return 0;
@@ -121,22 +135,25 @@ uint8_t xymodem_main()
         else
         {
 #if USE_LCD
-            LCD_SetCursorPos(0, 1);
-            LCD_Puts("R/NAK",16);
+            LCD_SetCursorPos( 0, 1 );
+            LCD_Puts( ( uint8_t * )"R/NAK", 16 );
 #endif
-            if( F_firstack == false )
+            if( XYW.F_firstack == false )
             {
                 // Restart
-                xymodem_init();
-                if( ++retryCount >= 20 )
-                {
-                    return 1;
-                }                
+//                xymodem_init();
+//                if( ++retryCount >= 20 )
+//                {
+//                    _s_tiny_free_( &TN_STRUCT_MEM, RxBuf );
+//                    _s_tiny_free_( &TN_STRUCT_MEM, cbuf );
+//                    return 1;
+//                }
+                ;
             }
             else
             {
                 // Retry
-                S_xymodem_state = 1;
+                XYW.S_xymodem_state = 1;
             }
         }
     }
@@ -144,10 +161,10 @@ uint8_t xymodem_main()
 
 void xymodem_init()
 {
-    CRC = 0;
-    Serial = 0x0FF;
-    S_xymodem_state = 0; F_firstack = false;
-    S_xymodem_EOTstate = 0;
+    XYW.CRC = 0;
+    XYW.Serial = 0x0FF;
+    XYW.S_xymodem_state = 0; XYW.F_firstack = false;
+    XYW.S_xymodem_EOTstate = 0;
 }
 
 int16_t get_SIO0_polling( void )
@@ -164,36 +181,36 @@ int16_t get_SIO0_polling( void )
         return -1;
     }
 #else   // Z80proto
-        return getchar_SIO0();
+    return getchar_SIO0();
 #endif
 }
 
 uint8_t xymodem_receive( uint16_t wait )
 // timeout: wait <= prevTick - SlowTick(in vic_lpc23xx.c)
 {
-    uint16_t count = 0, limit, prevTick;
-    uint8_t buf, stat;
+    register uint16_t count = 0, limit, prevTick;
+    register uint8_t buf, stat, preCount = 0;
 
     // start, receive first byte
-    switch( S_xymodem_state )
+    switch( XYW.S_xymodem_state )
     {
         case 0:
             // 'C'
             xymodem_startpkt();
-            S_xymodem_state = 2;
+            XYW.S_xymodem_state = 2;
             break;
         case 1:
             // NAK
             xymodem_sendnak();
             // next S1 or S2
-            S_xymodem_state = 2;
+            XYW.S_xymodem_state = 2;
             break;
         case 2:
             // ACK or ACK -> 'C'
             xymodem_sendack();
-            if( F_firstack == false )
+            if( XYW.F_firstack == false )
             {   // ACK -> 'C', next S1 or S2
-                F_firstack = true;
+                XYW.F_firstack = true;
             }
             break;
         case 3:
@@ -204,18 +221,27 @@ uint8_t xymodem_receive( uint16_t wait )
     }
 //    SlowTick = 0;
     prevTick = SlowTick;
-#if defined evLPC2388 || defined evADuC7129
     while( 1 )
     {
+#if defined evLPC2388 || defined evADuC7129
         _NOP(); stat = U0LSR;
-        if( ( stat & 0x01 ) != 0 ) break;
+        if( ( stat & 0x01 ) != 0 )
+        {
+            _NOP(); buf = U0RBR;
+            break;
+        }
+#else   // Z80proto
+        buf = getchar_SIO0();
+        if( buf >= 0 )
+        {
+            break;
+        }
+#endif
         if( SlowTick > prevTick + wait )
         {
             return NAK;
         }
     }
-    _NOP(); buf = U0RBR;
-#endif
 
     switch( buf )
     {
@@ -223,21 +249,22 @@ uint8_t xymodem_receive( uint16_t wait )
             limit = 128;
             break;
         case STX:
-            limit = 1024;
-            break;
+//            limit = 1024;
+//            break;
+            return NAK;
         case EOT:
-            switch( S_xymodem_EOTstate )
+            switch( XYW.S_xymodem_EOTstate )
             {
                 case 0:
                     xymodem_sendnak();
-                    S_xymodem_state = 3;
-                    S_xymodem_EOTstate = 1;
+                    XYW.S_xymodem_state = 3;
+                    XYW.S_xymodem_EOTstate = 1;
                     return NAK;
                 case 1:
                     xymodem_sendack();
                     xymodem_startpkt();
-                    S_xymodem_state = 3;
-                    S_xymodem_EOTstate = 2;
+                    XYW.S_xymodem_state = 3;
+                    XYW.S_xymodem_EOTstate = 2;
                     return ACK;
                 default:
                     // last ACK
@@ -248,17 +275,18 @@ uint8_t xymodem_receive( uint16_t wait )
         default:
             return NAK;
     }
-    limit += 5;
 #if USE_LCD
     {
-        uint8_t cbuf[ 10 ];
-        LCD_SetCursorPos(0, 0);
-        xsprintf( cbuf, "%02X->%4d", buf, limit );
+        LCD_SetCursorPos( 0, 0 );
+        xsprintf( ( char * )cbuf, ( const char * )"%02X->%4d", buf, limit );
         LCD_Puts( cbuf, 12 );
-        LCD_SetCursorPos(8, 0);
+        LCD_SetCursorPos( 8, 0 );
     }
 #endif
-    RxBuf[ count++ ] = buf;
+    limit += 5;
+    RxBuf[ count ] = buf;   // for debug
+    _NOP();
+    preCount = 1;
 
     // now, receive second byte ...
     while( 1 )
@@ -266,35 +294,40 @@ uint8_t xymodem_receive( uint16_t wait )
         buf = get_SIO0_polling();
         if( buf >= 0 )
         {
-            RxBuf[ count ] = buf;
-//            if( count >= 3 && count <= limit - 2 )
-//            {
+            switch( count )
+            {
+                case 128:
+                    XYW.CRCH = buf;
+                    break;
+                case 129:
+                    XYW.CRCL = buf; // receive succeed(maybe)
 //                updcrc( buf );
-//            }
-            count++;
-            // timeout rewind
-//            SlowTick = 0;
-            prevTick = SlowTick;
-        }
-        if( count >= limit ) // receive succeed(maybe)
-        {
+                    {
 #if USE_LCD
             {
-                uint8_t cbuf[ 10 ];
-                xsprintf( cbuf, "->%4d", count );
+                xsprintf( ( char * )cbuf, ( const char * )"->%4d", count - 1 );
                 LCD_Puts( cbuf, 6 );
             }
 #endif
-            CRCL = RxBuf[ --count ];
-            CRCH = RxBuf[ --count ];
-            return ACK;
+                        return ACK;
+                    }
+                    break;
+                default:
+                    RxBuf[ count ] = buf;
+            }
+
+            preCount++;
+            if( preCount > 2 )  // ignore head(3bytes)
+            {
+                count++;
+            }
+            prevTick = SlowTick;
         }
         if( SlowTick > prevTick + wait )
         {
 #if USE_LCD
             {
-                uint8_t cbuf[ 10 ];
-                xsprintf( cbuf, "-X%4d", count );
+                xsprintf( ( char * )cbuf, ( const char * )"-X%4d", count );
                 LCD_Puts( cbuf, 6 );
             }
 #endif
@@ -305,7 +338,7 @@ uint8_t xymodem_receive( uint16_t wait )
 
 uint8_t xymodem_chkcrc()
 {
-    if( CRC == ( CRCH << 8 ) + CRCL )
+    if( XYW.CRC == ( XYW.CRCH << 8 ) + XYW.CRCL )
     {
         return true;
     }
@@ -315,16 +348,16 @@ uint8_t xymodem_chkcrc()
 uint16_t updcrc( c )
 uint8_t c;
 {
-    uint16_t count;
+    register uint16_t count;
 
     for( count = 8 ; --count >= 0; )
     {
-        CRC <<= 1;
-        CRC += ( ( ( c <<= 1 ) & 0400 ) != 0 );
-        if( CRC & 0x8000 )
+        XYW.CRC <<= 1;
+        XYW.CRC += ( ( ( c <<= 1 ) & 0400 ) != 0 );
+        if( XYW.CRC & 0x8000 )
         {
-            CRC ^= 0x1021;
+            XYW.CRC ^= 0x1021;
         }
     }
-    return CRC;
+    return XYW.CRC;
 }

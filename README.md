@@ -2,7 +2,9 @@
 
 ## What is this?(コレは何？)
 ev68020などで使うつもりの、I/OプロセッサのZ80実装です。
+
 CP/M-68kなどの移植を視野に入れて、CP/M80を動かす事をゴールにしています。
+
 ソレゆえに、Z80proto2では64kフルRAMにする回路(ROMKICK)を含みます。
 
 ## Environment(動作環境)
@@ -14,19 +16,22 @@ Tool                    | Description
 **CAD**                 | KiCad Version (6.0.11), release build
 
 ## Status(進捗) -- 2025年4月現在
-Hardware:
-Z80proto2基板 -> 設計完了, FDC&DMAモジュールの試作中
-Z80proto2 SAKI80(AKA Super AKI-80)サポート基板 -> 設計完了, 試作回路のデバッグ中
+Hardware                          | Description
+:---------------------------------|:-----------------------------------------
+Z80proto2 board                   |設計完了, FDC&DMAモジュールの試作中
+Z80proto2 SAKI80(AKA Super AKI-80) support board|設計完了, 試作回路のデバッグ中
 
-Software:
-ipl0 -> デバッグ完了。たぶんSAKI80でも動く
-memtest80 -> デバッグ完了。7seg表示必須(ゆえにSAKI80非対応)
-Miniloader -> フレームワークは完了, 機能追加と細かい仕様を詰めている。XMODEM/CRCテスト実装を追加(CRCチェック機能デバッグ中), kermitは保留。XYMODEMあるいはkermitをリンクすると、実行バイナリサイズは約3.5kBytes, SPIのみリンクすると約1.5kBytes
-MiniMon, MiniMon-C -> MiniLoaderの拡張バージョン。ゆえにstatusはMiniLoaderと同様。機能追加中(FDC関連)&SAKI80対応作業中
+Software           | Description
+:------------------|:--------------------------------------------------------
+ipl0               |デバッグ完了。たぶんSAKI80でも動く
+memtest80          |デバッグ完了。7seg表示必須(ゆえにSAKI80非対応)
+Miniloader         |フレームワークは完了, 機能追加と細かい仕様を詰めている。XMODEM/CRCテスト実装を追加(動作するもののbuggy, CRCチェック機能を含めて全体的にデバッグ中), kermitは保留。XYMODEMあるいはkermitをリンクした時の実行バイナリサイズは約4.3kBytes, SPIのみリンクすると約1.5kBytes
+MiniMon, MiniMon-C |MiniLoaderの拡張バージョン。ゆえにstatusはMiniLoaderと同様。機能追加中(FDC関連)&SAKI80対応作業中
 
-Additional(その他):
-MSP430_SPI_LCD40x4 -> 設計完了, SPIターゲット機能デバッグ中
-freertos -> 実験的実装(EXPERIMENTAL), 動作は保証しません
+Additional         | Description
+:------------------|:--------------------------------------------------------
+MSP430_SPI_LCD40x4 |設計完了, SPIターゲット機能デバッグ中
+freertos           |実験的実装(EXPERIMENTAL), 動作は保証しません
 
 ## TODO(今後修正・追加すべきモノゴトと細かい話)
 0. SIOフロー制御の追加 -> DTR*をアサート/ネゲートするだけの機能追加、ではダメっぽいので、キチンとした仕様を実装する
@@ -49,7 +54,7 @@ freertos -> 実験的実装(EXPERIMENTAL), 動作は保証しません
 
 使用しているデバイスについて、メーカーがデータシートなどで開示している技術情報は、各社に工業所有権があります。
 
-kermit.cは、Frank da Cruz氏によるkermit.basをCに移植したものです。
+kermit-suspend.cは、Frank da Cruz氏によるkermit.basをCに移植したものです。
 
 xymodem.cは、Chuck Forsberg氏による10-14-88版ドキュメントより作成しました。
 
@@ -57,7 +62,7 @@ xymodem.cは、Chuck Forsberg氏による10-14-88版ドキュメントより作�
 
 lcdlib.cは、Sakazume氏(http://219.117.208.26/~saka/ham/LCD2/)による実装です。
 
-xprintf.cは、CHaN氏(http://elm-chan.org/fsw.html)による実装の一部を利用させて頂きました。
+CHaN氏(http://elm-chan.org/fsw.html)によるxprintf.c実装を参考にさせて頂きました。
 
 私(yasunoxx▼Julia)が書いたプログラムは、MITライセンスで開示しています。本プログラム[Z80proto2](https://github.com/yasunoxx/Z80proto2)を使用した/使用しない事による全ての結果について、上記権利者と私は何の保証も賠償も致しません。
 

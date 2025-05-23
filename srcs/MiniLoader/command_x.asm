@@ -3,6 +3,9 @@
 
     PUBLIC  receive_xymodem
   	PUBLIC	_SlowTick
+    PUBLIC  _BUF_SIO128_0
+    PUBLIC  _BUF_SIO128_1
+    PUBLIC  _XYW
     EXTERN  _xymodem_main
     EXTERN  putchar_SIO0
     EXTERN  putCRLF

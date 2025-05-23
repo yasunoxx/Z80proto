@@ -7,11 +7,14 @@ ASMSRC = $(TARGET).asm
 ASMOBJ = $(TARGET).o
 BIN = $(TARGET).bin
 OBJS = $(ASMOBJ) command_j.o command_d.o command_m.o command_i.o \
-	command_x.o xymodem.o
-#	lcdlib.o xprintf.o
+	command_x.o xymodem.o \
+	lcdlib.o 
+#	xprintf.o
 MAP = $(TARGET).map
-ASFLAGS = -DWITH_XYMODEM=1 -DWITH_7SEG=0 -DWITH_SPI=1
-CFLAGS = +embedded -DUSE_LCD=0
+ASFLAGS = -DWITH_XYMODEM=1 -DUSE_LCD=1 \
+	-DWITH_7SEG=0 -DWITH_SPI=1
+CFLAGS = +embedded -DUSE_LCD=1 
+#	-D__Z88DK_R2L_CALLING_CONVENTION
 LDFLAGS = +embedded --no-crt -m 
 
 .PHONY:	all $(OBJS)
@@ -26,9 +29,6 @@ xymodem.o:
 
 lcdlib.o:
 	$(CC) $(CFLAGS) -c lcdlib.c
-
-xprintf.o:
-	$(CC) $(CFLAGS) -c xprintf.c
 
 clean:
 	rm -f $(BIN) $(OBJS) $(MAP) *.lis *.lst

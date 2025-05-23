@@ -88,6 +88,10 @@ endif
 ;
     ei
 
+if DEBUG_PIOOUT == 1
+    call    DEBUG_PIOOUT_SETUP
+endif
+
 ;;
 ;;; Proto2 title
 ;;
@@ -184,8 +188,8 @@ if WITH_KERMIT == 1
 ;   ; Knnnn : receive kermit protocol, store to 0x0nnnn
 endif
 if WITH_XYMODEM == 1
-;   cp  'X'
-;   jp  z, receive_XYMODEM
+    cp  'X'
+    jp  z, receive_xymodem
 ;   ; Xnnnn : receive X/YMODEM protocol, store to 0x0nnnn
 endif
 ;   cp  'S'

@@ -79,8 +79,8 @@ void LCD_ShiftCursor(signed int n);
 
 
 // HD44780 bus lines
-#define   LCD_EN    7    // green
-#define   LCD_RS    5    // blue
+#define   LCD_EN    4    // green
+#define   LCD_RS    6    // blue
 #define   LCD_DATA  0
 //  ^ LCD_DATA = LSB of bits position( ex.: define 23 -> select ["23"..26] )
 
