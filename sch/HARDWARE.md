@@ -2,6 +2,7 @@
 
 ## What is this?(コレは何？)
 ev68020などで使うつもりの、I/OプロセッサのZ80実装です。
+
 ここでは、ハードウェアの概要を説明します。
 
 
@@ -14,7 +15,7 @@ Tool                    | Description
 
 
 ## Directory(ディレクトリ構成)
-Directory|Description
+Directory           | Description
 :-------------------|:--------------------------------------------------
 **FDC**             |MZ-80FI's diagram trace (C)1981 Sharp Corporation
 **MZ80K_framebuf**  |MZ-80K's diagram trace (C)1979-81 Sharp Corporation
