@@ -1,0 +1,91 @@
+; goto SST2
+
+dispstr 'put LCD12864init'
+pause 3
+
+call OUTINIT
+pause 1
+
+; LCD init proc.
+dispstr 'DISPOFF'
+sendln 'po1e3e'
+call RSLE
+sendln 'po1ec0'
+call RSLE
+sendln 'po1eb8'
+call RSLE
+sendln 'po1e40'
+call RSLE
+dispstr 'DISPON'
+sendln 'po1e3f'
+call RSLE
+dispstr 'SENDDATA'
+; RSH
+sendln 'po1c40'
+mpause 150
+; set data
+sendln 'po1eAA'
+mpause 150
+call RSHE
+sendln 'po1e55'
+mpause 150
+call RSHE
+call RSLE
+dispstr 'READSTAT'
+sendln 'po1ec0'
+call RSLE
+sendln 'po1eb8'
+call RSLE
+sendln 'po1e40'
+call RSLE
+
+:SST2
+sendln 'po1e3E'
+call RSLE
+mpause 150
+call ININIT
+mpause 150
+sendln 'po1c90'
+mpause 150
+sendln 'po1c80'
+mpause 150
+sendln 'pi1e'
+
+dispstr '***END'
+
+
+end
+
+:RSLE
+mpause 150
+sendln 'po1c10'
+mpause 150
+sendln 'po1c00'
+mpause 150
+return
+
+:RSHE
+mpause 150
+sendln 'po1c50'
+mpause 150
+sendln 'po1c40'
+mpause 150
+return
+
+:OUTINIT
+; PIOA output
+sendln 'po1d0f'
+mpause 150
+; PIOB output
+sendln 'po1f0f'
+pause 1
+return
+
+:ININIT
+; PIOA output
+sendln 'po1d0f'
+mpause 150
+; PIOB input
+sendln 'po1f4f'
+pause 1
+return

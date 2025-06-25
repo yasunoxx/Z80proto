@@ -125,7 +125,7 @@ int main( void )
 	/* Main Application Loop */
 	while( 1 )
 	{
-		SubLCD();
+		SubLCD();	// LCD sequencer
 
 		if( F_SysTimer2_Flipper == SYSTIMER2_FLIP_ON )
 		{

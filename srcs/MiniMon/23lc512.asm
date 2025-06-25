@@ -18,7 +18,7 @@ loader_spi_loop:
 
 loader_spiram_init: ; 23LC512 init
     ld  a, SPI_DEVID_Ch0
-    ld  (SPI_SELD_DEV), a
+    ld  (SPI_SELD_DEV), a ; FIXME
     call    spi_dev_sel
 ;
     ld  a, SPIRAM_CMD_RSTIO
@@ -28,7 +28,7 @@ loader_spiram_init: ; 23LC512 init
 ;
 ;; enter a byte mode
     ld  a, SPI_DEVID_Ch0
-    ld  (SPI_SELD_DEV), a
+    ld  (SPI_SELD_DEV), a ; FIXME
     call    spi_dev_sel
 ;
     ld  a, SPIRAM_CMD_WRMR
@@ -43,7 +43,7 @@ loader_spiram_init: ; 23LC512 init
 loader_spi_loop2:
 ;; write
     ld  a, SPI_DEVID_Ch0
-    ld  (SPI_SELD_DEV), a
+    ld  (SPI_SELD_DEV), a ; FIXME
     call    spi_dev_sel
 ;
     ld  a, SPIRAM_CMD_WRITE
@@ -61,7 +61,7 @@ loader_spi_loop2:
 ;
 ;; read
     ld  a, SPI_DEVID_Ch0
-    ld  (SPI_SELD_DEV), a
+    ld  (SPI_SELD_DEV), a ; FIXME
     call    spi_dev_sel
 ;
     ld  a, SPIRAM_CMD_READ

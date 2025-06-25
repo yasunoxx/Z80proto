@@ -288,7 +288,7 @@ spirom_read00:
     call    spirom_setWRSR
 ;
     ld  a, SPI_DEVID_Ch1
-    ld  (SPI_SELD_DEV), a
+    ld  (SPI_SELD_DEV), a ; FIXME
     call    spi_dev_sel
 ;
     ld  ix, 1F00h   ; FAT0(0x1F0000:sector 1Fh / block 0, block index 0~15)
@@ -323,7 +323,7 @@ spirom_read00:
 ;   reset ROM
     call    spi_dev_unsel
     ld  a, SPI_DEVID_Ch1
-    ld  (SPI_SELD_DEV), a
+    ld  (SPI_SELD_DEV), a ; FIXME
     call    spi_dev_sel
 ;
     ld  ix, 0       ; sector 0 / block 0
@@ -354,7 +354,7 @@ spirom_readIndex:
     call    spirom_setWRSR
 ;
     ld  a, SPI_DEVID_Ch1
-    ld  (SPI_SELD_DEV), a
+    ld  (SPI_SELD_DEV), a ; FIXME
     call    spi_dev_sel
 ;
 ;    ld  ix, 1F01h   ; FAT block 16~31
@@ -387,7 +387,7 @@ spirom_read256_loop:
 
 spirom_setWRSR: ; read on fast read data mode, destroy AF
     ld  a, SPI_DEVID_Ch1
-    ld  (SPI_SELD_DEV), a
+    ld  (SPI_SELD_DEV), a ; FIXME
     call    spi_dev_sel
 ;
     ld  a, SPIROM_CMD_WRSR
@@ -622,7 +622,7 @@ drv_7seg_S0:    ; output 7seg
 drv_7seg_S0_1: ;; 7seg anode line set(post)
     ld  c, a
     ld  a, (PO_2_BUP)
-    and 00000011b
+    and 11000011b
                 ; erase anode line
     or  c       ; set new anode line
     call    out_PO_2

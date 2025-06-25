@@ -1,0 +1,1564 @@
+
+main.elf:     file format elf32-msp430
+
+SYMBOL TABLE:
+0000ffea l    d  __interrupt_vector_6	00000000 __interrupt_vector_6
+0000fff0 l    d  __interrupt_vector_9	00000000 __interrupt_vector_9
+0000fff2 l    d  __interrupt_vector_10	00000000 __interrupt_vector_10
+0000fff4 l    d  __interrupt_vector_11	00000000 __interrupt_vector_11
+0000fffe l    d  __reset_vector	00000000 __reset_vector
+0000c000 l    d  .rodata	00000000 .rodata
+0000c000 l    d  .rodata2	00000000 .rodata2
+0000c000 l    d  .text	00000000 .text
+00000200 l    d  .data	00000000 .data
+00000200 l    d  .bss	00000000 .bss
+00000224 l    d  .noinit	00000000 .noinit
+00000224 l    d  .heap	00000000 .heap
+00000000 l    d  .MSP430.attributes	00000000 .MSP430.attributes
+00000000 l    d  .comment	00000000 .comment
+00000000 l    d  .debug_aranges	00000000 .debug_aranges
+00000000 l    d  .debug_info	00000000 .debug_info
+00000000 l    d  .debug_abbrev	00000000 .debug_abbrev
+00000000 l    d  .debug_line	00000000 .debug_line
+00000000 l    d  .debug_frame	00000000 .debug_frame
+00000000 l    d  .debug_str	00000000 .debug_str
+00000000 l    d  .debug_loc	00000000 .debug_loc
+00000000 l    d  .debug_ranges	00000000 .debug_ranges
+00000000 l    df *ABS*	00000000 io.c
+00000000 l    df *ABS*	00000000 interrupt.c
+00000000 l    df *ABS*	00000000 /usr/local/msp430-elf/bin/../lib/gcc/msp430-elf/9.3.1/../../../../msp430-elf/lib/430/crt0.o
+0000fffe l       __reset_vector	00000000 __msp430_resetvec_hook
+00000000 l    df *ABS*	00000000 crt_bss.o
+00000000 l    df *ABS*	00000000 crt_movedata.o
+00000000 l    df *ABS*	00000000 crt_main.o
+00000000 l    df *ABS*	00000000 crt_callexit.o
+00000000 l    df *ABS*	00000000 main.c
+0000c030 l     F .text	0000001a ConfigureTimerPwm.part.0
+00000000 l    df *ABS*	00000000 tlv.c
+00000000 l    df *ABS*	00000000 lib_a-memcpy.o
+00000000 l    df *ABS*	00000000 exit.c
+00000000 l    df *ABS*	00000000 lib_a-memmove.o
+00000000 l    df *ABS*	00000000 lib_a-memset.o
+0000c1c4 g     F .text	00000012 ADC10_ISR
+00000022 g       *ABS*	00000000 P1DIR
+0000c1aa g     F .text	0000001a InitializeIOpins
+00000053 g       *ABS*	00000000 BCSCTL3
+0000c54c g     F .text	00000058 TimerA1_ISR
+0000c096 g     F .text	0000002e initializeDCO
+0000020e g     O .bss	00000001 Var_CALBC1_12MHz
+00000042 g       *ABS*	00000000 P2SEL2
+0000c5d8 g     F .text	00000042 memmove
+0000c02c g     F .text	00000004 __crt0_call_exit
+000001b4 g       *ABS*	00000000 ADC10MEM
+00000202 g     O .bss	00000001 ClockMode
+0000c5b6 g       .text	00000000 .hidden __mspabi_func_epilog_6
+00000162 g       *ABS*	00000000 TA0CCTL0
+00000002 g       *ABS*	00000000 IFG1
+0000c5c4 g     F .text	00000014 memcpy
+0000020d g     O .bss	00000001 Var_CALDCO_8MHz
+00000120 g       *ABS*	00000000 WDTCTL
+0000020c g     O .bss	00000001 Var_CALBC1_8MHz
+0000c000 g     F .text	00000004 __crt0_start
+00000228 g       .heap	00000000 __HeapLimit
+00000228 g       .heap	00000000 __heap_end__
+0000c004 g     F .text	0000000e __crt0_init_bss
+00000024 g       *ABS*	00000000 __bsssize
+0000021a g     O .bss	00000002 Var_CAL_ADC_15T30
+0000020f g     O .bss	00000001 Var_CALDCO_12MHz
+0000c5c0 g       .text	00000000 .hidden __mspabi_func_epilog_1
+00000204 g     O .bss	00000002 SysTimer2_Counter
+00000216 g     O .bss	00000002 Var_CAL_ADC_25VREF_FACTOR
+0000c5bc g       .text	00000000 .hidden __mspabi_func_epilog_3
+0000021c g     O .bss	00000002 Var_CAL_ADC_15VREF_FACTOR
+0000021e g     O .bss	00000002 Var_CAL_ADC_OFFSET
+000001b2 g       *ABS*	00000000 ADC10CTL1
+00000210 g     O .bss	00000001 Var_CALBC1_16MHz
+0000020a g     O .bss	00000001 Var_CALBC1_1MHz
+0000002e g       *ABS*	00000000 P2SEL
+00000224 g       .noinit	00000000 end
+0000c186 g     F .text	00000018 ConfigureAdcTempSensor
+00000026 g       *ABS*	00000000 P1SEL
+00000041 g       *ABS*	00000000 P1SEL2
+00000212 g     O .bss	00000002 Var_CAL_ADC_25T85
+0000c000 g       .text	00000000 _start
+00000211 g     O .bss	00000001 Var_CALDCO_16MHz
+00000220 g     O .bss	00000002 Var_CAL_ADC_GAIN_FACTOR
+00000056 g       *ABS*	00000000 DCOCTL
+00000172 g       *ABS*	00000000 TA0CCR0
+00000222 g     O .bss	00000002 LcdWait
+00000000 g       *ABS*	00000000 __romdatacopysize
+0000c1d6 g     F .text	00000374 GetTLV
+00000208 g     O .bss	00000002 TempReg
+00000000  w      *ABS*	00000000 __rom_highdatacopysize
+0000c614 g     F .text	00000014 memset
+0000c0da g     F .text	000000b0 main
+00000224 g       .heap	00000000 __heap_start__
+00000206 g     O .bss	00000002 SysTimer_Counter
+0000c0c4 g     F .text	00000016 PreApplicationMode
+00000000  w      *ABS*	00000000 __high_bsssize
+00000160 g       *ABS*	00000000 TA0CTL
+00000000  w      *ABS*	00000000 __rom_highdatastart
+00000000 g       *ABS*	00000000 IE1
+0000c5a4 g     F .text	00000010 WDT_ISR
+0000020b g     O .bss	00000001 Var_CALDCO_1MHz
+0000c626 g       *ABS*	00000000 __romdatastart
+0000c04a g     F .text	00000028 ConfigureTimerPwm
+0000c072 g     F .text	00000024 InitializeClocks
+000001b0 g       *ABS*	00000000 ADC10CTL0
+00000021 g       *ABS*	00000000 P1OUT
+00000058 g       *ABS*	00000000 BCSCTL2
+00000000  w      *ABS*	00000000 __high_datastart
+00000000  w      *ABS*	00000000 __upper_data_init
+00000200 g       .bss	00000000 __bssstart
+0000c5b8 g       .text	00000000 .hidden __mspabi_func_epilog_5
+00000400 g       .MSP430.attributes	00000000 __stack
+00000200 g       .data	00000000 _edata
+00000224 g       .heap	00000000 _end
+00000164 g       *ABS*	00000000 TA0CCTL1
+00000200 g     O .bss	00000001 F_SysTimer2_Flipper
+00000201 g     O .bss	00000001 F_SysTimer_Flipper
+0000c5d6  w    F .text	00000004 exit
+00000057 g       *ABS*	00000000 BCSCTL1
+00000000  w      *ABS*	00000000 __high_bssstart
+00000214 g     O .bss	00000002 Var_CAL_ADC_25T30
+0000c546 g     F .text	00000006 TimerA0_ISR
+0000c026 g     F .text	00000006 __crt0_call_main
+0000c5d6  w    F .text	00000004 _exit
+0000c19e g     F .text	0000000c SampleAndConversionAdcTemp
+00000218 g     O .bss	00000002 Var_CAL_ADC_15T85
+00000200 g       .data	00000000 __datastart
+0000c012 g     F .text	00000014 __crt0_movedata
+0000c5be g       .text	00000000 .hidden __mspabi_func_epilog_2
+0000c5b4 g       .text	00000000 .hidden __mspabi_func_epilog_7
+0000c5ba g       .text	00000000 .hidden __mspabi_func_epilog_4
+
+
+
+Disassembly of section __interrupt_vector_6:
+
+0000ffea <__interrupt_vector_6>:
+    ffea:	c4 c1       	interrupt service routine at 0xc1c4
+
+Disassembly of section __interrupt_vector_9:
+
+0000fff0 <__interrupt_vector_9>:
+    fff0:	4c c5       	interrupt service routine at 0xc54c
+
+Disassembly of section __interrupt_vector_10:
+
+0000fff2 <__interrupt_vector_10>:
+    fff2:	46 c5       	interrupt service routine at 0xc546
+
+Disassembly of section __interrupt_vector_11:
+
+0000fff4 <__interrupt_vector_11>:
+    fff4:	a4 c5       	interrupt service routine at 0xc5a4
+
+Disassembly of section .text:
+
+0000c000 <__crt0_start>:
+    c000:	31 40 00 04 	mov	#1024,	r1	;#0x0400
+
+0000c004 <__crt0_init_bss>:
+    c004:	3c 40 00 02 	mov	#512,	r12	;#0x0200
+
+0000c008 <.Loc.76.1>:
+    c008:	0d 43       	clr	r13		;
+
+0000c00a <.Loc.77.1>:
+    c00a:	3e 40 24 00 	mov	#36,	r14	;#0x0024
+
+0000c00e <.Loc.81.1>:
+    c00e:	b0 12 14 c6 	call	#-14828	;#0xc614
+
+0000c012 <__crt0_movedata>:
+    c012:	3c 40 00 02 	mov	#512,	r12	;#0x0200
+
+0000c016 <.Loc.116.1>:
+    c016:	3d 40 26 c6 	mov	#-14810,r13	;#0xc626
+
+0000c01a <.Loc.119.1>:
+    c01a:	0d 9c       	cmp	r12,	r13	;
+
+0000c01c <.Loc.120.1>:
+    c01c:	04 24       	jz	$+10     	;abs 0xc026
+
+0000c01e <.Loc.122.1>:
+    c01e:	3e 40 00 00 	mov	#0,	r14	;
+
+0000c022 <.Loc.124.1>:
+    c022:	b0 12 d8 c5 	call	#-14888	;#0xc5d8
+
+0000c026 <__crt0_call_main>:
+    c026:	0c 43       	clr	r12		;
+
+0000c028 <.Loc.254.1>:
+    c028:	b0 12 da c0 	call	#-16166	;#0xc0da
+
+0000c02c <__crt0_call_exit>:
+    c02c:	b0 12 d6 c5 	call	#-14890	;#0xc5d6
+
+0000c030 <ConfigureTimerPwm.part.0>:
+// Declare functions
+void ConfigureTimerPwm( void )
+{
+    if( ClockMode == Low )
+    {
+        TACCR0 = TIMER_PWM_PERIOD;          // Compare Maxim value
+    c030:	b2 40 0c 00 	mov	#12,	&0x0172	;#0x000c
+    c034:	72 01 
+
+0000c036 <.Loc.159.1>:
+        #ifdef TARGET_XT1
+            TACTL = TASSEL_2 | MC_1;        // TACLK = SMCLK, Up mode.
+        #else
+            TACTL = TASSEL_2 | MC_1;        // TACLK = ACLK, Up mode.
+    c036:	b2 40 10 02 	mov	#528,	&0x0160	;#0x0210
+    c03a:	60 01 
+
+0000c03c <.Loc.161.1>:
+        #endif
+        TACCTL0 = CCIE;                     // TACCTL0 output OUT bit(not used)
+    c03c:	b2 40 10 00 	mov	#16,	&0x0162	;#0x0010
+    c040:	62 01 
+
+0000c042 <.Loc.162.1>:
+        TACCTL1 = CCIE + OUTMOD_3;          // TACCTL1 Capture Compare, Set/reset
+    c042:	b2 40 70 00 	mov	#112,	&0x0164	;#0x0070
+    c046:	64 01 
+
+0000c048 <.Loc.171.1>:
+        TACCR0 = TIMER_PWM_PERIOD_DCO;      // Compare Maxim value
+        TACTL = TASSEL_2 | MC_1;            // TACLK = SMCLK, Up mode.
+        TACCTL0 = CCIE;                     // TACCTL0 output OUT bit(not used)
+        TACCTL1 = CCIE + OUTMOD_3;          // TACCTL1 Capture Compare, Set/reset
+    }                                              
+}
+    c048:	30 41       	ret			
+
+0000c04a <ConfigureTimerPwm>:
+    if( ClockMode == Low )
+    c04a:	5c 42 02 02 	mov.b	&0x0202,r12	;0x0202
+
+0000c04e <.Loc.153.1>:
+    c04e:	0c 93       	cmp	#0,	r12	;r3 As==00
+    c050:	03 20       	jnz	$+8      	;abs 0xc058
+    c052:	b0 12 30 c0 	call	#-16336	;#0xc030
+
+0000c056 <.LVL0>:
+}
+    c056:	30 41       	ret			
+
+0000c058 <.L4>:
+        TACCR0 = TIMER_PWM_PERIOD_DCO;      // Compare Maxim value
+    c058:	b2 40 e0 2e 	mov	#12000,	&0x0172	;#0x2ee0
+    c05c:	72 01 
+
+0000c05e <.Loc.167.1>:
+        TACTL = TASSEL_2 | MC_1;            // TACLK = SMCLK, Up mode.
+    c05e:	b2 40 10 02 	mov	#528,	&0x0160	;#0x0210
+    c062:	60 01 
+
+0000c064 <.Loc.168.1>:
+        TACCTL0 = CCIE;                     // TACCTL0 output OUT bit(not used)
+    c064:	b2 40 10 00 	mov	#16,	&0x0162	;#0x0010
+    c068:	62 01 
+
+0000c06a <.Loc.169.1>:
+        TACCTL1 = CCIE + OUTMOD_3;          // TACCTL1 Capture Compare, Set/reset
+    c06a:	b2 40 70 00 	mov	#112,	&0x0164	;#0x0070
+    c06e:	64 01 
+
+0000c070 <.Loc.171.1>:
+}
+    c070:	30 41       	ret			
+
+0000c072 <InitializeClocks>:
+
+void InitializeClocks( void )
+{
+    DCOCTL = 0;
+    c072:	c2 43 56 00 	mov.b	#0,	&0x0056	;r3 As==00
+
+0000c076 <.Loc.176.1>:
+    BCSCTL1 = 0;
+    c076:	c2 43 57 00 	mov.b	#0,	&0x0057	;r3 As==00
+
+0000c07a <.Loc.177.1>:
+    BCSCTL1 = XT2OFF | DIVA_0 | RSEL0;
+    c07a:	f2 40 81 ff 	mov.b	#-127,	&0x0057	;#0xff81
+    c07e:	57 00 
+
+0000c080 <.Loc.179.1>:
+                      // Set ACLK / 1
+    BCSCTL2 = 0;
+    c080:	c2 43 58 00 	mov.b	#0,	&0x0058	;r3 As==00
+
+0000c084 <.Loc.180.1>:
+    BCSCTL2 = SELM_3 | DIVM_0 | SELS | DIVS_0;
+    c084:	f2 40 c8 ff 	mov.b	#-56,	&0x0058	;#0xffc8
+    c088:	58 00 
+
+0000c08a <.Loc.182.1>:
+                      // SMCLK = MCLK = ACLK = 12kHz
+    BCSCTL3 = 0;
+    c08a:	c2 43 53 00 	mov.b	#0,	&0x0053	;r3 As==00
+
+0000c08e <.Loc.183.1>:
+    BCSCTL3 = LFXT1S_2; // use VLO    
+    c08e:	f2 40 20 00 	mov.b	#32,	&0x0053	;#0x0020
+    c092:	53 00 
+
+0000c094 <.Loc.184.1>:
+}
+    c094:	30 41       	ret			
+
+0000c096 <initializeDCO>:
+
+void initializeDCO( void )
+{
+        DCOCTL = Var_CALDCO_16MHz;
+    c096:	d2 42 11 02 	mov.b	&0x0211,&0x0056	;0x0211
+    c09a:	56 00 
+
+0000c09c <.Loc.189.1>:
+        DCOCTL |= DCO2;
+    c09c:	f2 d0 80 ff 	bis.b	#-128,	&0x0056	;#0xff80
+    c0a0:	56 00 
+
+0000c0a2 <.Loc.190.1>:
+        BCSCTL1 = Var_CALBC1_16MHz;
+    c0a2:	d2 42 10 02 	mov.b	&0x0210,&0x0057	;0x0210
+    c0a6:	57 00 
+
+0000c0a8 <.Loc.191.1>:
+        BCSCTL1 |= DIVA_0;
+        BCSCTL2 &= ~( DIVS_3 );
+    c0a8:	f2 f0 f9 ff 	and.b	#-7,	&0x0058	;#0xfff9
+    c0ac:	58 00 
+
+0000c0ae <.Loc.193.1>:
+        BCSCTL2 = SELM_0 | DIVM_0; // DCO = MCLK = SMCLK = ACLK(12MHZ, VLO * 1000)
+    c0ae:	c2 43 58 00 	mov.b	#0,	&0x0058	;r3 As==00
+
+0000c0b2 <.Loc.194.1>:
+        TACTL = TASSEL_2 | MC_2 | TACLR;
+    c0b2:	b2 40 24 02 	mov	#548,	&0x0160	;#0x0224
+    c0b6:	60 01 
+
+0000c0b8 <.Loc.196.1>:
+      // Select SMCKL as source, no divider, Continuous mode and reset timer
+        BCSCTL1 |= XT2OFF; // XT2 off, and Set ACLK to /1 divider
+    c0b8:	f2 d0 80 ff 	bis.b	#-128,	&0x0057	;#0xff80
+    c0bc:	57 00 
+
+0000c0be <.Loc.198.1>:
+
+        ClockMode = High;
+    c0be:	d2 43 02 02 	mov.b	#1,	&0x0202	;r3 As==01
+
+0000c0c2 <.Loc.199.1>:
+}
+    c0c2:	30 41       	ret			
+
+0000c0c4 <PreApplicationMode>:
+
+void PreApplicationMode( void )
+{
+        SysTimer_Counter = 0;
+    c0c4:	82 43 06 02 	mov	#0,	&0x0206	;r3 As==00
+
+0000c0c8 <.Loc.204.1>:
+        F_SysTimer_Flipper = SYSTIMER_FLIP_OFF;
+    c0c8:	c2 43 01 02 	mov.b	#0,	&0x0201	;r3 As==00
+
+0000c0cc <.Loc.205.1>:
+        SysTimer2_Counter = 0;
+    c0cc:	82 43 04 02 	mov	#0,	&0x0204	;r3 As==00
+
+0000c0d0 <.Loc.206.1>:
+        F_SysTimer2_Flipper = SYSTIMER2_FLIP_OFF;
+    c0d0:	c2 43 00 02 	mov.b	#0,	&0x0200	;r3 As==00
+
+0000c0d4 <.Loc.207.1>:
+        ClockMode = Low;
+    c0d4:	c2 43 02 02 	mov.b	#0,	&0x0202	;r3 As==00
+
+0000c0d8 <.Loc.210.1>:
+//  __bis_SR_register( LPM3_bits + GIE );  // LPM0 with
+//  __bis_SR_register( LPM3_bits );
+}
+    c0d8:	30 41       	ret			
+
+0000c0da <main>:
+
+// Main function
+int main(void)
+{
+    WDTCTL = WDTPW | WDTHOLD;       // Stop watchdog timer
+    c0da:	b2 40 80 5a 	mov	#23168,	&0x0120	;#0x5a80
+    c0de:	20 01 
+
+0000c0e0 <.Loc.216.1>:
+    ClockMode = Low;
+    c0e0:	c2 43 02 02 	mov.b	#0,	&0x0202	;r3 As==00
+
+0000c0e4 <.LBB10>:
+    DCOCTL = 0;
+    c0e4:	c2 43 56 00 	mov.b	#0,	&0x0056	;r3 As==00
+
+0000c0e8 <.Loc.176.1>:
+    BCSCTL1 = 0;
+    c0e8:	c2 43 57 00 	mov.b	#0,	&0x0057	;r3 As==00
+
+0000c0ec <.Loc.177.1>:
+    BCSCTL1 = XT2OFF | DIVA_0 | RSEL0;
+    c0ec:	f2 40 81 ff 	mov.b	#-127,	&0x0057	;#0xff81
+    c0f0:	57 00 
+
+0000c0f2 <.Loc.179.1>:
+    BCSCTL2 = 0;
+    c0f2:	c2 43 58 00 	mov.b	#0,	&0x0058	;r3 As==00
+
+0000c0f6 <.Loc.180.1>:
+    BCSCTL2 = SELM_3 | DIVM_0 | SELS | DIVS_0;
+    c0f6:	f2 40 c8 ff 	mov.b	#-56,	&0x0058	;#0xffc8
+    c0fa:	58 00 
+
+0000c0fc <.Loc.182.1>:
+    BCSCTL3 = 0;
+    c0fc:	c2 43 53 00 	mov.b	#0,	&0x0053	;r3 As==00
+
+0000c100 <.Loc.183.1>:
+    BCSCTL3 = LFXT1S_2; // use VLO    
+    c100:	f2 40 20 00 	mov.b	#32,	&0x0053	;#0x0020
+    c104:	53 00 
+
+0000c106 <.LBE10>:
+
+    InitializeClocks();
+    InitializeIOpins();
+    c106:	b0 12 aa c1 	call	#-15958	;#0xc1aa
+
+0000c10a <.LBB12>:
+        SysTimer_Counter = 0;
+    c10a:	82 43 06 02 	mov	#0,	&0x0206	;r3 As==00
+
+0000c10e <.Loc.204.1>:
+        F_SysTimer_Flipper = SYSTIMER_FLIP_OFF;
+    c10e:	c2 43 01 02 	mov.b	#0,	&0x0201	;r3 As==00
+
+0000c112 <.Loc.205.1>:
+        SysTimer2_Counter = 0;
+    c112:	82 43 04 02 	mov	#0,	&0x0204	;r3 As==00
+
+0000c116 <.Loc.206.1>:
+        F_SysTimer2_Flipper = SYSTIMER2_FLIP_OFF;
+    c116:	c2 43 00 02 	mov.b	#0,	&0x0200	;r3 As==00
+
+0000c11a <.Loc.207.1>:
+        ClockMode = Low;
+    c11a:	c2 43 02 02 	mov.b	#0,	&0x0202	;r3 As==00
+
+0000c11e <.LBB14>:
+    if( ClockMode == Low )
+    c11e:	5c 42 02 02 	mov.b	&0x0202,r12	;0x0202
+
+0000c122 <.Loc.153.1>:
+    c122:	0c 93       	cmp	#0,	r12	;r3 As==00
+    c124:	16 20       	jnz	$+46     	;abs 0xc152
+    c126:	b0 12 30 c0 	call	#-16336	;#0xc030
+
+0000c12a <.L11>:
+    PreApplicationMode();
+    ConfigureTimerPwm();
+
+    __enable_interrupt();
+    c12a:	32 d2       	eint			
+
+0000c12c <.Loc.224.1>:
+    ConfigureAdcTempSensor();
+    c12c:	b0 12 86 c1 	call	#-15994	;#0xc186
+
+0000c130 <.LVL3>:
+    GetTLV();
+    c130:	b0 12 d6 c1 	call	#-15914	;#0xc1d6
+
+0000c134 <.LVL4>:
+    __disable_interrupt();
+    c134:	32 c2       	dint			
+    c136:	03 43       	nop			
+
+0000c138 <.Loc.227.1>:
+    initializeDCO(); // on this file
+    c138:	b0 12 96 c0 	call	#-16234	;#0xc096
+
+0000c13c <.LBB17>:
+    if( ClockMode == Low )
+    c13c:	5c 42 02 02 	mov.b	&0x0202,r12	;0x0202
+
+0000c140 <.Loc.153.1>:
+    c140:	0c 93       	cmp	#0,	r12	;r3 As==00
+    c142:	14 20       	jnz	$+42     	;abs 0xc16c
+    c144:	b0 12 30 c0 	call	#-16336	;#0xc030
+
+0000c148 <.L13>:
+    ConfigureTimerPwm();
+    __enable_interrupt();
+    c148:	32 d2       	eint			
+
+0000c14a <.Loc.261.1>:
+    UCA0CTLW0 &= ~UCSWRST;          // Release eUSCI_A UART module for operation
+    UCA0IE = UCRXIE;                // Enable eUSCI_A RX interrupt
+#endif
+
+    // Enable global interrupts and enter LPM0
+    __bis_SR_register(LPM0_bits + GIE);
+    c14a:	32 d0 18 00 	bis	#24,	r2	;#0x0018
+
+0000c14e <.Loc.262.1>:
+}
+    c14e:	4c 43       	clr.b	r12		;
+    c150:	30 41       	ret			
+
+0000c152 <.L10>:
+        TACCR0 = TIMER_PWM_PERIOD_DCO;      // Compare Maxim value
+    c152:	b2 40 e0 2e 	mov	#12000,	&0x0172	;#0x2ee0
+    c156:	72 01 
+
+0000c158 <.Loc.167.1>:
+        TACTL = TASSEL_2 | MC_1;            // TACLK = SMCLK, Up mode.
+    c158:	b2 40 10 02 	mov	#528,	&0x0160	;#0x0210
+    c15c:	60 01 
+
+0000c15e <.Loc.168.1>:
+        TACCTL0 = CCIE;                     // TACCTL0 output OUT bit(not used)
+    c15e:	b2 40 10 00 	mov	#16,	&0x0162	;#0x0010
+    c162:	62 01 
+
+0000c164 <.Loc.169.1>:
+        TACCTL1 = CCIE + OUTMOD_3;          // TACCTL1 Capture Compare, Set/reset
+    c164:	b2 40 70 00 	mov	#112,	&0x0164	;#0x0070
+    c168:	64 01 
+    c16a:	df 3f       	jmp	$-64     	;abs 0xc12a
+
+0000c16c <.L12>:
+        TACCR0 = TIMER_PWM_PERIOD_DCO;      // Compare Maxim value
+    c16c:	b2 40 e0 2e 	mov	#12000,	&0x0172	;#0x2ee0
+    c170:	72 01 
+
+0000c172 <.Loc.167.1>:
+        TACTL = TASSEL_2 | MC_1;            // TACLK = SMCLK, Up mode.
+    c172:	b2 40 10 02 	mov	#528,	&0x0160	;#0x0210
+    c176:	60 01 
+
+0000c178 <.Loc.168.1>:
+        TACCTL0 = CCIE;                     // TACCTL0 output OUT bit(not used)
+    c178:	b2 40 10 00 	mov	#16,	&0x0162	;#0x0010
+    c17c:	62 01 
+
+0000c17e <.Loc.169.1>:
+        TACCTL1 = CCIE + OUTMOD_3;          // TACCTL1 Capture Compare, Set/reset
+    c17e:	b2 40 70 00 	mov	#112,	&0x0164	;#0x0070
+    c182:	64 01 
+    c184:	e1 3f       	jmp	$-60     	;abs 0xc148
+
+0000c186 <ConfigureAdcTempSensor>:
+volatile unsigned short TempReg;
+
+void ConfigureAdcTempSensor( void )
+{
+  /* Configure ADC Temp Sensor Channel */
+  ADC10CTL1 = INCH_10 + ADC10DIV_3 + SHS_1;
+    c186:	
+0000c18a <L0^A>:
+    c18a:	
+0000c18c <.Loc.17.1>:
+  // Temp Sensor ADC10CLK/4, Timer_A.OUT1 Trigger
+  ADC10CTL0 = SREF_1 + ADC10SHT_3 + REFON + REF2_5V + ADC10ON;  // + ADC10IE;
+    c18c:	b2 40 70 38 	mov	#14448,	&0x01b0	;#0x3870
+    c190:	b0 01 
+
+0000c192 <.Loc.18.1>:
+  ADC10CTL0 &= ~ADC10IFG;
+    c192:	a2 c2 b0 01 	bic	#4,	&0x01b0	;r2 As==10
+
+0000c196 <.Loc.19.1>:
+  ADC10CTL0 |= ENC + ADC10SC;  // Sampling and conversion start
+    c196:	b2 d0 03 00 	bis	#3,	&0x01b0	;
+    c19a:	b0 01 
+
+0000c19c <.Loc.20.1>:
+}
+    c19c:	30 41       	ret			
+
+0000c19e <SampleAndConversionAdcTemp>:
+
+unsigned short SampleAndConversionAdcTemp( void )
+{
+  unsigned short tempreg;
+
+  tempreg = ADC10MEM;
+    c19e:	1c 42 b4 01 	mov	&0x01b4,r12	;0x01b4
+
+0000c1a2 <.Loc.27.1>:
+  ADC10CTL0 |= ENC + ADC10SC;         // Sampling and conversion start
+    c1a2:	b2 d0 03 00 	bis	#3,	&0x01b0	;
+    c1a6:	b0 01 
+
+0000c1a8 <.Loc.28.1>:
+  return tempreg;
+}
+    c1a8:	30 41       	ret			
+
+0000c1aa <InitializeIOpins>:
+
+void InitializeIOpins( void )
+{
+  P1SEL = 0x00;
+    c1aa:	c2 43 26 00 	mov.b	#0,	&0x0026	;r3 As==00
+
+0000c1ae <.Loc.34.1>:
+  P1SEL2 = 0x00;
+    c1ae:	c2 43 41 00 	mov.b	#0,	&0x0041	;r3 As==00
+
+0000c1b2 <.Loc.35.1>:
+  P2SEL = 0x00;
+    c1b2:	c2 43 2e 00 	mov.b	#0,	&0x002e	;r3 As==00
+
+0000c1b6 <.Loc.36.1>:
+  P2SEL2 = 0x00; // see MSP430x2xx manual Page 329
+    c1b6:	c2 43 42 00 	mov.b	#0,	&0x0042	;r3 As==00
+
+0000c1ba <.Loc.38.1>:
+
+  LED_DIR |= LED1;
+    c1ba:	d2 d3 22 00 	bis.b	#1,	&0x0022	;r3 As==01
+
+0000c1be <.Loc.39.1>:
+  LED_OUT &= ~LED1;
+    c1be:	d2 c3 21 00 	bic.b	#1,	&0x0021	;r3 As==01
+
+0000c1c2 <.Loc.40.1>:
+}
+    c1c2:	30 41       	ret			
+
+0000c1c4 <ADC10_ISR>:
+
+// ADC10 interrupt service routine
+void __attribute__ (( interrupt ADC10_VECTOR )) ADC10_ISR( void )
+{
+  TempReg = ADC10MEM;
+    c1c4:	92 42 b4 01 	mov	&0x01b4,&0x0208	;0x01b4
+    c1c8:	08 02 
+
+0000c1ca <.Loc.46.1>:
+  ADC10CTL0 &= ~ADC10IFG;
+    c1ca:	a2 c2 b0 01 	bic	#4,	&0x01b0	;r2 As==10
+
+0000c1ce <.Loc.47.1>:
+  ADC10CTL0 |= ENC + ADC10SC;
+    c1ce:	b2 d0 03 00 	bis	#3,	&0x01b0	;
+    c1d2:	b0 01 
+
+0000c1d4 <.Loc.48.1>:
+}
+    c1d4:	00 13       	reti			
+
+0000c1d6 <GetTLV>:
+unsigned char Var_CALDCO_8MHz, Var_CALBC1_8MHz;
+unsigned char Var_CALDCO_1MHz, Var_CALBC1_1MHz;
+
+
+void GetTLV( void )
+{
+    c1d6:	0a 12       	push	r10		;
+
+0000c1d8 <.LCFI0>:
+    c1d8:	09 12       	push	r9		;
+
+0000c1da <.LCFI1>:
+    c1da:	08 12       	push	r8		;
+
+0000c1dc <.LCFI2>:
+    c1dc:	07 12       	push	r7		;
+
+0000c1de <.LCFI3>:
+    c1de:	06 12       	push	r6		;
+
+0000c1e0 <.LCFI4>:
+    c1e0:	05 12       	push	r5		;
+
+0000c1e2 <.LCFI5>:
+    c1e2:	04 12       	push	r4		;
+
+0000c1e4 <.LCFI6>:
+    c1e4:	31 80 56 00 	sub	#86,	r1	;#0x0056
+
+0000c1e8 <.LCFI7>:
+  unsigned char data[ TLV_SIZE ];
+  unsigned char count = 0;
+  unsigned short checksum;
+
+  memcpy( data, (void *)TLV_START, TLV_SIZE );  // Read TLV
+    c1e8:	7e 40 40 00 	mov.b	#64,	r14	;#0x0040
+    c1ec:	3d 40 c0 10 	mov	#4288,	r13	;#0x10c0
+    c1f0:	0c 41       	mov	r1,	r12	;
+    c1f2:	3c 50 16 00 	add	#22,	r12	;#0x0016
+    c1f6:	b0 12 c4 c5 	call	#-14908	;#0xc5c4
+
+0000c1fa <.LVL1>:
+
+  // FIXME: add here CHECKSUM VALIDATION
+  checksum = data[ count++ ];
+  checksum += data[ count ++ ] << 8;
+    c1fa:	5c 42 11 02 	mov.b	&0x0211,r12	;0x0211
+    c1fe:	81 4c 06 00 	mov	r12,	6(r1)	;
+    c202:	5d 42 10 02 	mov.b	&0x0210,r13	;0x0210
+    c206:	81 4d 08 00 	mov	r13,	8(r1)	;
+    c20a:	5e 42 0f 02 	mov.b	&0x020f,r14	;0x020f
+    c20e:	81 4e 0a 00 	mov	r14,	10(r1)	; 0x000a
+    c212:	5f 42 0e 02 	mov.b	&0x020e,r15	;0x020e
+    c216:	81 4f 0c 00 	mov	r15,	12(r1)	; 0x000c
+    c21a:	5c 42 0d 02 	mov.b	&0x020d,r12	;0x020d
+    c21e:	81 4c 0e 00 	mov	r12,	14(r1)	; 0x000e
+    c222:	5d 42 0c 02 	mov.b	&0x020c,r13	;0x020c
+    c226:	81 4d 10 00 	mov	r13,	16(r1)	; 0x0010
+    c22a:	5e 42 0b 02 	mov.b	&0x020b,r14	;0x020b
+    c22e:	81 4e 12 00 	mov	r14,	18(r1)	; 0x0012
+    c232:	5f 42 0a 02 	mov.b	&0x020a,r15	;0x020a
+    c236:	81 4f 14 00 	mov	r15,	20(r1)	; 0x0014
+    c23a:	91 42 20 02 	mov	&0x0220,0(r1)	;0x0220
+    c23e:	00 00 
+    c240:	15 42 1e 02 	mov	&0x021e,r5	;0x021e
+    c244:	91 42 1c 02 	mov	&0x021c,2(r1)	;0x021c
+    c248:	02 00 
+    c24a:	16 42 1a 02 	mov	&0x021a,r6	;0x021a
+    c24e:	17 42 18 02 	mov	&0x0218,r7	;0x0218
+    c252:	18 42 16 02 	mov	&0x0216,r8	;0x0216
+    c256:	19 42 14 02 	mov	&0x0214,r9	;0x0214
+    c25a:	1a 42 12 02 	mov	&0x0212,r10	;0x0212
+    c25e:	5b 41 18 00 	mov.b	24(r1),	r11	;0x00018
+
+0000c262 <.Loc.36.1>:
+  memcpy( data, (void *)TLV_START, TLV_SIZE );  // Read TLV
+    c262:	81 43 04 00 	mov	#0,	4(r1)	;r3 As==00
+    c266:	44 43       	clr.b	r4		;
+
+0000c268 <.Loc.40.1>:
+  checksum += data[ count ++ ] << 8;
+    c268:	6c 43       	mov.b	#2,	r12	;r3 As==10
+    c26a:	6e 42       	mov.b	#4,	r14	;r2 As==10
+
+0000c26c <.L2>:
+
+  while( 1 )
+  {
+    if( data[ count ] == TAG_EMPTY )
+    c26c:	4f 4e       	mov.b	r14,	r15	;
+
+0000c26e <.Loc.44.1>:
+    c26e:	7b 90 fe ff 	cmp.b	#-2,	r11	;#0xfffe
+    c272:	63 24       	jz	$+200    	;abs 0xc33a
+
+0000c274 <.L3>:
+      count++;
+      count += data[ count ];
+      count++;
+    }
+//    else if( data[ count ] == TAG_ADC10_1 || data[ count ] == TAG_ADC12_1 )
+    else if( data[ count ] == TAG_ADC10_1 )
+    c274:	7b 90 10 00 	cmp.b	#16,	r11	;#0x0010
+    c278:	a5 24       	jz	$+332    	;abs 0xc3c4
+
+0000c27a <.Loc.72.1>:
+      Var_CAL_ADC_25T30 = data[ count++ ];
+      Var_CAL_ADC_25T30 += data[ count++ ] << 8;
+      Var_CAL_ADC_25T85 = data[ count++ ];
+      Var_CAL_ADC_25T85 += data[ count++ ] << 8;
+    }
+    else if( data[ count ] == TAG_DCO_30 )
+    c27a:	5b 93       	cmp.b	#1,	r11	;r3 As==01
+    c27c:	f7 23       	jnz	$-16     	;abs 0xc26c
+
+0000c27e <.LVL4>:
+    {
+      count++;
+      count++; // size
+      Var_CALDCO_16MHz = data[ count++ ];
+    c27e:	7d 40 16 00 	mov.b	#22,	r13	;#0x0016
+    c282:	0d 51       	add	r1,	r13	;
+    c284:	0f 5d       	add	r13,	r15	;
+    c286:	6f 4f       	mov.b	@r15,	r15	;
+    c288:	81 4f 06 00 	mov	r15,	6(r1)	;
+
+0000c28c <.LVL5>:
+    c28c:	4d 4c       	mov.b	r12,	r13	;
+    c28e:	7d 50 03 00 	add.b	#3,	r13	;
+
+0000c292 <.Loc.77.1>:
+      Var_CALBC1_16MHz = data[ count++ ];
+    c292:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c296 <.Loc.77.1>:
+    c296:	7e 40 16 00 	mov.b	#22,	r14	;#0x0016
+    c29a:	0e 51       	add	r1,	r14	;
+    c29c:	0d 5e       	add	r14,	r13	;
+    c29e:	6d 4d       	mov.b	@r13,	r13	;
+    c2a0:	81 4d 08 00 	mov	r13,	8(r1)	;
+
+0000c2a4 <.LVL6>:
+    c2a4:	4d 4c       	mov.b	r12,	r13	;
+    c2a6:	6d 52       	add.b	#4,	r13	;r2 As==10
+
+0000c2a8 <.Loc.78.1>:
+      Var_CALDCO_12MHz = data[ count++ ];
+    c2a8:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c2ac <.Loc.78.1>:
+    c2ac:	0d 5e       	add	r14,	r13	;
+    c2ae:	6d 4d       	mov.b	@r13,	r13	;
+    c2b0:	81 4d 0a 00 	mov	r13,	10(r1)	; 0x000a
+
+0000c2b4 <.LVL7>:
+    c2b4:	4d 4c       	mov.b	r12,	r13	;
+    c2b6:	7d 50 05 00 	add.b	#5,	r13	;
+
+0000c2ba <.Loc.79.1>:
+      Var_CALBC1_12MHz = data[ count++ ];
+    c2ba:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c2be <.Loc.79.1>:
+    c2be:	0d 5e       	add	r14,	r13	;
+    c2c0:	6d 4d       	mov.b	@r13,	r13	;
+    c2c2:	81 4d 0c 00 	mov	r13,	12(r1)	; 0x000c
+
+0000c2c6 <.LVL8>:
+    c2c6:	4d 4c       	mov.b	r12,	r13	;
+    c2c8:	7d 50 06 00 	add.b	#6,	r13	;
+
+0000c2cc <.Loc.80.1>:
+      Var_CALDCO_8MHz = data[ count++ ];
+    c2cc:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c2d0 <.Loc.80.1>:
+    c2d0:	0d 5e       	add	r14,	r13	;
+    c2d2:	6d 4d       	mov.b	@r13,	r13	;
+    c2d4:	81 4d 0e 00 	mov	r13,	14(r1)	; 0x000e
+
+0000c2d8 <.LVL9>:
+    c2d8:	4d 4c       	mov.b	r12,	r13	;
+    c2da:	7d 50 07 00 	add.b	#7,	r13	;
+
+0000c2de <.Loc.81.1>:
+      Var_CALBC1_8MHz = data[ count++ ];
+    c2de:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c2e2 <.Loc.81.1>:
+    c2e2:	0d 5e       	add	r14,	r13	;
+    c2e4:	6d 4d       	mov.b	@r13,	r13	;
+    c2e6:	81 4d 10 00 	mov	r13,	16(r1)	; 0x0010
+
+0000c2ea <.Loc.82.1>:
+      Var_CALDCO_1MHz = data[ count++ ];
+    c2ea:	4d 4c       	mov.b	r12,	r13	;
+    c2ec:	7d 50 09 00 	add.b	#9,	r13	;
+    c2f0:	4e 4d       	mov.b	r13,	r14	;
+
+0000c2f2 <.LVL10>:
+      Var_CALBC1_8MHz = data[ count++ ];
+    c2f2:	7d 53       	add.b	#-1,	r13	;r3 As==11
+
+0000c2f4 <.LVL11>:
+      Var_CALDCO_1MHz = data[ count++ ];
+    c2f4:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c2f8 <.Loc.82.1>:
+    c2f8:	7f 40 16 00 	mov.b	#22,	r15	;#0x0016
+    c2fc:	0f 51       	add	r1,	r15	;
+    c2fe:	0d 5f       	add	r15,	r13	;
+
+0000c300 <.LVL12>:
+    c300:	6d 4d       	mov.b	@r13,	r13	;
+    c302:	81 4d 12 00 	mov	r13,	18(r1)	; 0x0012
+
+0000c306 <.Loc.83.1>:
+      Var_CALBC1_1MHz = data[ count++ ];
+    c306:	7c 50 0a 00 	add.b	#10,	r12	;#0x000a
+    c30a:	3c f0 ff 00 	and	#255,	r12	;#0x00ff
+
+0000c30e <.LVL13>:
+    c30e:	0d 4f       	mov	r15,	r13	;
+    c310:	0d 5e       	add	r14,	r13	;
+    c312:	6d 4d       	mov.b	@r13,	r13	;
+    c314:	81 4d 14 00 	mov	r13,	20(r1)	; 0x0014
+    c318:	91 43 04 00 	mov	#1,	4(r1)	;r3 As==01
+
+0000c31c <.L4>:
+    }
+    if( count >= TLV_SIZE ) break;
+    c31c:	7d 40 3f 00 	mov.b	#63,	r13	;#0x003f
+    c320:	4d 9c       	cmp.b	r12,	r13	;
+    c322:	17 28       	jnc	$+48     	;abs 0xc352
+
+0000c324 <.L19>:
+    c324:	7d 40 16 00 	mov.b	#22,	r13	;#0x0016
+    c328:	0d 51       	add	r1,	r13	;
+    c32a:	0d 5c       	add	r12,	r13	;
+    c32c:	6b 4d       	mov.b	@r13,	r11	;
+    c32e:	4e 4c       	mov.b	r12,	r14	;
+    c330:	6e 53       	incd.b	r14		;
+
+0000c332 <.LVL16>:
+    if( data[ count ] == TAG_EMPTY )
+    c332:	4f 4e       	mov.b	r14,	r15	;
+
+0000c334 <.Loc.44.1>:
+    c334:	7b 90 fe ff 	cmp.b	#-2,	r11	;#0xfffe
+    c338:	9d 23       	jnz	$-196    	;abs 0xc274
+
+0000c33a <.L17>:
+      count++;
+    c33a:	5c 53       	inc.b	r12		;
+
+0000c33c <.LVL18>:
+      count += data[ count ];
+    c33c:	4d 4c       	mov.b	r12,	r13	;
+    c33e:	7c 40 16 00 	mov.b	#22,	r12	;#0x0016
+    c342:	0c 51       	add	r1,	r12	;
+    c344:	0d 5c       	add	r12,	r13	;
+
+0000c346 <.Loc.48.1>:
+      count++;
+    c346:	6e 5d       	add.b	@r13,	r14	;
+    c348:	4c 4e       	mov.b	r14,	r12	;
+
+0000c34a <.LVL19>:
+    if( count >= TLV_SIZE ) break;
+    c34a:	7d 40 3f 00 	mov.b	#63,	r13	;#0x003f
+    c34e:	4d 9c       	cmp.b	r12,	r13	;
+    c350:	e9 2f       	jc	$-44     	;abs 0xc324
+
+0000c352 <.L7>:
+    c352:	04 93       	cmp	#0,	r4	;r3 As==00
+    c354:	11 24       	jz	$+36     	;abs 0xc378
+    c356:	a2 41 20 02 	mov	@r1,	&0x0220	;
+    c35a:	82 45 1e 02 	mov	r5,	&0x021e	;
+    c35e:	92 41 02 00 	mov	2(r1),	&0x021c	;
+    c362:	1c 02 
+    c364:	82 46 1a 02 	mov	r6,	&0x021a	;
+    c368:	82 47 18 02 	mov	r7,	&0x0218	;
+    c36c:	82 48 16 02 	mov	r8,	&0x0216	;
+    c370:	82 49 14 02 	mov	r9,	&0x0214	;
+    c374:	82 4a 12 02 	mov	r10,	&0x0212	;
+
+0000c378 <.L8>:
+    c378:	81 93 04 00 	cmp	#0,	4(r1)	;r3 As==00
+    c37c:	20 24       	jz	$+66     	;abs 0xc3be
+    c37e:	1e 41 06 00 	mov	6(r1),	r14	;
+    c382:	c2 4e 11 02 	mov.b	r14,	&0x0211	;
+    c386:	1f 41 08 00 	mov	8(r1),	r15	;
+    c38a:	c2 4f 10 02 	mov.b	r15,	&0x0210	;
+    c38e:	1c 41 0a 00 	mov	10(r1),	r12	;0x0000a
+    c392:	c2 4c 0f 02 	mov.b	r12,	&0x020f	;
+    c396:	1d 41 0c 00 	mov	12(r1),	r13	;0x0000c
+    c39a:	c2 4d 0e 02 	mov.b	r13,	&0x020e	;
+    c39e:	1e 41 0e 00 	mov	14(r1),	r14	;0x0000e
+    c3a2:	c2 4e 0d 02 	mov.b	r14,	&0x020d	;
+    c3a6:	1f 41 10 00 	mov	16(r1),	r15	;0x00010
+    c3aa:	c2 4f 0c 02 	mov.b	r15,	&0x020c	;
+    c3ae:	1c 41 12 00 	mov	18(r1),	r12	;0x00012
+    c3b2:	c2 4c 0b 02 	mov.b	r12,	&0x020b	;
+    c3b6:	1d 41 14 00 	mov	20(r1),	r13	;0x00014
+    c3ba:	c2 4d 0a 02 	mov.b	r13,	&0x020a	;
+
+0000c3be <.L1>:
+  } // endwhile
+}
+    c3be:	31 50 56 00 	add	#86,	r1	;#0x0056
+
+0000c3c2 <.LCFI8>:
+    c3c2:	f8 3c       	jmp	$+498    	;abs 0xc5b4
+
+0000c3c4 <.L18>:
+      Var_CAL_ADC_GAIN_FACTOR = data[ count++ ];
+    c3c4:	4d 4c       	mov.b	r12,	r13	;
+    c3c6:	7d 50 03 00 	add.b	#3,	r13	;
+
+0000c3ca <.Loc.56.1>:
+      Var_CAL_ADC_GAIN_FACTOR += data[ count++ ] << 8;
+    c3ca:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c3ce <.Loc.56.1>:
+    c3ce:	7e 40 16 00 	mov.b	#22,	r14	;#0x0016
+    c3d2:	0e 51       	add	r1,	r14	;
+    c3d4:	0d 5e       	add	r14,	r13	;
+
+0000c3d6 <.Loc.56.1>:
+    c3d6:	6d 4d       	mov.b	@r13,	r13	;
+    c3d8:	0d 5d       	rla	r13		;
+    c3da:	0d 5d       	rla	r13		;
+    c3dc:	0d 5d       	rla	r13		;
+    c3de:	0d 5d       	rla	r13		;
+    c3e0:	0d 5d       	rla	r13		;
+    c3e2:	0d 5d       	rla	r13		;
+    c3e4:	0d 5d       	rla	r13		;
+    c3e6:	0d 5d       	rla	r13		;
+
+0000c3e8 <.Loc.55.1>:
+      Var_CAL_ADC_GAIN_FACTOR = data[ count++ ];
+    c3e8:	0f 5e       	add	r14,	r15	;
+
+0000c3ea <.Loc.56.1>:
+      Var_CAL_ADC_GAIN_FACTOR += data[ count++ ] << 8;
+    c3ea:	6f 4f       	mov.b	@r15,	r15	;
+    c3ec:	0f 5d       	add	r13,	r15	;
+    c3ee:	81 4f 00 00 	mov	r15,	0(r1)	;
+
+0000c3f2 <.LVL22>:
+      Var_CAL_ADC_OFFSET = data[ count++ ];
+    c3f2:	4d 4c       	mov.b	r12,	r13	;
+    c3f4:	7d 50 05 00 	add.b	#5,	r13	;
+
+0000c3f8 <.Loc.58.1>:
+      Var_CAL_ADC_OFFSET += data[ count++ ] << 8;
+    c3f8:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c3fc <.Loc.58.1>:
+    c3fc:	0d 5e       	add	r14,	r13	;
+
+0000c3fe <.Loc.58.1>:
+    c3fe:	65 4d       	mov.b	@r13,	r5	;
+    c400:	05 55       	rla	r5		;
+    c402:	05 55       	rla	r5		;
+    c404:	05 55       	rla	r5		;
+    c406:	05 55       	rla	r5		;
+    c408:	05 55       	rla	r5		;
+    c40a:	05 55       	rla	r5		;
+    c40c:	05 55       	rla	r5		;
+    c40e:	05 55       	rla	r5		;
+
+0000c410 <.Loc.56.1>:
+      Var_CAL_ADC_GAIN_FACTOR += data[ count++ ] << 8;
+    c410:	4d 4c       	mov.b	r12,	r13	;
+    c412:	6d 52       	add.b	#4,	r13	;r2 As==10
+
+0000c414 <.Loc.57.1>:
+      Var_CAL_ADC_OFFSET = data[ count++ ];
+    c414:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c418 <.Loc.57.1>:
+    c418:	0d 5e       	add	r14,	r13	;
+
+0000c41a <.Loc.58.1>:
+      Var_CAL_ADC_OFFSET += data[ count++ ] << 8;
+    c41a:	6d 4d       	mov.b	@r13,	r13	;
+    c41c:	05 5d       	add	r13,	r5	;
+
+0000c41e <.LVL23>:
+      Var_CAL_ADC_15VREF_FACTOR = data[ count++ ];
+    c41e:	4d 4c       	mov.b	r12,	r13	;
+    c420:	7d 50 07 00 	add.b	#7,	r13	;
+
+0000c424 <.Loc.60.1>:
+      Var_CAL_ADC_15VREF_FACTOR += data[ count++ ] << 8;
+    c424:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c428 <.Loc.60.1>:
+    c428:	0d 5e       	add	r14,	r13	;
+
+0000c42a <.Loc.60.1>:
+    c42a:	6e 4d       	mov.b	@r13,	r14	;
+    c42c:	0e 5e       	rla	r14		;
+    c42e:	0e 5e       	rla	r14		;
+    c430:	0e 5e       	rla	r14		;
+    c432:	0e 5e       	rla	r14		;
+    c434:	0e 5e       	rla	r14		;
+    c436:	0e 5e       	rla	r14		;
+    c438:	0e 5e       	rla	r14		;
+    c43a:	0e 5e       	rla	r14		;
+
+0000c43c <.Loc.58.1>:
+      Var_CAL_ADC_OFFSET += data[ count++ ] << 8;
+    c43c:	4d 4c       	mov.b	r12,	r13	;
+    c43e:	7d 50 06 00 	add.b	#6,	r13	;
+
+0000c442 <.Loc.59.1>:
+      Var_CAL_ADC_15VREF_FACTOR = data[ count++ ];
+    c442:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c446 <.Loc.59.1>:
+    c446:	7f 40 16 00 	mov.b	#22,	r15	;#0x0016
+    c44a:	0f 51       	add	r1,	r15	;
+    c44c:	0d 5f       	add	r15,	r13	;
+
+0000c44e <.Loc.60.1>:
+      Var_CAL_ADC_15VREF_FACTOR += data[ count++ ] << 8;
+    c44e:	6d 4d       	mov.b	@r13,	r13	;
+    c450:	0d 5e       	add	r14,	r13	;
+    c452:	81 4d 02 00 	mov	r13,	2(r1)	;
+
+0000c456 <.LVL24>:
+      Var_CAL_ADC_15T30 = data[ count++ ];
+    c456:	4d 4c       	mov.b	r12,	r13	;
+    c458:	7d 50 09 00 	add.b	#9,	r13	;
+
+0000c45c <.Loc.62.1>:
+      Var_CAL_ADC_15T30 += data[ count++ ] << 8;
+    c45c:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c460 <.Loc.62.1>:
+    c460:	0d 5f       	add	r15,	r13	;
+
+0000c462 <.Loc.62.1>:
+    c462:	66 4d       	mov.b	@r13,	r6	;
+    c464:	06 56       	rla	r6		;
+    c466:	06 56       	rla	r6		;
+    c468:	06 56       	rla	r6		;
+    c46a:	06 56       	rla	r6		;
+    c46c:	06 56       	rla	r6		;
+    c46e:	06 56       	rla	r6		;
+    c470:	06 56       	rla	r6		;
+    c472:	06 56       	rla	r6		;
+
+0000c474 <.Loc.60.1>:
+      Var_CAL_ADC_15VREF_FACTOR += data[ count++ ] << 8;
+    c474:	4d 4c       	mov.b	r12,	r13	;
+    c476:	7d 52       	add.b	#8,	r13	;r2 As==11
+
+0000c478 <.Loc.61.1>:
+      Var_CAL_ADC_15T30 = data[ count++ ];
+    c478:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c47c <.Loc.61.1>:
+    c47c:	0d 5f       	add	r15,	r13	;
+
+0000c47e <.Loc.62.1>:
+      Var_CAL_ADC_15T30 += data[ count++ ] << 8;
+    c47e:	6d 4d       	mov.b	@r13,	r13	;
+    c480:	06 5d       	add	r13,	r6	;
+
+0000c482 <.LVL25>:
+      Var_CAL_ADC_15T85 = data[ count++ ];
+    c482:	4d 4c       	mov.b	r12,	r13	;
+    c484:	7d 50 0b 00 	add.b	#11,	r13	;#0x000b
+
+0000c488 <.Loc.64.1>:
+      Var_CAL_ADC_15T85 += data[ count++ ] << 8;
+    c488:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c48c <.Loc.64.1>:
+    c48c:	0d 5f       	add	r15,	r13	;
+
+0000c48e <.Loc.64.1>:
+    c48e:	67 4d       	mov.b	@r13,	r7	;
+    c490:	07 57       	rla	r7		;
+    c492:	07 57       	rla	r7		;
+    c494:	07 57       	rla	r7		;
+    c496:	07 57       	rla	r7		;
+    c498:	07 57       	rla	r7		;
+    c49a:	07 57       	rla	r7		;
+    c49c:	07 57       	rla	r7		;
+    c49e:	07 57       	rla	r7		;
+
+0000c4a0 <.Loc.62.1>:
+      Var_CAL_ADC_15T30 += data[ count++ ] << 8;
+    c4a0:	4d 4c       	mov.b	r12,	r13	;
+    c4a2:	7d 50 0a 00 	add.b	#10,	r13	;#0x000a
+
+0000c4a6 <.Loc.63.1>:
+      Var_CAL_ADC_15T85 = data[ count++ ];
+    c4a6:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c4aa <.Loc.63.1>:
+    c4aa:	0d 5f       	add	r15,	r13	;
+
+0000c4ac <.Loc.64.1>:
+      Var_CAL_ADC_15T85 += data[ count++ ] << 8;
+    c4ac:	6d 4d       	mov.b	@r13,	r13	;
+    c4ae:	07 5d       	add	r13,	r7	;
+
+0000c4b0 <.LVL26>:
+      Var_CAL_ADC_25VREF_FACTOR = data[ count++ ];
+    c4b0:	4d 4c       	mov.b	r12,	r13	;
+    c4b2:	7d 50 0d 00 	add.b	#13,	r13	;#0x000d
+
+0000c4b6 <.Loc.66.1>:
+      Var_CAL_ADC_25VREF_FACTOR += data[ count++ ] << 8;
+    c4b6:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c4ba <.Loc.66.1>:
+    c4ba:	0d 5f       	add	r15,	r13	;
+
+0000c4bc <.Loc.66.1>:
+    c4bc:	68 4d       	mov.b	@r13,	r8	;
+    c4be:	08 58       	rla	r8		;
+    c4c0:	08 58       	rla	r8		;
+    c4c2:	08 58       	rla	r8		;
+    c4c4:	08 58       	rla	r8		;
+    c4c6:	08 58       	rla	r8		;
+    c4c8:	08 58       	rla	r8		;
+    c4ca:	08 58       	rla	r8		;
+    c4cc:	08 58       	rla	r8		;
+
+0000c4ce <.Loc.64.1>:
+      Var_CAL_ADC_15T85 += data[ count++ ] << 8;
+    c4ce:	4d 4c       	mov.b	r12,	r13	;
+    c4d0:	7d 50 0c 00 	add.b	#12,	r13	;#0x000c
+
+0000c4d4 <.Loc.65.1>:
+      Var_CAL_ADC_25VREF_FACTOR = data[ count++ ];
+    c4d4:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c4d8 <.Loc.65.1>:
+    c4d8:	0d 5f       	add	r15,	r13	;
+
+0000c4da <.Loc.66.1>:
+      Var_CAL_ADC_25VREF_FACTOR += data[ count++ ] << 8;
+    c4da:	6d 4d       	mov.b	@r13,	r13	;
+    c4dc:	08 5d       	add	r13,	r8	;
+
+0000c4de <.LVL27>:
+      Var_CAL_ADC_25T30 = data[ count++ ];
+    c4de:	4d 4c       	mov.b	r12,	r13	;
+    c4e0:	7d 50 0f 00 	add.b	#15,	r13	;#0x000f
+
+0000c4e4 <.Loc.68.1>:
+      Var_CAL_ADC_25T30 += data[ count++ ] << 8;
+    c4e4:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c4e8 <.Loc.68.1>:
+    c4e8:	0d 5f       	add	r15,	r13	;
+
+0000c4ea <.Loc.68.1>:
+    c4ea:	69 4d       	mov.b	@r13,	r9	;
+    c4ec:	09 59       	rla	r9		;
+    c4ee:	09 59       	rla	r9		;
+    c4f0:	09 59       	rla	r9		;
+    c4f2:	09 59       	rla	r9		;
+    c4f4:	09 59       	rla	r9		;
+    c4f6:	09 59       	rla	r9		;
+    c4f8:	09 59       	rla	r9		;
+    c4fa:	09 59       	rla	r9		;
+
+0000c4fc <.Loc.66.1>:
+      Var_CAL_ADC_25VREF_FACTOR += data[ count++ ] << 8;
+    c4fc:	4d 4c       	mov.b	r12,	r13	;
+    c4fe:	7d 50 0e 00 	add.b	#14,	r13	;#0x000e
+
+0000c502 <.Loc.67.1>:
+      Var_CAL_ADC_25T30 = data[ count++ ];
+    c502:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c506 <.Loc.67.1>:
+    c506:	0d 5f       	add	r15,	r13	;
+
+0000c508 <.Loc.68.1>:
+      Var_CAL_ADC_25T30 += data[ count++ ] << 8;
+    c508:	6d 4d       	mov.b	@r13,	r13	;
+    c50a:	09 5d       	add	r13,	r9	;
+
+0000c50c <.Loc.69.1>:
+      Var_CAL_ADC_25T85 = data[ count++ ];
+    c50c:	4e 4c       	mov.b	r12,	r14	;
+    c50e:	7e 50 11 00 	add.b	#17,	r14	;#0x0011
+    c512:	3e f0 ff 00 	and	#255,	r14	;#0x00ff
+
+0000c516 <.LVL28>:
+      Var_CAL_ADC_25T30 += data[ count++ ] << 8;
+    c516:	4d 4c       	mov.b	r12,	r13	;
+    c518:	7d 50 10 00 	add.b	#16,	r13	;#0x0010
+
+0000c51c <.Loc.69.1>:
+      Var_CAL_ADC_25T85 = data[ count++ ];
+    c51c:	3d f0 ff 00 	and	#255,	r13	;#0x00ff
+
+0000c520 <.Loc.69.1>:
+    c520:	0d 5f       	add	r15,	r13	;
+
+0000c522 <.Loc.70.1>:
+      Var_CAL_ADC_25T85 += data[ count++ ] << 8;
+    c522:	7c 50 12 00 	add.b	#18,	r12	;#0x0012
+    c526:	3c f0 ff 00 	and	#255,	r12	;#0x00ff
+
+0000c52a <.LVL29>:
+    c52a:	0e 5f       	add	r15,	r14	;
+
+0000c52c <.Loc.70.1>:
+    c52c:	6a 4e       	mov.b	@r14,	r10	;
+    c52e:	0a 5a       	rla	r10		;
+    c530:	0a 5a       	rla	r10		;
+    c532:	0a 5a       	rla	r10		;
+    c534:	0a 5a       	rla	r10		;
+    c536:	0a 5a       	rla	r10		;
+    c538:	0a 5a       	rla	r10		;
+    c53a:	0a 5a       	rla	r10		;
+    c53c:	0a 5a       	rla	r10		;
+
+0000c53e <.Loc.70.1>:
+    c53e:	6d 4d       	mov.b	@r13,	r13	;
+    c540:	0a 5d       	add	r13,	r10	;
+    c542:	54 43       	mov.b	#1,	r4	;r3 As==01
+    c544:	eb 3e       	jmp	$-552    	;abs 0xc31c
+
+0000c546 <TimerA0_ISR>:
+#define	SYSTIMER2_FLIP_ON	1
+extern volatile unsigned char F_SysTimer2_Flipper;
+
+void __attribute__ (( interrupt TIMER0_A0_VECTOR )) TimerA0_ISR( void )
+{
+  TACCTL0 &= ~CCIFG;
+    c546:	92 c3 62 01 	bic	#1,	&0x0162	;r3 As==01
+
+0000c54a <L0^A>:
+}
+    c54a:	00 13       	reti			
+
+0000c54c <TimerA1_ISR>:
+
+void __attribute__ (( interrupt TIMER0_A1_VECTOR )) TimerA1_ISR( void )
+{
+    c54c:	0d 12       	push	r13		;
+
+0000c54e <.LCFI0>:
+    c54e:	0c 12       	push	r12		;
+
+0000c550 <.LCFI1>:
+  SysTimer_Counter++;
+    c550:	92 53 06 02 	inc	&0x0206		;
+
+0000c554 <.Loc.33.1>:
+  if( SysTimer_Counter >= SYSTIMER_COUNTUP )
+    c554:	1c 42 06 02 	mov	&0x0206,r12	;0x0206
+
+0000c558 <.Loc.33.1>:
+    c558:	7d 40 63 00 	mov.b	#99,	r13	;#0x0063
+    c55c:	0d 9c       	cmp	r12,	r13	;
+    c55e:	0a 2c       	jc	$+22     	;abs 0xc574
+
+0000c560 <.Loc.35.1>:
+  {
+    if( F_SysTimer_Flipper == SYSTIMER_FLIP_OFF )
+    c560:	5c 42 01 02 	mov.b	&0x0201,r12	;0x0201
+
+0000c564 <.Loc.35.1>:
+    c564:	0c 93       	cmp	#0,	r12	;r3 As==00
+    c566:	19 24       	jz	$+52     	;abs 0xc59a
+
+0000c568 <.Loc.42.1>:
+      F_SysTimer_Flipper = SYSTIMER_FLIP_ON;
+      LED_OUT |= LED1;
+    }
+    else
+    {
+      F_SysTimer_Flipper = SYSTIMER_FLIP_OFF;
+    c568:	c2 43 01 02 	mov.b	#0,	&0x0201	;r3 As==00
+
+0000c56c <.Loc.43.1>:
+      LED_OUT &= ~LED1;
+    c56c:	d2 c3 21 00 	bic.b	#1,	&0x0021	;r3 As==01
+
+0000c570 <.L6>:
+    }
+    SysTimer_Counter = 0;
+    c570:	82 43 06 02 	mov	#0,	&0x0206	;r3 As==00
+
+0000c574 <.L4>:
+  }
+
+  SysTimer2_Counter++;
+    c574:	92 53 04 02 	inc	&0x0204		;
+
+0000c578 <.Loc.49.1>:
+  if( SysTimer2_Counter >= SYSTIMER2_COUNTUP )
+    c578:	1c 42 04 02 	mov	&0x0204,r12	;0x0204
+
+0000c57c <.Loc.49.1>:
+    c57c:	7d 40 09 00 	mov.b	#9,	r13	;
+    c580:	0d 9c       	cmp	r12,	r13	;
+    c582:	04 2c       	jc	$+10     	;abs 0xc58c
+
+0000c584 <.Loc.51.1>:
+  {
+    F_SysTimer2_Flipper = SYSTIMER2_FLIP_ON;
+    c584:	d2 43 00 02 	mov.b	#1,	&0x0200	;r3 As==01
+
+0000c588 <.Loc.52.1>:
+    SysTimer2_Counter = 0;
+    c588:	82 43 04 02 	mov	#0,	&0x0204	;r3 As==00
+
+0000c58c <.L7>:
+  }
+
+  LcdWait++;
+    c58c:	92 53 22 02 	inc	&0x0222		;
+
+0000c590 <.Loc.57.1>:
+
+  TACCTL1 &= ~CCIFG;
+    c590:	92 c3 64 01 	bic	#1,	&0x0164	;r3 As==01
+
+0000c594 <.Loc.58.1>:
+}
+    c594:	3c 41       	pop	r12		;
+
+0000c596 <.LCFI2>:
+    c596:	3d 41       	pop	r13		;
+
+0000c598 <.LCFI3>:
+    c598:	00 13       	reti			
+
+0000c59a <.L8>:
+      F_SysTimer_Flipper = SYSTIMER_FLIP_ON;
+    c59a:	d2 43 01 02 	mov.b	#1,	&0x0201	;r3 As==01
+
+0000c59e <.Loc.38.1>:
+      LED_OUT |= LED1;
+    c59e:	d2 d3 21 00 	bis.b	#1,	&0x0021	;r3 As==01
+    c5a2:	e6 3f       	jmp	$-50     	;abs 0xc570
+
+0000c5a4 <WDT_ISR>:
+
+// ADC10 interrupt service routine
+void __attribute__ (( interrupt WDT_VECTOR )) WDT_ISR( void )
+{
+  IE1 &= ~WDTIE;  /* disable interrupt */
+    c5a4:	d2 c3 00 00 	bic.b	#1,	&0x0000	;r3 As==01
+
+0000c5a8 <.Loc.64.1>:
+  IFG1 &= ~WDTIFG;  /* clear interrupt flag */
+    c5a8:	d2 c3 02 00 	bic.b	#1,	&0x0002	;r3 As==01
+
+0000c5ac <.Loc.65.1>:
+  WDTCTL = WDTPW + WDTHOLD;  /* put WDT back in hold state */
+    c5ac:	b2 40 80 5a 	mov	#23168,	&0x0120	;#0x5a80
+    c5b0:	20 01 
+
+0000c5b2 <.Loc.66.1>:
+}
+    c5b2:	00 13       	reti			
+
+0000c5b4 <__mspabi_func_epilog_7>:
+    c5b4:	34 41       	pop	r4		;
+
+0000c5b6 <__mspabi_func_epilog_6>:
+    c5b6:	35 41       	pop	r5		;
+
+0000c5b8 <__mspabi_func_epilog_5>:
+    c5b8:	36 41       	pop	r6		;
+
+0000c5ba <__mspabi_func_epilog_4>:
+    c5ba:	37 41       	pop	r7		;
+
+0000c5bc <__mspabi_func_epilog_3>:
+    c5bc:	38 41       	pop	r8		;
+
+0000c5be <__mspabi_func_epilog_2>:
+    c5be:	39 41       	pop	r9		;
+
+0000c5c0 <__mspabi_func_epilog_1>:
+    c5c0:	3a 41       	pop	r10		;
+    c5c2:	30 41       	ret			
+
+0000c5c4 <memcpy>:
+    c5c4:	0f 4c       	mov	r12,	r15	;
+    c5c6:	0e 5d       	add	r13,	r14	;
+
+0000c5c8 <.L2>:
+    c5c8:	0d 9e       	cmp	r14,	r13	;
+    c5ca:	01 20       	jnz	$+4      	;abs 0xc5ce
+
+0000c5cc <.Loc.111.1>:
+    c5cc:	30 41       	ret			
+
+0000c5ce <.L3>:
+    c5ce:	ff 4d 00 00 	mov.b	@r13+,	0(r15)	;
+
+0000c5d2 <.LVL4>:
+    c5d2:	1f 53       	inc	r15		;
+    c5d4:	f9 3f       	jmp	$-12     	;abs 0xc5c8
+
+0000c5d6 <_exit>:
+    c5d6:	ff 3f       	jmp	$+0      	;abs 0xc5d6
+
+0000c5d8 <memmove>:
+    c5d8:	0a 12       	push	r10		;
+
+0000c5da <L0^A>:
+    c5da:	09 12       	push	r9		;
+
+0000c5dc <.LCFI1>:
+    c5dc:	0f 4d       	mov	r13,	r15	;
+    c5de:	0f 5e       	add	r14,	r15	;
+
+0000c5e0 <.Loc.69.1>:
+    c5e0:	0d 9c       	cmp	r12,	r13	;
+    c5e2:	02 2c       	jc	$+6      	;abs 0xc5e8
+
+0000c5e4 <.Loc.69.1>:
+    c5e4:	0c 9f       	cmp	r15,	r12	;
+    c5e6:	07 28       	jnc	$+16     	;abs 0xc5f6
+
+0000c5e8 <.L2>:
+    c5e8:	0e 4c       	mov	r12,	r14	;
+
+0000c5ea <.L4>:
+    c5ea:	0d 9f       	cmp	r15,	r13	;
+    c5ec:	0a 24       	jz	$+22     	;abs 0xc602
+
+0000c5ee <.LVL3>:
+    c5ee:	fe 4d 00 00 	mov.b	@r13+,	0(r14)	;
+
+0000c5f2 <.LVL4>:
+    c5f2:	1e 53       	inc	r14		;
+    c5f4:	fa 3f       	jmp	$-10     	;abs 0xc5ea
+
+0000c5f6 <.L3>:
+    c5f6:	09 4e       	mov	r14,	r9	;
+    c5f8:	39 e3       	inv	r9		;
+
+0000c5fa <.Loc.74.1>:
+    c5fa:	4d 43       	clr.b	r13		;
+
+0000c5fc <.L5>:
+    c5fc:	3d 53       	add	#-1,	r13	;r3 As==11
+
+0000c5fe <.LVL7>:
+    c5fe:	09 9d       	cmp	r13,	r9	;
+    c600:	01 20       	jnz	$+4      	;abs 0xc604
+
+0000c602 <.L9>:
+    c602:	dd 3f       	jmp	$-68     	;abs 0xc5be
+
+0000c604 <.L6>:
+    c604:	0b 4e       	mov	r14,	r11	;
+    c606:	0b 5d       	add	r13,	r11	;
+    c608:	0b 5c       	add	r12,	r11	;
+    c60a:	0a 4f       	mov	r15,	r10	;
+    c60c:	0a 5d       	add	r13,	r10	;
+
+0000c60e <.LVL10>:
+    c60e:	eb 4a 00 00 	mov.b	@r10,	0(r11)	;
+    c612:	f4 3f       	jmp	$-22     	;abs 0xc5fc
+
+0000c614 <memset>:
+    c614:	0e 5c       	add	r12,	r14	;
+
+0000c616 <.LVL2>:
+    c616:	0f 4c       	mov	r12,	r15	;
+
+0000c618 <.L2>:
+    c618:	0f 9e       	cmp	r14,	r15	;
+
+0000c61a <L0^A>:
+    c61a:	01 20       	jnz	$+4      	;abs 0xc61e
+
+0000c61c <.Loc.104.1>:
+    c61c:	30 41       	ret			
+
+0000c61e <.L3>:
+    c61e:	1f 53       	inc	r15		;
+
+0000c620 <.LVL4>:
+    c620:	cf 4d ff ff 	mov.b	r13,	-1(r15)	; 0xffff
+    c624:	f9 3f       	jmp	$-12     	;abs 0xc618

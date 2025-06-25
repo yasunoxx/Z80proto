@@ -245,9 +245,7 @@ static void _lcd_wait_100ns(void)
 static void _lcd_wait_300ns(void)
 {
 #asm
-    nop
-    nop
-    nop
+    nop ; 4sysclk = 500nsec@16MHz
 #endasm
 }
 
@@ -259,7 +257,9 @@ static void _lcd_wait_usec(unsigned int t)
     i = t;
     i <<= 1;            /* t = t * 2; */
     while(i) {          /* 'while' takes ? cycles */
-        _lcd_wait_300ns();
+#asm
+        nop ; 4sysclk = 500nsec@16MHz
+#endasm
         i--;            /* 'i--' takes ? cycle */
 	}
 }

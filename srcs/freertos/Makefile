@@ -8,18 +8,15 @@ ASMSRC = $(TARGET)_crt0.asm
 ASMOBJ = $(TARGET).o
 BIN = $(TARGET).bin
 OBJS = $(ASMOBJ) main.o \
-	croutine.o event_groups.o list.o tasks.o queue.o timers.o \
-	heap_1.o \
+	croutine.o event_groups.o list.o tasks.o queue.o timers.o heap_1.o \
 	port.o
 
 MAP = $(TARGET).map
-CFLAGS = +embedded \
-	-I$(PATH_FREEOS_KERNEL_SOURCE)/include \
-	-I/usr/local/z88dk/include \
-	-Iport
+CFLAGS = +embedded -I$(FREERTOS_SRC)/include \
+	-I/usr/local/z88dk/include -Iport
 LDFLAGS = +embedded --no-crt -m -Llib2 -lembedded_clib2
 
-# adjust your environment
+# Top Address
 ASFLAGS = -r1000h
 
 .PHONY:	all $(OBJS)

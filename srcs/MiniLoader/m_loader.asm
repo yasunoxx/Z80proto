@@ -52,7 +52,7 @@ endif
 if WITH_SPI == 1
     out (PO_0), a
 endif
-if SUPMOD == 1
+if (TARGET_Z80PROTO == 2|SUPMOD == 1)
     out (PO_0), a
     out (PO_1), a
     out (PO_2), a
@@ -88,7 +88,7 @@ endif
 ;
     ei
 
-if DEBUG_PIOOUT == 1
+if (DEBUG_PIOOUT == 1|USE_LCD=1)
     call    DEBUG_PIOOUT_SETUP
 endif
 
@@ -182,6 +182,10 @@ endif
     cp  ':'
     jp  z, ihex_load
     ; :nnnn.... : Intel HEX format text load and store
+    cp  'B'
+    jp  z, breakp_cons
+    ; BSnnnn : set breakpoint(rst 30h)
+    ; BR : reset breakpoint
 if WITH_KERMIT == 1
 ;   cp  'K'
 ;   jp  z, receive_kermit
@@ -190,7 +194,7 @@ endif
 if WITH_XYMODEM == 1
     cp  'X'
     jp  z, receive_xymodem
-;   ; Xnnnn : receive X/YMODEM protocol, store to 0x0nnnn
+    ; Xnnnn : receive X/YMODEM protocol, store to 0x0nnnn
 endif
 ;   cp  'S'
 ;   jp  z, upload_srec_1line
@@ -205,18 +209,19 @@ endif
 ;   cp  'W'
 ;   jp  z, write_out_spibuf
 ;   ; Wnnnn : write buffer to ROM 0xnnnn00~+255 bytes
-;   cp  'P'
-;   jp  z, in_port_cons
-;   ; Pnn : read I/O address 0x0nn
+    cp  'P'
+    jp  z, inout_port_cons
+    ; PInn, POnnxx : read I/O address 'nn'
+    ;              or write I/O address 'nn' data 'xx'
 ;   cp  'Q'
 ;   jp  z, out_port_cons
 ;   ; Qnnxx : write I/O address 0x0nn data 0x0xx
 ;   cp  'O'
 ;   jp  z, output_srec
 ;   ; O : output S-record format
-;   cp  'T'
-;   jp  z, test_mode
-;   ; T : for test usage
+    cp  'T'
+    jp  z, test_mode
+    ; Tnnnn : test memory area 0x0nnnn to 0x0EFFF
 ;   cp  'N'
 ;   jp  z, noun_verb_mode
 ;   ; N : for debug mode ...
@@ -227,12 +232,15 @@ endif
     extern  modify_cons         ; command_m.asm
     extern  dump_cons           ; command_d.asm
     extern  ihex_load           ; command_i.asm
+    extern  inout_port_cons     ; command_p.asm
 if WITH_KERMIT == 1
     extern  receive_kermit      ; command_k.asm
 endif
 if WITH_XYMODEM == 1
     extern  receive_xymodem     ; command_x.asm
 endif
+    extern  test_mode           ; command_t.asm
+    extern  breakp_cons         ; command_b.asm
 
     PUBLIC  de2buf_sio0tx
 de2buf_sio0tx: ; DE(4 nibbles) -> BUF_SIO0TX

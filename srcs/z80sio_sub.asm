@@ -189,11 +189,12 @@ analyze_SIO0:   ;; get status flags, and reset error
     in  a, (SIO_Ch0_C)
     ld  c, a
 analyze_SIO0_RR0_bit0: ;;　read status and error recovery
-    bit 0, c    ; Receive Character Available
-    jr  z, analyze_SIO0_RR0_bit1
+;    bit 0, c    ; Receive Character Available
+;;   FIX: this bit is no effect(interrupt mode)
+;    jr  z, analyze_SIO0_RR0_bit1
 ;
-    ; Receiver Flag Set
-    set F_STAT_RECEIVE, (ix)
+    ; Receive Flag Set
+;    set F_STAT_RECEIVE, (ix)
 ;
 analyze_SIO0_RR0_bit1:
     bit 1, c
@@ -266,8 +267,8 @@ analyze_SIO0_end:
 
     PUBLIC  _putchar_SIO0
 _putchar_SIO0:
-    push    af
     ld  a, l
+    push    af
     jr  putchar_SIO0_0
 ;
     PUBLIC  putchar_SIO0
@@ -292,12 +293,12 @@ putchar_SIO0_2:
 ;
     ret
 
+    PUBLIC  _getchar_SIO0
+_getchar_SIO0:
 getchar_SIO0: ;;  A = Receive Character
     push    bc
-    ld  b, a
     xor a
     ld  (BUF_GETCHAR_SIO0+1), a
-    ld  a, b
 if SIO_RX_INT == 0
     xor a
     out (SIO_Ch0_C), a
@@ -305,16 +306,16 @@ if SIO_RX_INT == 0
     bit 0, a
     jr  z, getchar_SIO0_norecv
 getchar_SIO0_2:
+;    ; Send XOFF
 ;    ld  a, 5
 ;    out (SIO_Ch0_C), a
 getchar_SIO0_2_2:
-;    ; Send XOFF
 ;    in  a, (SIO_Ch0_C)
 ;    bit 2, a
 ;    jr  z, getchar_SIO0_2_2
 ;    ld  a, XOFF
-;    out (SIO_Ch0_D), a
-    ; Set RTS(RFR) or DTR
+;    call    putchar_SIO0
+    ; Set RTS(RFR) and DTR
     ld  a, 5
     out (SIO_Ch0_C), a
     ld  a, (SIO0_WR5)
@@ -337,7 +338,7 @@ getchar_SIO0_2_3:
 ;    jr  z, getchar_SIO0_2_3
 ;    ld  a, XON
 ;    call    putchar_SIO0
-    ; Reset RTS(RFR) or DTR
+    ; Reset RTS(RFR) and DTR
     ld  a, 5
     out (SIO_Ch0_C), a
     ld  a, (SIO0_WR5)
@@ -385,23 +386,29 @@ getchar_SIO0_exit:
 ;
     ret
 
-    PUBLIC  _getchar_SIO0
-_getchar_SIO0:
-; as uint16_t getchar_SIO0( void )
+if NOWDEBUG == 1
+    PUBLIC  _get_SIO0_polling
+_get_SIO0_polling:
     call    getchar_SIO0
-    ld  a, (BUF_GETCHAR_SIO0+1)
-    cp  0FFh
-    jr  nz, _getchar_SIO0_2
-    ;
-    ld  h, a
-    ld  l, a    ; HL = 0FFFFh = -1
+    ld      hl, (BUF_GETCHAR_SIO0)
+    ld      a, (BUF_GETCHAR_SIO0+1)
+    cp      0FFh
+    jr      z, _get_SIO0_polling_2
     ret
-_getchar_SIO0_2:
-    ld  hl, (BUF_GETCHAR_SIO0)  ; HL = 0000h to 00FFh
+_get_SIO0_polling_2:
+    ld      hl, $ffff
     ret
+endif
 
     PUBLIC  _puts_SIO0
 _puts_SIO0:
+    ld  hl,2
+    add hl,sp   ; skip over return address on stack
+    ld  e,(hl)
+    inc hl
+    ld  d,(hl)   ; de = p
+    ld  hl, de
+
 puts_SIO0: ;;  HL = String Addr.(NULL Term.)
     push    af
 ;
@@ -433,7 +440,7 @@ gets_SIO0:  ;; IX = *buffer, HL = CNT_BUF_CON
 ;
     call    putchar_SIO0    ; echo back
     cp  CR
-    ret z                   ; exit
+    jr  z, gets_SIO0_3      ; exit
 ;
 ; Other Characters
     cp  'a' - 1
@@ -457,6 +464,10 @@ gets_SIO0_2:
     inc (hl)    ;   CNT_BUF_CON
 ;
     jr  gets_SIO0
+
+gets_SIO0_3:
+    call    putCRLF
+    ret
 
 bs_cons: ;; BACKSPACE
 del_cons: ;; DELETE

@@ -852,7 +852,7 @@ drv_7seg_S0_1:
 ;;  7seg anode line set(post)
     ld  c, a
     ld  a, (PO_2_BUP)
-    and 00000011b
+    and 11000011b
                 ; erase anode line
     or  c       ; set new anode line
     call    out_PO_2

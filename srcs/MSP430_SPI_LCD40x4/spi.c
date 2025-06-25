@@ -105,7 +105,7 @@ void __attribute__ ((interrupt(USCIAB0RX_VECTOR))) USCIAB0RX_ISR (void)
 //      UCA0TXBUF = ACK;
       F_SPI_Receive = true;
       break;
-      case 4:break;                             // Vector 4 - UCA1RXIFG
-      default: break;
+    case 4:break;                             // Vector 4 - UCA1RXIFG
+    default: break;
   }
 }

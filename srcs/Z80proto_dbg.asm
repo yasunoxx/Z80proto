@@ -73,17 +73,24 @@ get_PC:
 ;
     ret
 
-if DEBUG_PPIOUT == 1
-_DEBUG_PPIOUT_SETUP:
-DEBUG_PPIOUT_SETUP:
+if DEBUG_PIOOUT == 1
+_DEBUG_PIOOUT_SETUP:
+DEBUG_PIOOUT_SETUP:
     di
     ;
     push    af
-    ld a, 10011001b ; Group A&B mode0, PB = OUTPUT
-    out (DEBUG_PPICTRL), a
+    ld a, 00001111b ; Mode 0(Output)
+    out (DEBUG_PIOCTRL), a
     ;
     pop af
     ;
     ei
+    ret
+
+_DEBUG_PIOOUT:
+;    push    af
+    ld  a, (_DEBUG_PIOA_DATA)
+    out (DEBUG_PIOA), a
+;    pop af
     ret
 endif

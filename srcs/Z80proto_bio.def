@@ -9,17 +9,13 @@ i8253_C2    EQU 12h
 i8253_CC    EQU 13h
 endif
 ;
-if TARGET_Z80PROTO == 2
+if (SUPMOD==1||WITH_SPI==1)
 PO_0        EQU 00h
 PI_0        EQU 0Ch
+endif
+if (TARGET_Z80PROTO == 2||SUPMOD==1)
 ROMSEL      EQU 08h
 PAGE1       EQU 09h
-endif
-if (TARGET_SAKI80 == 1&SUPMOD==1)
-PO_0        EQU 00h
-PI_0        EQU 07h
-ROMSEL      EQU 03h
-PAGE1       EQU 04h
 endif
 ;
 ; SPI device addr.
