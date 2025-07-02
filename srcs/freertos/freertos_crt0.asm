@@ -23,21 +23,21 @@ rst00:
     PUBLIC  __sgoioblk_end
 
 ; Maximum number of FILEs available
-IF !DEFINED_CLIB_FOPEN_MAX
+.if !DEFINED_CLIB_FOPEN_MAX
     defc    CLIB_FOPEN_MAX = 10
-ENDIF
+endif 
 
 PUBLIC  __FOPEN_MAX
 defc    __FOPEN_MAX = CLIB_FOPEN_MAX
 
 ; Maximum number of fds available
-IF !DEFINED_CLIB_OPEN_MAX
+.if !DEFINED_CLIB_OPEN_MAX
     defc    CLIB_OPEN_MAX = CLIB_FOPEN_MAX
-ENDIF
+endif 
 
 PUBLIC  __CLIB_OPEN_MAX
 defc    __CLIB_OPEN_MAX = CLIB_OPEN_MAX
-IF CRT_ENABLE_STDIO = 1
+.if CRT_ENABLE_STDIO = 1
 
     ; Setup std* streams
     ld hl,__sgoioblk+2
@@ -47,7 +47,7 @@ IF CRT_ENABLE_STDIO = 1
     ld hl,__sgoioblk+22
     ld (hl),21                  ; stderr
 
-ENDIF
+endif 
 
 .__sgoioblk
     defs    CLIB_FOPEN_MAX * 10 ; stdio control block
@@ -67,15 +67,15 @@ main:
     ; pre ROMKICK
     out (ROMSEL), a
     out (PAGE1), a
-;if FDCDMA == 1
+;.if FDCDMA == 1
 ;    out (FD_CONTROL), a ; MOTOR off, etc ...
-;endif
+;endif 
 
 ;
     ld  a, 00000100b    ; Initial PO_2 value
     call    out_PO_2
 
-if RUN_MODE == RUN_ON_RAM
+.if RUN_MODE == RUN_ON_RAM
 main1:
 ;;
 ;;; Evaluate: ROMKICK(for Z80proto2)
@@ -116,7 +116,7 @@ IPL0AREA    EQU 00000h
     ld  bc, SIZE
     ldir
 ;;
-endif
+endif 
 
 ;; initialize system devices
     extern  sloop
@@ -124,16 +124,16 @@ init:
     ld  bc, 0789h
     call    sloop
 ;
-if INTERRUPT_MODE == 2
+.if INTERRUPT_MODE == 2
 ;;  for im2
     call    conf_CTC
     call    conf_SIO
-endif
-if INTERRUPT_MODE == 1
+endif 
+.if INTERRUPT_MODE == 1
 ;;  for im1
     call    conf_timer1
     call    conf_timer_other
-endif
+endif 
 ;
     call    conf_sysmem
 ;
@@ -165,7 +165,7 @@ endif
 ;;; im1 devices
 ;;
 ;   --------------------------------------------------------------------------
-if  INTERRUPT_MODE == 1
+.if  INTERRUPT_MODE == 1
 
 ;;; FIXME: add getchar*, putchar*, gets*, puts* routines for im1
 int_sci: ;;  check SCI
@@ -187,14 +187,14 @@ int_timer_hook:
 
     include "../Z80proto_im1.asm"
 
-endif
+endif 
 
 ;   --------------------------------------------------------------------------
 ;;
 ;;; im2 devices
 ;;
 ;   --------------------------------------------------------------------------
-if  INTERRUPT_MODE == 2
+.if  INTERRUPT_MODE == 2
 
 int_CTC:
     push    af
@@ -269,7 +269,7 @@ int_void:   ; im2, do nothing
 ;
     include "../z80sio_sub.asm"
 
-endif
+endif 
 ;
 ;
 

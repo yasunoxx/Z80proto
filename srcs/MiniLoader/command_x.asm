@@ -1,5 +1,5 @@
 ;; command_x.asm -- handler, call xymodem.c functions
-  include "../memmap.def"
+  .include "common/memmap.def"
 
   PUBLIC  receive_xymodem
   PUBLIC  _Transfer_Dest_xymodem
@@ -10,6 +10,7 @@
   PUBLIC  _BUF_GETCHAR_SIO0
   EXTERN  p_ix2bc
   EXTERN  _xymodem_main
+  EXTERN  getchar_SIO0
   EXTERN  putchar_SIO0
   EXTERN  putCRLF
   EXTERN  putAreg2chrs

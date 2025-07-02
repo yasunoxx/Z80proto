@@ -50,7 +50,7 @@ extern volatile TCB_t * volatile pxCurrentTCB;
 
 void port_configSETUP_TIMER_INTERRUPT()
 {
-#asm
+__asm
     di
     push    af
     push    hl
@@ -63,7 +63,7 @@ void port_configSETUP_TIMER_INTERRUPT()
     pop hl
     pop af
     ei
-#endasm
+__endasm
 }
 #define configSETUP_TIMER_INTERRUPT() void port_configSETUP_TIMER_INTERRUPT()
 
@@ -74,7 +74,7 @@ void port_configSETUP_TIMER_INTERRUPT()
 
 void port_configSTOP_TIMER_INTERRUPT()
 {
-#asm
+__asm
     di
     push    af
     push    hl
@@ -86,7 +86,7 @@ void port_configSTOP_TIMER_INTERRUPT()
     pop hl
     pop af
     ei
-#endasm
+__endasm
 }
 #define configSTOP_TIMER_INTERRUPT() port_configSTOP_TIMER_INTERRUPT()
 

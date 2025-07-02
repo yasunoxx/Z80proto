@@ -1,5 +1,5 @@
 ;	fputc_cons
-;	INCLUDE "../../z80sioctc.def"
+;	.include "common/../z80sioctc.def"
 ;	INCLUDE	"../../memmap.def"
 	PUBLIC  fputc_cons_native
 	extern	putchar_SIO0

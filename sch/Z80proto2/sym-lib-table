@@ -1,3 +1,4 @@
 (sym_lib_table
   (lib (name "Toshiba_Sp")(type "KiCad")(uri "${KIPRJMOD}/Toshiba_Sp.kicad_sym")(options "")(descr ""))
+  (lib (name "FT245RNL")(type "KiCad")(uri "${KIPRJMOD}/FT245RNL.kicad_sym")(options "")(descr ""))
 )

@@ -1,6 +1,6 @@
 ;; command_m.asm -- 'M' command implement for MiniMon/MiniLoader
 ;
-    include "../memmap.def"
+    .include "common/memmap.def"
 
     PUBLIC  modify_cons
     EXTERN  p_ix2bc

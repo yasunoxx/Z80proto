@@ -1,0 +1,29 @@
+;;  Z80proto_bio.def -- definition for Z80proto Basic I/O devices
+
+if INTERRUPT_MODE == 1
+i8253_C0    .equ 10h
+i8253_C1    .equ 11h
+i8253_C1_LSB    .equ 40h
+i8253_C1_MSB    .equ 9Ch
+i8253_C2    .equ 12h
+i8253_CC    .equ 13h
+endif 
+;
+if (SUPMOD==1||WITH_SPI==1)
+PO_0        .equ 00h
+PI_0        .equ 0Ch
+endif 
+if (TARGET_Z80PROTO == 2||SUPMOD==1)
+ROMSEL      .equ 08h
+PAGE1       .equ 09h
+endif 
+;
+; SPI device addr.
+SPI_DEVID_NULL  .equ 00000000b
+SPI_DEVID_Ch0   .equ 00100000b
+SPI_DEVID_Ch1   .equ 01000000b
+SPI_DEVID_Ch2   .equ 01100000b
+
+; 25FL016A command
+SPIROM_CMD_WRSR .equ 01h
+SPIROM_CMD_FAST_READ    .equ 0Bh

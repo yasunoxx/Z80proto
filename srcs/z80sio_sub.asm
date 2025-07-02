@@ -19,8 +19,9 @@ conf_CTC:
     out(CTC_Ch2), a
     out(CTC_Ch3), a
 ;
-    xor a       ; Interrupt Vector MSB
-    ld  i, a
+    ld  hl, INTCTC
+    ld  a, h
+    ld  i, a    ; Interrupt Vector MSB
     ld  a, INTCTC & 00FFh  ; Interrupt Vector LSB
     out(CTC_Ch0), a
 ;
@@ -38,7 +39,7 @@ if TARGET_Z80PROTO == 2
                 ; This is configuration, not Interrupt Vector
     out(CTC_Ch0), a
     ld  a, 250  ; 1/((16*250)/4000000) = 1000, 1msec/Interrupt
-endif
+endif 
 if (TARGET_SAKI80 == 1|TARGET_Z84C01X == 1)
     ld  a, 10100111b
                 ; Ch0
@@ -52,7 +53,7 @@ if (TARGET_SAKI80 == 1|TARGET_Z84C01X == 1)
                 ; This is configuration, not Interrupt Vector
     out(CTC_Ch0), a
     ld  a, 31  ; 1/((256*31)/8000000) = 1008.064, 1msec/Interrupt
-endif
+endif 
     out(CTC_Ch0), a
 ;
     ret
@@ -81,7 +82,7 @@ conf_CTC_Ch2: ;; call from conf_SIO_Ch1
     out(CTC_Ch2), a
 ;
     ret
-endif
+endif 
 
 if TARGET_SAKI80 == 1
 conf_CTC_Ch3: ;; call from conf_SIO_Ch0
@@ -98,16 +99,16 @@ conf_CTC_Ch3: ;; call from conf_SIO_Ch0
     out(CTC_Ch3), a
 ;
     ret
-endif
+endif 
 
 conf_SIO:
 ;;  Ch0 configure
 if TARGET_Z80PROTO == 2
     call    conf_CTC_Ch1
-endif
+endif 
 if TARGET_SAKI80 == 1
     call    conf_CTC_Ch3
-endif
+endif 
 ;
     ld  b, 12
     ld  c, SIO_Ch0_C
@@ -123,7 +124,7 @@ if TARGET_Z80PROTO == 2
     ld  c, SIO_Ch1_C
     ld  hl, SIO1_CONF
     otir
-endif
+endif 
 ;
     ret
 
@@ -149,12 +150,12 @@ if TARGET_Z80PROTO == 2
 ;   WR4, Rx and Tx control
     defb    4
     defb    01000100b   ; x16 clock, Async. Mode 1 stop bit, non parity
-endif
+endif 
 if (TARGET_SAKI80 == 1|TARGET_Z84C01X == 1)
 ;   WR4, Rx and Tx control
     defb    4
     defb    00000100b   ; x1 clock, Async. Mode 1 stop bit, non parity
-endif
+endif 
 ;   WR3, Receiver Logic control
     defb    3
     defb    11000001b   ; Rx 8bit, not Auto Enables, Rx enable
@@ -168,12 +169,12 @@ SIO0_WR5:
 if SIO_RX_INT == 0
     defb    00000000b   ; Wait/Ready disable, no Rx INT
                         ; Tx INT & Ext./Stat. INT disable
-endif
+endif 
 if SIO_RX_INT == 1
     defb    00011000b   ; Wait/Ready disable, Rx INT on All receive character,
                         ; but parity error is not sp. condx.,
                         ; Tx INT & Ext./Stat. INT disable
-endif
+endif 
 
 analyze_SIO0:   ;; get status flags, and reset error
     push    af
@@ -295,9 +296,10 @@ putchar_SIO0_2:
 
     PUBLIC  _getchar_SIO0
 _getchar_SIO0:
+    PUBLIC  getchar_SIO0
 getchar_SIO0: ;;  A = Receive Character
     push    bc
-    xor a
+    ld  a, 0FFh
     ld  (BUF_GETCHAR_SIO0+1), a
 if SIO_RX_INT == 0
     xor a
@@ -305,16 +307,20 @@ if SIO_RX_INT == 0
     in  a, (SIO_Ch0_C)
     bit 0, a
     jr  z, getchar_SIO0_norecv
+    ;
+if SIO0_FLOW_CONTROL = SOFT
 getchar_SIO0_2:
-;    ; Send XOFF
-;    ld  a, 5
-;    out (SIO_Ch0_C), a
+    ; Send XOFF
+    ld  a, 5
+    out (SIO_Ch0_C), a
 getchar_SIO0_2_2:
-;    in  a, (SIO_Ch0_C)
-;    bit 2, a
-;    jr  z, getchar_SIO0_2_2
-;    ld  a, XOFF
-;    call    putchar_SIO0
+    in  a, (SIO_Ch0_C)
+    bit 2, a
+    jr  z, getchar_SIO0_2_2
+    ld  a, XOFF
+    out (SIO_Ch0_D), a
+endif
+if SIO0_FLOW_CONTROL == HARD
     ; Set RTS(RFR) and DTR
     ld  a, 5
     out (SIO_Ch0_C), a
@@ -322,22 +328,27 @@ getchar_SIO0_2_2:
     set BIT_RTS, a
     set BIT_DTR, a
     out (SIO_Ch0_C), a
+endif
 
     ; data receive and analyze
     in  a, (SIO_Ch0_D)
     ld  (BUF_GETCHAR_SIO0), a
+    xor a
+    ld  (BUF_GETCHAR_SIO0+1), a
     call    analyze_SIO0
 
-    push    af
-;    ; Send XON
-;    ld  a, 5
-;    out (SIO_Ch0_C), a
+if SIO0_FLOW_CONTROL == SOFT
+    ; Send XON
+    ld  a, 5
+    out (SIO_Ch0_C), a
 getchar_SIO0_2_3:
-;    in  a, (SIO_Ch0_C)
-;    bit 2, a
-;    jr  z, getchar_SIO0_2_3
-;    ld  a, XON
-;    call    putchar_SIO0
+    in  a, (SIO_Ch0_C)
+    bit 2, a
+    jr  z, getchar_SIO0_2_3
+    ld  a, XON
+    out (SIO_Ch0_D), a
+endif
+if SIO0_FLOW_CONTROL == HARD
     ; Reset RTS(RFR) and DTR
     ld  a, 5
     out (SIO_Ch0_C), a
@@ -345,8 +356,9 @@ getchar_SIO0_2_3:
     res BIT_RTS, a
     res BIT_DTR, a
     out (SIO_Ch0_C), a
-    pop af
 endif
+
+endif 
 if SIO_RX_INT == 1
 ; Compare Read Pointer and Write Pointer
     ld  a, (PTR_BUF_SIO0_RX_READ)
@@ -365,19 +377,21 @@ if SIO_RX_INT == 1
 ;
     ld  a, (bc)
     ld  (BUF_GETCHAR_SIO0), a
+    xor a
+    ld  (BUF_GETCHAR_SIO0+1), a
 ; Pointer Increment
     ld  a, (PTR_BUF_SIO0_RX_READ)
     inc a
     and 00111111b
     ld  (PTR_BUF_SIO0_RX_READ), a
-endif
+endif 
 ;
     jr  getchar_SIO0_exit
 ;
 getchar_SIO0_norecv:
     ld  a, NULL
     ld  (BUF_GETCHAR_SIO0), a
-    ld  a, 0FFh
+    ld  a, 0FFh ; 0x0FF00 = NORECV
     ld  (BUF_GETCHAR_SIO0+1), a
 ;
 getchar_SIO0_exit:
@@ -385,20 +399,6 @@ getchar_SIO0_exit:
     ld  a, (BUF_GETCHAR_SIO0)
 ;
     ret
-
-if NOWDEBUG == 1
-    PUBLIC  _get_SIO0_polling
-_get_SIO0_polling:
-    call    getchar_SIO0
-    ld      hl, (BUF_GETCHAR_SIO0)
-    ld      a, (BUF_GETCHAR_SIO0+1)
-    cp      0FFh
-    jr      z, _get_SIO0_polling_2
-    ret
-_get_SIO0_polling_2:
-    ld      hl, $ffff
-    ret
-endif
 
     PUBLIC  _puts_SIO0
 _puts_SIO0:
@@ -409,6 +409,7 @@ _puts_SIO0:
     ld  d,(hl)   ; de = p
     ld  hl, de
 
+    PUBLIC  puts_SIO0
 puts_SIO0: ;;  HL = String Addr.(NULL Term.)
     push    af
 ;
@@ -426,6 +427,7 @@ puts_SIO0_end:
 ;
     ret
 
+    PUBLIC  gets_SIO0
 gets_SIO0:  ;; IX = *buffer, HL = CNT_BUF_CON
             ;; for usage, see loader_cons_oneliner()
     call    getchar_SIO0
@@ -487,6 +489,7 @@ bs_cons_2:
     call    putchar_SIO0    ; echo back
     jr  gets_SIO0
 
+    PUBLIC  init_SIO_buffers
 init_SIO_buffers:
     xor a
     ld  (PTR_BUF_SIO0_RX_READ), a

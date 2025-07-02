@@ -34,15 +34,15 @@ main:
     ; pre ROMKICK
     out (ROMSEL), a
     out (PAGE1), a
-;if FDCDMA == 1
+;.if FDCDMA == 1
 ;    out (FD_CONTROL), a ; MOTOR off, etc ...
-;endif
+;endif 
 
 ;
     ld  a, 00000100b    ; Initial PO_2 value
     call    out_PO_2
 
-if RUN_MODE == RUN_ON_RAM
+.if RUN_MODE == RUN_ON_RAM
 main1:
 ;;
 ;;; Evaluate: ROMKICK(for Z80proto2)
@@ -83,7 +83,7 @@ IPL0AREA    EQU 00000h
     ld  bc, SIZE
     ldir
 ;;
-endif
+endif 
 
 ;; initialize system devices
     extern  sloop
@@ -91,16 +91,16 @@ init:
     ld  bc, 0789h
     call    sloop
 ;
-if INTERRUPT_MODE == 2
+.if INTERRUPT_MODE == 2
 ;;  for im2
     call    conf_CTC
     call    conf_SIO
-endif
-if INTERRUPT_MODE == 1
+endif 
+.if INTERRUPT_MODE == 1
 ;;  for im1
     call    conf_timer1
     call    conf_timer_other
-endif
+endif 
 ;
     call    conf_sysmem
 ;
@@ -425,7 +425,7 @@ spirom_setAddr: ; IX = read/wrte addr MSB 16bit(nnnn00h), destroy AF, HL
 ;;; im1 devices
 ;;
 ;   --------------------------------------------------------------------------
-if  INTERRUPT_MODE == 1
+.if  INTERRUPT_MODE == 1
 
 ;;; FIXME: add getchar*, putchar*, gets*, puts* routines for im1
 int_sci: ;;  check SCI
@@ -441,14 +441,14 @@ int_i8253: ;;  time is up(maybe), re-set counter
 
     include "../Z80proto_im1.asm"
 
-endif
+endif 
 
 ;   --------------------------------------------------------------------------
 ;;
 ;;; im2 devices
 ;;
 ;   --------------------------------------------------------------------------
-if  INTERRUPT_MODE == 2
+.if  INTERRUPT_MODE == 2
 
 int_CTC:
     push    af
@@ -517,7 +517,7 @@ int_void:   ; im2, do nothing
 ;
     include "../z80sio_sub.asm"
 
-endif
+endif 
 ;
 ;
 

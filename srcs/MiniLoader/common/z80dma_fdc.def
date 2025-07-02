@@ -1,0 +1,11 @@
+;   z80dma_fdc.def -- definition for Z80ADMA & TMS2793 BOARD
+
+    DEFC    FDCDMA = 0  ; flag "FDC&DMA board is not present"
+;    DEFC    FDCDMA = 1  ; flag "FDC&DMA board is present"
+
+    DEFC    FD_CONTROL = 30h
+    DEFC    FDC_CMD  = 34h
+    DEFC    FDC_TRK  = 35h
+    DEFC    FDC_SECT = 36h
+    DEFC    FDC_DATA = 37h
+    DEFC    DMA_CMD  = 38h

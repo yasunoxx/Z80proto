@@ -1,7 +1,7 @@
 ;; command_p.asm -- 'P' command implement for MiniMon
 ;
-    include "../z80sioctc.def"
-    include "../memmap.def"
+    .include "common/z80sioctc.def"
+    .include "common/memmap.def"
 
     PUBLIC inout_port_cons
     EXTERN  p_ix2bc

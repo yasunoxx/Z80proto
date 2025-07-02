@@ -6,26 +6,29 @@
 ;;
 ;;; Program
 ;;
-rst00:
+    .module m_loader
+    .z80
+    .area   _CODE
 ;;  !!!DO NOT EDIT!!!: m_loader.asm is "run on ROM" only
 ;   run on ROM
-    ORG 0h
+;    .ORG 0
+rst00:
 ;
-    include "config.asm"
+    .include "config.asm"
 ;
     jp main
 ;
-    include "../Z80proto_bio.def"
-if TARGET_Z80PROTO == 2
-    include "../z80sioctc.def"
-endif
-if (TARGET_SAKI80 == 1|TARGET_Z84C01X == 1)
-    include "../saki80sioctc.def"
-endif
-    include "../Z80proto_seg.def"
-    include "../memmap.def"
+    .include "common/Z80proto_bio.def"
+.if TARGET_Z80PROTO == 2
+    .include "common/z80sioctc.def"
+.endif
+.if (TARGET_SAKI80 == 1|TARGET_Z84C01X == 1)
+    .include "common/saki80sioctc.def"
+.endif
+    .include "common/Z80proto_seg.def"
+    .include "common/memmap.def"
 ;
-    include "../crt_z80_rsts.asm"
+    .include "common/crt_z80_rsts.asm"
 
 ; ----------------------------------------------------------------------------
 ;;
@@ -34,10 +37,10 @@ endif
 ; ----------------------------------------------------------------------------
 ;
 main:
-if (TARGET_SAKI80 == 1|TARGET_Z84C01X == 1)
+.if (TARGET_SAKI80 == 1|TARGET_Z84C01X == 1)
     ; disable WDT()
-WDTER   EQU 0F0h
-WDTCR   EQU 0F1h
+WDTER   .equ 0F0h
+WDTCR   .equ 0F1h
     ld  a, 01111011b
     out (WDTER), a
     ld  a, 0B1h
@@ -46,13 +49,13 @@ WDTCR   EQU 0F1h
     out (WDTCR), a
     ; for debug
     in  a, (WDTER)
-endif
+.endif
     ;
     xor a
-if WITH_SPI == 1
+.if WITH_SPI == 1
     out (PO_0), a
-endif
-if (TARGET_Z80PROTO == 2|SUPMOD == 1)
+.endif
+.if (TARGET_Z80PROTO == 2|SUPMOD == 1)
     out (PO_0), a
     out (PO_1), a
     out (PO_2), a
@@ -62,35 +65,35 @@ if (TARGET_Z80PROTO == 2|SUPMOD == 1)
 ;
     ld  a, 00000100b    ; Initial PO_2 value
     call    out_PO_2
-endif
+.endif
 
 ;; initialize system devices
 init:
     ld  bc, 0FEDCh  ; long wait
     call    sloop   ; BC = wait loop count
 ;
-if INTERRUPT_MODE == 2
+.if INTERRUPT_MODE == 2
 ;;  for im2
     call    conf_CTC
     call    conf_SIO
-endif
-if INTERRUPT_MODE == 1
+.endif
+.if INTERRUPT_MODE == 1
 ;;  for im1
     call    conf_timer1
     call    conf_timer_other
-endif
+.endif
 ;
     call    conf_sysmem
 ;
-if SUPMOD == 1
+.if SUPMOD == 1
     call    spi_dev_unsel
-endif
+.endif
 ;
     ei
 
-if (DEBUG_PIOOUT == 1|USE_LCD=1)
+.if (DEBUG_PIOOUT == 1|USE_LCD=1)
     call    DEBUG_PIOOUT_SETUP
-endif
+.endif
 
 ;;
 ;;; Proto2 title
@@ -165,11 +168,11 @@ parse_cons_2:
     ld  a, (hl)
 ;
 parse_cons_3:
-if WITH_SPI == 1
+.if WITH_SPI == 1
     cp  'L'
     jp  z, spirom_loadIndex
     ; L : load FAT0(0x1F0000~) into buffer
-endif
+.endif
     cp  'D'
     jp  z, dump_cons
     ; Dnnnn : memory dump nnnn~+127 bytes
@@ -186,16 +189,16 @@ endif
     jp  z, breakp_cons
     ; BSnnnn : set breakpoint(rst 30h)
     ; BR : reset breakpoint
-if WITH_KERMIT == 1
+.if WITH_KERMIT == 1
 ;   cp  'K'
 ;   jp  z, receive_kermit
 ;   ; Knnnn : receive kermit protocol, store to 0x0nnnn
-endif
-if WITH_XYMODEM == 1
+.endif
+.if WITH_XYMODEM == 1
     cp  'X'
     jp  z, receive_xymodem
     ; Xnnnn : receive X/YMODEM protocol, store to 0x0nnnn
-endif
+.endif
 ;   cp  'S'
 ;   jp  z, upload_srec_1line
 ;   ; Sxxxx... : S-record type memory modify
@@ -233,12 +236,12 @@ endif
     extern  dump_cons           ; command_d.asm
     extern  ihex_load           ; command_i.asm
     extern  inout_port_cons     ; command_p.asm
-if WITH_KERMIT == 1
+.if WITH_KERMIT == 1
     extern  receive_kermit      ; command_k.asm
-endif
-if WITH_XYMODEM == 1
+.endif
+.if WITH_XYMODEM == 1
     extern  receive_xymodem     ; command_x.asm
-endif
+.endif
     extern  test_mode           ; command_t.asm
     extern  breakp_cons         ; command_b.asm
 
@@ -271,7 +274,7 @@ de2buf_sio0tx: ; DE(4 nibbles) -> BUF_SIO0TX
 ;
     ret
 
-if WITH_SPI == 1
+.if WITH_SPI == 1
 ;;
 ;;;
 ;;;; SPI loader Mode
@@ -376,12 +379,12 @@ spirom_read256_loop:
     call    spi_read_8bit
     ld  (ix), a
     inc ix
-if WITH_7SEG == 1
+.if WITH_7SEG == 1
 ;; disp readdata
     ld  a, b
     cpl a   ; ???
     call    drv_7seg_sub_disp2
-endif
+.endif
 ;
     djnz    spirom_read256_loop
 ;
@@ -417,7 +420,7 @@ spirom_setAddr: ; IX = read/wrte addr MSB 16bit(nnnn00h), destroy AF, HL
 ;
     ret
 ;
-endif
+.endif
 
 ;;
 ;;; Interrupt Service Routines, and Peripherals subroutines
@@ -428,7 +431,7 @@ endif
 ;;; im1 devices
 ;;
 ;   --------------------------------------------------------------------------
-if  INTERRUPT_MODE == 1
+.if  INTERRUPT_MODE == 1
 
 ;;; FIXME: add getchar*, putchar*, gets*, puts* routines for im1
 int_sci: ;;  check SCI
@@ -442,16 +445,16 @@ int_i8253: ;;  time is up(maybe), re-set counter
 ;
     ret ; to rst38
 
-    include "../Z80proto_im1.asm"
+    .include "common/Z80proto_im1.asm"
 
-endif
+.endif
 
 ;   --------------------------------------------------------------------------
 ;;
 ;;; im2 devices
 ;;
 ;   --------------------------------------------------------------------------
-if  INTERRUPT_MODE == 2
+.if  INTERRUPT_MODE == 2
 
 int_CTC:
     push    af
@@ -535,9 +538,9 @@ int_void:   ; im2, do nothing
 ;
 ;;
 ;
-    include "../z80sio_sub.asm"
+    .include "common/z80sio_sub.asm"
 
-endif
+.endif
 ;
 ;
 
@@ -568,10 +571,10 @@ int_counter_8B:
 int_counter_8_end:
     ld  (V_CNT_8B), a
 ;
-if WITH_7SEG == 1
+.if WITH_7SEG == 1
 ;; and drive 7seg
     call    drv_7seg
-endif
+.endif
 ;
 int_SysTick_16:
     ld  hl, (SysTick)
@@ -635,7 +638,7 @@ conf_sysmem:
 ;;
 ;   --------------------------------------------------------------------------
 
-if WITH_7SEG == 1
+.if WITH_7SEG == 1
 ;;
 ;;; drv_*: Proto2 7seg device drive
 ;;
@@ -756,7 +759,7 @@ drv_7seg_sub_disp2_2:
     pop hl
     pop bc
     ret
-endif
+.endif
 
 out_PO_2:
     out (PO_2), a
@@ -767,10 +770,17 @@ out_PO_2:
     ret
 
 
-    include "../Z80proto_dbg.asm"
-    include "../Z80proto_misc.asm"
-    include "../ascii_misc.asm"
-    include "../Z80proto_spi.asm"
+    .include "common/Z80proto_dbg.asm"
+    .include "common/Z80proto_misc.asm"
+    .include "common/ascii_misc.asm"
+    .include "common/Z80proto_spi.asm"
+
+
+
+
+
+
+    .area   _CODE
 
 SEG_TITLE_PROTO2:
     defb    11001110b   ;   P
@@ -798,18 +808,18 @@ SEG_TITLE_CONS:
 
 STR_loader_title:
     defm    "\x0D\x0A\x0D\x0A\x0D\x0AMiniLoader"
-if TARGET_Z80PROTO == 1
+.if TARGET_Z80PROTO == 1
     defm    "/Proto1"
-endif
-if TARGET_Z80PROTO == 2
+.endif
+.if TARGET_Z80PROTO == 2
     defm    "/Proto2"
-endif
-if TARGET_SAKI80 == 1
+.endif
+.if TARGET_SAKI80 == 1
     defm    "/SAKI80"
-endif
-if TARGET_Z84C01X == 1
+.endif
+.if TARGET_Z84C01X == 1
     defm    "/Z84C01x"
-endif
+.endif
     defb    CR
     defb    LF
     defb    NULL

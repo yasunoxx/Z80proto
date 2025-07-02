@@ -1,5 +1,5 @@
 ;; command_t.asm -- test memory, etc.
-  include "../memmap.def"
+  .include "common/memmap.def"
 
   PUBLIC  test_mode
   EXTERN  p_ix2bc
@@ -8,8 +8,8 @@
   EXTERN  putAreg2chrs
   EXTERN  loader_cons_oneliner
 
-PIOBDAT     EQU 1Eh
-PIOBCTL     EQU 1Fh
+PIOBDAT     .equ 1Eh
+PIOBCTL     .equ 1Fh
 
 test_mode:
 ; Tnnnn : test memory area 0x0nnnn to 0x0EFFF
@@ -73,7 +73,7 @@ memclr2x:
     pop bc
     jp  loader_cons_oneliner
 
-if WITH_7SEG == 0
+.if WITH_7SEG == 0
 numbers:
     defb    11111100b   ;   0
     defb    01100000b   ;   1
@@ -91,4 +91,4 @@ numbers:
     defb    01111010b   ;   d
     defb    10011110b   ;   E
     defb    10001110b   ;   F
-endif
+.endif

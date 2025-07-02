@@ -1,5 +1,5 @@
 ;	fgetc_cons
-	INCLUDE "../../z80sioctc.def"
+	.include "common/../z80sioctc.def"
 ;	INCLUDE	"../../memmap.def"
 	PUBLIC	fgetc_cons
 	extern	getchar_SIO0

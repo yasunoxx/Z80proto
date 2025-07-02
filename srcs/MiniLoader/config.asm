@@ -21,14 +21,14 @@
 ;    DEFC SUPMOD = 0
 ;    DEFC SIO_RX_INT = 0
 ;  and use PIO(TMP82C265B) Chip 0 Port B
-if USE_LCD
+.if USE_LCD
     DEFC DEBUG_PIOOUT = 1
     DEFC DEBUG_PIOCTRL = 1Dh
     DEFC DEBUG_PIOA = 1Ch
     PUBLIC  _DEBUG_PIOOUT_SETUP
     PUBLIC  _DEBUG_PIOOUT
     PUBLIC  _DEBUG_PIOA_DATA
-endif
+.endif
 ;;  !!!EDIT CAREFULLY!!!
     ld  sp, 0FFFFh
 

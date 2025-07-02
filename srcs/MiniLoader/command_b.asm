@@ -1,7 +1,7 @@
 ;; command_b.asm -- set/reset breakpoint
 ;
-    include "../z80sioctc.def"
-    include "../memmap.def"
+    .include "common/z80sioctc.def"
+    .include "common/memmap.def"
 
     PUBLIC  breakp_cons
     EXTERN  p_ix2bc

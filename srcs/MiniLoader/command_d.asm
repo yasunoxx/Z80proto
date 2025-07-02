@@ -1,7 +1,7 @@
 ;; command_d.asm -- 'd' command implement for MiniMon/MiniLoader
 ;
-    include "../z80sioctc.def"
-    include "../memmap.def"
+    .include "common/z80sioctc.def"
+    .include "common/memmap.def"
 
     PUBLIC dump_cons
     EXTERN  p_ix2bc

@@ -62,9 +62,9 @@ uint8_t F_firstack;
     #define xsprintf sprintf
     void _NOP()
     {
-    #asm
+    __asm
         nop
-    #endasm
+    __endasm;
     }
     extern volatile uint16_t SlowTick;
     extern volatile _XYMODEM_WORK_t XYW;
@@ -236,7 +236,7 @@ uint8_t xymodem_receive( uint16_t wait )
 // timeout: wait <= prevTick - SlowTick(in vic_lpc23xx.c)
 {
     register uint16_t count = 0, limit, prevTick;
-    register uint8_t buf, stat, preCount = 0;
+    register uint8_t buf, preCount = 0;
 
     // start, receive first byte
     switch( XYW.S_xymodem_state )
@@ -399,8 +399,7 @@ bool xymodem_chkcrc()
     return false;
 }
 
-uint16_t updcrc( c )
-uint16_t c;
+uint16_t updcrc( uint16_t c )
 {
     register uint8_t count;
 

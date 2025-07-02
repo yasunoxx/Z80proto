@@ -3,22 +3,28 @@
 ;   assemble: zcc +embedded --no-crt m_loader.asm -o m_loader.bin -m --list
 ;             (or 'make')
 
-    include "../Z80proto_bio.def"
-    include "../z80sioctc.def"
-    include "../z80dma_fdc.def"
-    include "../Z80proto_seg.def"
-    include "../memmap.def"
-
 ;;
 ;;; Program
 ;;; !!!DO NOT EDIT ABOVE LINES!!!
 ;;
 rst00:
+;
     include "config.asm"
 ;
     jp main
-
+;
+    include "../Z80proto_bio.def"
+if TARGET_Z80PROTO == 2
+    include "../z80sioctc.def"
+endif
+if (TARGET_SAKI80 == 1|TARGET_Z84C01X == 1)
+    include "../saki80sioctc.def"
+endif
+    include "../Z80proto_seg.def"
+    include "../memmap.def"
+;
     include "../crt_z80_rsts.asm"
+
 
 ; ----------------------------------------------------------------------------
 ;;
@@ -27,20 +33,35 @@ rst00:
 ; ----------------------------------------------------------------------------
 ;
 main:
+if (TARGET_SAKI80 == 1|TARGET_Z84C01X == 1)
+    ; disable WDT()
+WDTER   EQU 0F0h
+WDTCR   EQU 0F1h
+    ld  a, 01111011b
+    out (WDTER), a
+    ld  a, 0B1h
+    out (WDTCR), a
+    ld  a, 4Eh
+    out (WDTCR), a
+    ; for debug
+    in  a, (WDTER)
+endif
+    ;
     xor a
+if WITH_SPI == 1
+    out (PO_0), a
+endif
+if (TARGET_Z80PROTO == 2|SUPMOD == 1)
     out (PO_0), a
     out (PO_1), a
     out (PO_2), a
-    ; pre ROMKICK
+    ; no ROMKICK
     out (ROMSEL), a
     out (PAGE1), a
-;if FDCDMA == 1
-;    out (FD_CONTROL), a ; MOTOR off, etc ...
-;endif
-
 ;
     ld  a, 00000100b    ; Initial PO_2 value
     call    out_PO_2
+endif
 
 if RUN_MODE == RUN_ON_RAM
 main1:
@@ -75,7 +96,7 @@ main2:
 ;
 ;; copy Head block
 ;; no effect when ROM boot
-PAYLOAD     EQU 0E000h
+PAYLOAD     EQU 0D800h
 SIZE        EQU 80h
 IPL0AREA    EQU 00000h
     ld  hl, PAYLOAD
@@ -83,29 +104,28 @@ IPL0AREA    EQU 00000h
     ld  bc, SIZE
     ldir
 ;;
-endif
+endif 
 
 ;; initialize system devices
-    extern  sloop
 init:
-    ld  bc, 0789h
-    call    sloop
+    ld  bc, 0FEDCh  ; long wait
+    call    sloop   ; BC = wait loop count
 ;
 if INTERRUPT_MODE == 2
 ;;  for im2
     call    conf_CTC
     call    conf_SIO
-endif
+endif 
 if INTERRUPT_MODE == 1
 ;;  for im1
     call    conf_timer1
     call    conf_timer_other
-endif
+endif 
 ;
     call    conf_sysmem
-;
+if SUPMOD == 1
     call    spi_dev_unsel
-;
+endif
 ;   copy BIOS jump table
     ld  hl, BIOS_TABLE
     ld  de, BIOS_ADDR_TABLE
@@ -116,6 +136,10 @@ endif
 ;;
 ;
     ei
+
+if (DEBUG_PIOOUT == 1|USE_LCD=1)
+    call    DEBUG_PIOOUT_SETUP
+endif
 
 ;;
 ;;; Proto2 title
@@ -137,8 +161,8 @@ MiniMoni:
     ld  hl, STR_loader_title
     call    puts_SIO0
 ; check AUTOLOAD switch
-;    in  a, (PI_0)
-;    bit 2, a
+    in  a, (PI_0)
+    bit 2, a
 ;; branch here
 ;    jp  z, spirom_read00
 
@@ -163,6 +187,7 @@ loader_cons_oneliner: ; Startup Console one line
     xor a
     ld  (hl), a
     call    gets_SIO0
+;
 
 parse_cons: ;; parse command
 parse_cons_2:
@@ -179,37 +204,67 @@ parse_cons_2:
     ld  a, (hl)
 ;
 parse_cons_3:
+if WITH_SPI == 1
     cp  'L'
     jp  z, spirom_loadIndex
-    ; Lnn : load System block(0x1Fnn00~) into buffer
-;   cp  'C'
-;   jp  z, command_to_spidev
-;   ; Cnnxxll : send command address 'nn' data 'xx' to device 2, read reply 'll' bytes
-;   cp  'R'
-;   jp  z, read_in_spibuf
-;   ; Rnnnn : read SPI ROM 0xnnnn00~+255 bytes to buffer
-;   cp  'W'
-;   jp  z, write_out_spibuf
-;   ; Wnnnn : write buffer to SPI ROM 0xnnnn00~+255 bytes
-
+    ; L : load FAT0(0x1F0000~) into buffer
+endif
     cp  'D'
     jp  z, dump_cons
     ; Dnnnn : memory dump nnnn~+127 bytes
     cp  'J'
     jp  z, jump_cons
-    ; Jnnnn : jump/call 0xnnnn
-
+    ; Jnnnn : jump
     cp  'M'
     jp  z, modify_cons
-    ; Mnnnnxx : modify memory data xx to address nnnn
+    ; Mnnnnxx : modify memory data 0x0xx to address 0x0nnnn
+    cp  ':'
+    jp  z, ihex_load
+    ; :nnnn.... : Intel HEX format text load and store
+    cp  'B'
+    jp  z, breakp_cons
+    ; BSnnnn : set breakpoint(rst 30h)
+    ; BR : reset breakpoint
+if WITH_KERMIT == 1
+;   cp  'K'
+;   jp  z, receive_kermit
+;   ; Knnnn : receive kermit protocol, store to 0x0nnnn
+endif
+if WITH_XYMODEM == 1
+    cp  'X'
+    jp  z, receive_xymodem
+    ; Xnnnn : receive X/YMODEM protocol, store to 0x0nnnn
+endif
 ;   cp  'S'
 ;   jp  z, upload_srec_1line
 ;   ; Sxxxx... : S-record type memory modify
 ;   ; (accept S1, S2, S3 record, ignore other records)
+;   cp  'C'
+;   jp  z, command_to_spidev
+;   ; Cnnxx : send command address 0x0nn data 0x0xx to device 2
+;   cp  'R'
+;   jp  z, read_in_spibuf
+;   ; Rnnnn : read ROM 0xnnnn00~+255 bytes to buffer
+;   cp  'W'
+;   jp  z, write_out_spibuf
+;   ; Wnnnn : write buffer to ROM 0xnnnn00~+255 bytes
+    cp  'P'
+    jp  z, inout_port_cons
+    ; PInn, POnnxx : read I/O address 'nn'
+    ;              or write I/O address 'nn' data 'xx'
+;   cp  'Q'
+;   jp  z, out_port_cons
+;   ; Qnnxx : write I/O address 0x0nn data 0x0xx
 ;   cp  'O'
 ;   jp  z, output_srec
-;   ; Ossssllll : output S-record format, start at 0xssssh length llll
-
+;   ; O : output S-record format
+    cp  'T'
+    jp  z, test_mode
+    ; Tnnnn : test memory area 0x0nnnn to 0x0EFFF
+;   cp  'N'
+;   jp  z, noun_verb_mode
+;   ; N : for debug mode ...
+;
     cp  'F'
     jp  z, fdc_command_cons
     ; FFnnxx : write FDC register 'nn' to data 'xx'
@@ -217,30 +272,23 @@ parse_cons_3:
     ; FOxx : write CONTROL port data 'xx'
     ; FI : read CONTROL port
 
-    cp  'P'
-    jp  z, inout_port_cons
-    ; PInn, POnnxx : read I/O address 'nn'
-    ;              or write I/O address 'nn' data 'xx'
-    cp  'B'
-    jp  z, breakp_cons
-    ; BSnnnn : set breakpoint(rst 30h)
-    ; BR : reset breakpoint
-;    cp  'N'
-;    jp  z, noun_verb_mode
-;    ; N : for debug mode ...
-;
     jp  loader_cons_oneliner
 ;;
 ;; commands
     extern  jump_cons           ; command_j.asm
     extern  modify_cons         ; command_m.asm
     extern  dump_cons           ; command_d.asm
+    extern  ihex_load           ; command_i.asm
     extern  inout_port_cons     ; command_p.asm
-    ;; Milestone: binary size over 0x800h
-    extern  fdc_command_cons    ; command_f.asm
+if WITH_KERMIT == 1
+    extern  receive_kermit      ; command_k.asm
+endif
+if WITH_XYMODEM == 1
+    extern  receive_xymodem     ; command_x.asm
+endif
+    extern  test_mode           ; command_t.asm
     extern  breakp_cons         ; command_b.asm
-;
-    extern  call_dummy      ; call_dummy.asm
+    extern  fdc_command_cons         ; command_f.asm
 
     PUBLIC  de2buf_sio0tx
 de2buf_sio0tx: ; DE(4 nibbles) -> BUF_SIO0TX
@@ -272,6 +320,7 @@ de2buf_sio0tx: ; DE(4 nibbles) -> BUF_SIO0TX
     ret
 
 
+if WITH_SPI == 1
 ;;
 ;;;
 ;;;; SPI loader Mode
@@ -285,7 +334,7 @@ spirom_loadIndex:
 ;; exit
     jp  loader_cons_oneliner
 
-;; spirom_read00 -- Autoboot: Read Sector 00 and execute
+;; spirom_read00 -- Autoboot: Read Sector 31 and execute
 spirom_read00:
     call    spirom_setWRSR
 ;
@@ -293,11 +342,10 @@ spirom_read00:
     ld  (SPI_SELD_DEV), a ; FIXME
     call    spi_dev_sel
 ;
-    ld  ix, 1F00h   ; FAT0(0x1F0000:sector 1Fh / block 0, block index 0~15)
+    ld  ix, 1F00h   ; FAT block 0~15
     call    spirom_setAddr
     call    spirom_read256toBUF
 ;
-;;  for debug: display addresses
     ld  de, (BUF_SPIROM + 2)    ; Destination Address
     call    de2buf_sio0tx
     ld  hl, BUF_SIO0TX
@@ -350,7 +398,7 @@ spirom_read00_loop:
 ;    jp  loader_cons
 
 ;
-;; spirom_ subroutines for 25F016
+;; spirom_ subroutines
 ;
 spirom_readIndex:
     call    spirom_setWRSR
@@ -377,10 +425,12 @@ spirom_read256_loop:
     call    spi_read_8bit
     ld  (ix), a
     inc ix
+if WITH_7SEG == 1
 ;; disp readdata
     ld  a, b
-    cpl a
+    cpl a   ; ???
     call    drv_7seg_sub_disp2
+endif
 ;
     djnz    spirom_read256_loop
 ;
@@ -416,7 +466,7 @@ spirom_setAddr: ; IX = read/wrte addr MSB 16bit(nnnn00h), destroy AF, HL
 ;
     ret
 ;
-
+endif
 
 ;;
 ;;; Interrupt Service Routines, and Peripherals subroutines
@@ -443,7 +493,7 @@ int_i8253: ;;  time is up(maybe), re-set counter
 
     include "../Z80proto_im1.asm"
 
-endif
+endif 
 
 ;   --------------------------------------------------------------------------
 ;;
@@ -470,13 +520,21 @@ int_CTC:
 
 int_SIO:
     push    af
+
+    ; Set RTS(RFR) or DTR
+    ld  a, 5
+    out (SIO_Ch0_C), a
+    ld  a, (SIO0_WR5)
+    set BIT_RTS, a
+    set BIT_DTR, a
+    out (SIO_Ch0_C), a
+
     call    analyze_SIO0    ; Get stat and Error Recovery
 ;
     push    ix
     ld  ix, F_STAT_SIO0
     bit F_STAT_RECEIVE, (ix)
-    jr  nz, int_SIO_Ch0_RCA
-    jr  int_SIO_exit
+    jr  z, int_SIO_exit
 ;
 int_SIO_Ch0_RCA:
     res F_STAT_RECEIVE, (ix)
@@ -504,6 +562,15 @@ int_SIO_Ch1:
 
 int_SIO_exit:
     pop ix
+
+    ; Reset RTS(RFR) or DTR
+    ld  a, 5
+    out (SIO_Ch0_C), a
+    ld  a, (SIO0_WR5)
+    res BIT_RTS, a
+    res BIT_DTR, a
+    out (SIO_Ch0_C), a
+
     pop af
 ;
     ei
@@ -519,7 +586,7 @@ int_void:   ; im2, do nothing
 ;
     include "../z80sio_sub.asm"
 
-endif
+endif 
 ;
 ;
 
@@ -550,8 +617,30 @@ int_counter_8B:
 int_counter_8_end:
     ld  (V_CNT_8B), a
 ;
+if WITH_7SEG == 1
 ;; and drive 7seg
     call    drv_7seg
+endif
+;
+int_SysTick_16:
+    ld  hl, (SysTick)
+    inc hl
+    ld  (SysTick), hl
+    ld  hl, (SysTick2)
+    inc hl
+    ld  (SysTick2), hl
+int_SlowTick_16:
+    ld  hl, (SlowTick_B)
+    inc hl
+    bit 1, h
+    jr  z, int_SlowTick_16_end
+    ;
+    ld  hl, (SlowTick)
+    inc hl
+    ld  (SlowTick), hl
+    ld  hl, 0
+int_SlowTick_16_end:
+    ld  (SlowTick_B), hl
 ;
 ;; exit
     ret
@@ -598,6 +687,7 @@ conf_sysmem:
 ;;
 ;   --------------------------------------------------------------------------
 
+if WITH_7SEG == 1
 ;;
 ;;; drv_*: Proto2 7seg device drive
 ;;
@@ -666,12 +756,57 @@ drv_7seg_S0_ex2:
 drv_7seg_end:
     ret
 
-out_PO_2:
-    out (PO_2), a
-                ; OUTPUT anode line
-    ld  (PO_2_BUP), a
-                ; BACKUP PO_2
+;;
+;;; 7seg subroutines
+;;
+drv_7seg_sub_disp4: ;; HL = disp. "  hhll", destroy AF
+    push    bc
+    push    hl
 ;
+    ld  a, h
+    and 11110000b
+    srl a
+    srl a
+    srl a
+    srl a
+    ld  c, a
+    call    get_SEG_CHR
+    ld  (SEG_2), a
+;
+    ld  a, h
+    and 00001111b
+    ld  c, a
+    call    get_SEG_CHR
+    ld  (SEG_3), a
+;
+    ld  a, l
+;
+;   falldown to drv_7seg_sub_disp2_2
+    jr  drv_7seg_sub_disp2_2
+
+drv_7seg_sub_disp2: ;; A = disp. "    aa", destroy AF
+    push    bc
+    push    hl
+drv_7seg_sub_disp2_2:
+    ld  l, a
+;
+    and 11110000b
+    srl a
+    srl a
+    srl a
+    srl a
+    ld  c, a
+    call    get_SEG_CHR
+    ld  (SEG_4), a
+;
+    ld  a, l
+    and 00001111b
+    ld  c, a
+    call    get_SEG_CHR
+    ld  (SEG_5), a
+;
+    pop hl
+    pop bc
     ret
 
 ;;
@@ -726,6 +861,15 @@ drv_7seg_sub_disp2_2:
     pop hl
     pop bc
     ret
+endif
+
+out_PO_2:
+    out (PO_2), a
+                ; OUTPUT anode line
+    ld  (PO_2_BUP), a
+                ; BACKUP PO_2
+;
+    ret
 
     include "../Z80proto_dbg.asm"
     include "../Z80proto_misc.asm"
@@ -740,6 +884,14 @@ SEG_TITLE_PROTO2:
     defb    00111010b   ;   o
     defb    11011010b   ;   2
 
+SEG_TITLE_LOADER:
+    defb    00011100b   ;   L
+    defb    01111010b   ;   d
+    defb    00001010b   ;   r
+    defb    0           ;   blank
+    defb    0           ;   blank
+    defb    0           ;   blank
+
 SEG_TITLE_CONS:
     defb    10011100b   ;   C
     defb    00111010b   ;   o
@@ -749,7 +901,19 @@ SEG_TITLE_CONS:
     defb    00000000b   ;   blank
 
 STR_loader_title:
-    defm    "\x0D\x0A\x0D\x0AMiniMon"
+    defm    "\x0D\x0A\x0D\x0A\x0D\x0AMiniMon"
+if TARGET_Z80PROTO == 1
+    defm    "/Proto1"
+endif
+if TARGET_Z80PROTO == 2
+    defm    "/Proto2"
+endif
+if TARGET_SAKI80 == 1
+    defm    "/SAKI80"
+endif
+if TARGET_Z84C01X == 1
+    defm    "/Z84C01x"
+endif
     defb    CR
     defb    LF
     defb    NULL

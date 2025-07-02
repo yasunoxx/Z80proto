@@ -1,30 +1,30 @@
-CC = zcc
-AS = z88dk-z80asm
-DASM = z88dk-dis
+CC = sdcc
+AS = sdasz80
+LD = sdldz80
 TARGET = m_loader
 
 ASMSRC = $(TARGET).asm
-ASMOBJ = $(TARGET).o
+ASMOBJ = $(TARGET).rel
 BIN = $(TARGET).bin
 OBJS = $(ASMOBJ) command_j.o command_d.o command_m.o command_i.o \
-	command_b.o command_p.o \
-	lcdlib.o \
-	command_t.o \
-	command_x.o xymodem.o
+	command_b.o command_p.o
+#	lcdlib.rel \
+#	command_t.o \
+#	command_x.o xymodem.rel
 MAP = $(TARGET).map
-ASFLAGS = -DWITH_XYMODEM=1 -DUSE_LCD=1 \
-	-DWITH_7SEG=0 -DWITH_SPI=1
-CFLAGS = +embedded -DUSE_LCD=1 \
-	--opt-code-speed
-#	-D__Z88DK_R2L_CALLING_CONVENTION
-LDFLAGS = +embedded --no-crt -m 
-
+#ASFLAGS = -DWITH_XYMODEM=1 -DUSE_LCD=1 \
+#	-DWITH_7SEG=0 -DWITH_SPI=1
+CFLAGS = -mz80 --std-sdcc11 -DUSE_LCD=1 \
+	--opt-code-size --stack-auto
+LDFLAGS = --code-loc=$(CODELOC) --stack-loc=(STACKLOC) \
+	--data-loc=$(DATALOC)
+#	--portmode=z80
+#	--out-gmt-elf
 .PHONY:	all $(OBJS)
 
 all: $(OBJS)
-	$(AS) $(ASFLAGS) $(ASMSRC) -o$(ASMOBJ)
-	$(CC) $(LDFLAGS) $(OBJS) -o $(BIN)
-	$(DASM) -x $(MAP) $(BIN) > $(TARGET).lst
+	$(AS) $(ASFLAGS) $(ASMSRC)
+	$(LD) $(LDFLAGS) $(OBJS) -o $(BIN)
 
 xymodem.o:
 	$(CC) $(CFLAGS) -c xymodem.c

@@ -338,6 +338,14 @@
       "FDC & DMA Module"
     ],
     [
+      "e18b22d0-9671-43dd-a547-08cbe0537910",
+      "Async FIFO"
+    ],
+    [
+      "3ff26855-acb6-4095-b55d-a5c79e8c3a87",
+      "IOblock_7seg"
+    ],
+    [
       "a515dd26-33c7-4917-90ff-35dff91379f9",
       "SPIROM_wLevelConvert"
     ],

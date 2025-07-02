@@ -235,18 +235,18 @@ void LCD_ShiftCursor(signed int n)
 /* wait 100 nano second or more */
 static void _lcd_wait_100ns(void)
 {
-#asm
+__asm
     nop ; 4sysclk = 500nsec@16MHz
-#endasm
+__endasm;
 }
 
 
 /* wait 300 nano second or more */
 static void _lcd_wait_300ns(void)
 {
-#asm
+__asm
     nop ; 4sysclk = 500nsec@16MHz
-#endasm
+__endasm;
 }
 
 /* wait T micro second or more */
@@ -257,9 +257,9 @@ static void _lcd_wait_usec(unsigned int t)
     i = t;
     i <<= 1;            /* t = t * 2; */
     while(i) {          /* 'while' takes ? cycles */
-#asm
+__asm
         nop ; 4sysclk = 500nsec@16MHz
-#endasm
+__endasm;
         i--;            /* 'i--' takes ? cycle */
 	}
 }

@@ -14,8 +14,8 @@ PIOBDAT     EQU 1Eh
 PIOBCTL     EQU 1Fh
 
 PAYLOAD     EQU 0100h
-SIZE        EQU 0700h
-IPL1AREA    EQU 0E000h
+SIZE        EQU 1E00h
+IPL1AREA    EQU 0D800h
 
 ;;
 ;;;
@@ -30,7 +30,8 @@ sloop:
 	or b
 	jr nz,sloop
 ;
-    jp  init_io
+;    jp  init_io
+    jr  blockcopy
 
 ;;  check PAYLOAD ... DEBUGSTOP when invalid PAYLOAD.
     ld  a, (PAYLOAD)
@@ -49,6 +50,28 @@ blockcopy:
 ;;  and Jump
     ld  hl, IPL1AREA
     jp  (hl)
+;;
+;;;
+;;
+        defs    $0050-ASMPC
+numbers:
+    defb    11111100b   ;   0
+    defb    01100000b   ;   1
+    defb    11011010b   ;   2
+    defb    11110010b   ;   3
+    defb    01100110b   ;   4
+    defb    10110110b   ;   5
+    defb    10111110b   ;   6
+    defb    11100100b   ;   7
+    defb    11111110b   ;   8
+    defb    11110110b   ;   9
+    defb    11101110b   ;   A
+    defb    00111110b   ;   b
+    defb    10011100b   ;   C
+    defb    01111010b   ;   d
+    defb    10011110b   ;   E
+    defb    10001110b   ;   F
+
 ;;
 ;;;
 ;;
@@ -76,7 +99,7 @@ memclr:
     ld  hl, 2000h
     xor a   ; or as you
     ld  (hl), a ; source
-    ld  bc, 0E000h  ; length
+    ld  bc, 0E800h  ; length
     ld  de, 2000h   ; dest.
 memclr2x:
     ldi
@@ -108,21 +131,6 @@ init_io:
 
     jp  memclr
 
-        defs    $0100-ASMPC
-numbers:
-    defb    11111100b   ;   0
-    defb    01100000b   ;   1
-    defb    11011010b   ;   2
-    defb    11110010b   ;   3
-    defb    01100110b   ;   4
-    defb    10110110b   ;   5
-    defb    10111110b   ;   6
-    defb    11100100b   ;   7
-    defb    11111110b   ;   8
-    defb    11110110b   ;   9
-    defb    11101110b   ;   A
-    defb    00111110b   ;   b
-    defb    10011100b   ;   C
-    defb    01111010b   ;   d
-    defb    10011110b   ;   E
-    defb    10001110b   ;   F
+        defs    $00FE-ASMPC
+TERM:
+    defw    2501
