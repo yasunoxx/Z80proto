@@ -4,12 +4,24 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include "parse.h"
-#include "control.h"
 
 #if USE_LCD
     #include "lcd1602.h"
 #endif
+
+#define NUL 0
+#define SOH 1
+#define STX 2
+#define EOT 4
+#define ACK 6
+#define NAK 0x15
+#define CAN 0x18
+#define CHR_C   0x43
+#define SPC 32
+#define CPMEOF  28
+#define CR  13
+#define LF  11
+#define DEL 127
 
 typedef struct {
     uint16_t DestAddr;
@@ -35,16 +47,21 @@ void tm_GetStat_TXE( void );
 uint16_t tm_Flush_FIFO( void );
 uint16_t tm_ReadIn_FIFO( void );
 uint16_t tm_Write_FIFO( uint8_t *, uint16_t );
-bool tm_chkcrc( uint8_t *buf );
 bool xymodem_chkcrc( uint16_t );
 
 extern void tm_ZeroFill_buf( void );
 extern void tm_Transfer_Dest( void );
 volatile bool F_RXF;
 volatile bool F_TXE;
+/*
+volatile union ScratchPad
+{
+    uint8_t B[ 2 ];
+    uint16_t W;
+};
+*/
 volatile uint8_t ScratchPad[ 2 ];
 volatile uint8_t CBuf[ 64 ];
-volatile uint8_t vCRC8;
 
 void testmode_init()
 {
@@ -60,8 +77,6 @@ void testmode_init()
     XYW.CRC = 0;
     XYW.SEQ = 0x0FF;
     XYW.FrameType = NUL;
-
-    vCRC8 = 0;
 }
 
 void tm_Wait( uint16_t wait )
@@ -77,6 +92,7 @@ void tm_DebugDump()
 {
     uint16_t loop, loop2;
 
+/*
     sprintf( ( char * )CBuf, "BUF_SIO256:\r\n" );
     puts_SIO0( CBuf );
     for( loop = 0; loop < 256; loop++ )
@@ -95,23 +111,13 @@ void tm_DebugDump()
         sprintf( ( char * )CBuf, "\r\n" );
         puts_SIO0( CBuf );
     }
-
-#ifdef CRC16
-    bool crcstat = tm_chkcrc( BUF_SIO256 );
+*/
+    bool crcstat = xymodem_chkcrc( &BUF_SIO256 );
 //    if( crcstat == true )
     {
         sprintf( ( char * )CBuf, "CRC16:0x%04X\r\n", XYW.CRC );
         puts_SIO0( CBuf );
     }
-#endif
-#ifdef CRC8
-    bool crcstat = tm_chkcrc( BUF_SIO256 );
-//    if( crcstat == true )
-    {
-        sprintf( ( char * )CBuf, "CRC8:0x%02X\r\n", vCRC8 );
-        puts_SIO0( CBuf );
-    }
-#endif
     sprintf( ( char * )CBuf, "\r\n" );
     puts_SIO0( CBuf );
 }
@@ -123,26 +129,37 @@ void testmode_main()
     uint16_t loop, loop2;
 
     testmode_init();
-    sprintf( ( char * )CBuf, "testmode, Read over FIFO.\r\n" );
+    sprintf( ( char * )CBuf, "testmode, Read XMODEM/Sum over FIFO.\r\n" );
     puts_SIO0( CBuf );
 
     while( 1 )
     {
+#ifdef NOWDEBUG
         prevTick = SysTick;
         while( 1 )
         {
-            if( SysTick > prevTick + 500 )
+            TxBuf[ 0 ] = 'C'; TxBuf[ 1 ] = NUL;
+            count = tm_Write_FIFO( TxBuf, 1 );
+#if USE_LCD
+            LCD_SetCursorPos( 0, 1 );
+            sprintf( ( char * )CBuf,
+              "Writeout %03d", count );
+            LCD_Puts( CBuf, 16 );
+#endif
+            while( 1 )
             {
-                prevTick = SysTick;
-                break;
+                if( SysTick > prevTick + 2000 )
+                {
+                    prevTick = SysTick;
+                    break;
+                }
+                tm_GetStat_RXF();
+                if( F_RXF == false ) goto ReadIn;
             }
-            tm_GetStat_RXF();
-            if( F_RXF == false ) goto ReadIn;
         }
-    }
+#endif
 
 ReadIn:
-    {
         BUF_SIO256[ 0 ] = NUL;
         XYW.FrameType = NUL;
         count = tm_ReadIn_FIFO();
@@ -155,6 +172,67 @@ ReadIn:
         LCD_Puts( CBuf, 16 );
 #endif
         tm_DebugDump();
+        if( XYW.FrameType == SOH )
+        {
+            if( count >= 132 && count <= 133 )
+            {
+                tm_Transfer_Dest();
+                // Send ACK
+                TxBuf[ 0 ] = ACK; TxBuf[ 1 ] = NUL;
+                sprintf( ( char * )CBuf, "Write SOH/ACK\r\n" );
+            }
+            else
+            {
+                // Send ACK
+                TxBuf[ 0 ] = NAK; TxBuf[ 1 ] = NUL;
+                sprintf( ( char * )CBuf, "Write SOH/NAK\r\n" );
+            }
+            count = tm_Write_FIFO( TxBuf, 1 );
+            puts_SIO0( CBuf );
+        }
+        else if( XYW.FrameType == EOT )
+        {
+            // Send ACK
+            TxBuf[ 0 ] = ACK; TxBuf[ 1 ] = NUL;
+            count = tm_Write_FIFO( TxBuf, 1 );
+            sprintf( ( char * )CBuf, "Write EOT/ACK\r\n" );
+            puts_SIO0( CBuf );
+            sprintf( ( char * )CBuf, "Completed.\r\n" );
+            puts_SIO0( CBuf );
+
+            return; // Exit
+
+        }
+        else if( XYW.FrameType == STX )
+        {
+            prevTick = SysTick;
+            while( 1 )
+            {
+                count = tm_Flush_FIFO();
+                if( SysTick > prevTick + 500 ) break;
+            }
+
+            // Send NAK
+            TxBuf[ 0 ] = NAK; TxBuf[ 1 ] = NUL;
+            count = tm_Write_FIFO( TxBuf, 1 );
+            sprintf( ( char * )CBuf, "Write STX/NAK\r\n" );
+            puts_SIO0( CBuf );
+        }
+        else
+        {
+            prevTick = SysTick;
+            while( 1 )
+            {
+                count = tm_Flush_FIFO();
+                if( SysTick > prevTick + 500 ) break;
+            }
+
+            // Send NAK
+            TxBuf[ 0 ] = NAK; TxBuf[ 1 ] = NUL;
+            count = tm_Write_FIFO( TxBuf, 1 );
+            sprintf( ( char * )CBuf, "Write %03X/NAK\r\n", XYW.FrameType );
+            puts_SIO0( CBuf );
+        }
         tm_Wait( 500 );
     }
 }
@@ -233,9 +311,18 @@ uint16_t tm_ReadIn_FIFO()
         {
             tm_Wait( 10 );
             tm_SEQ_RD();
-//            if( count < 256 )
+            if( count == 0 )
             {
-                BUF_SIO256[ count++ ] = ScratchPad[ 0 ];
+                XYW.FrameType = ScratchPad[ 0 ];
+            }
+            if( count == 1 )
+            {
+                XYW.SEQ = ScratchPad[ 0 ];
+            }
+            if( count < 256 )
+            {
+                BUF_SIO256[ ( count & 256 ) ] = ScratchPad[ 0 ];
+                count++;
             }
         }
         else
@@ -322,53 +409,26 @@ void tm_SEQ_WR( void )
     }
 }
 
-#ifdef CRC8
-extern uint8_t calcCRC8CCITT( uint8_t crc, uint8_t buf );
-#endif
-
-bool tm_chkcrc( uint8_t *buf )
-{
-    uint8_t loop;
-
-    for( loop = 0; loop <= FIFO_TRAILER_SIZE; loop++ )
-    {
-#ifdef CRC16
-        XYW.CRC = CALC_CRC1b( XYW.CRC, buf[ loop + 3 ] );
-#endif
-#ifdef CRC8
-        vCRC8 = calcCRC8CCITT( vCRC8, buf[ loop + 3 ] );
-#endif
-    }
-
-    if( XYW.CRC == ( XYW.CRCH << 8 ) + XYW.CRCL )
-    {
-        return true;
-    }
-    return false;
-}
-
 bool xymodem_chkcrc( uint16_t DestAddr )
 {
     // DestAddr = XYW.DestAddr - 128
-    ScratchPad[ 0 ] = ( ( DestAddr + 3 ) & 0x00FF );
-    ScratchPad[ 1 ] = ( ( DestAddr + 3 ) >> 8 );
+    ScratchPad[ 0 ] = ( DestAddr & 0x00FF );
+    ScratchPad[ 1 ] = ( DestAddr >> 8 );
 #asm
 chkcrc:
-    DEFC _FIFO_TRAILER_SIZE = 79
     ld  hl, ( _ScratchPad )
     ld  (DMPAD), hl
-    ld  b, _FIFO_TRAILER_SIZE
     ;
     ; Special Thanks to DemiGod Ippei
     ; CRC16 (C)1987 by Ippei Iwai
     ;
     ;   G(X) = X^16 + X^12 + X^5 + 1
     ;
-;    LD      A, 16
-;    ADD     A, A
-;    ADD     A, A
-;    ADD     A, A
-;    LD      B, A        ; B = 128
+    LD      A, 16
+    ADD     A, A
+    ADD     A, A
+    ADD     A, A
+    LD      B, A        ; B = 128
     LD      HL, (DMPAD)
     JR      CRC1
 DMPAD:

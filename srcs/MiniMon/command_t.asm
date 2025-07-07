@@ -16,7 +16,7 @@ PPI0PC   EQU 32h
 PPI0CTL  EQU 33h
 
 test_mode:
-; Tnnnn : test memory area 0x0nnnn to 0x0EFFF
+; T : Async. FIFO test mode
   ld  ix, BUF_CON
   inc ix
   call  p_ix2bc
@@ -71,6 +71,7 @@ _tm_ZeroFill_buf:
   xor a
 _tm_ZeroFill_buf_2:
   ld  ( ix ), a
+  inc ix
   djnz  _tm_ZeroFill_buf_2
   ;
   ret

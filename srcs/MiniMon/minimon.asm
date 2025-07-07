@@ -260,7 +260,7 @@ endif
 ;   ; O : output S-record format
     cp  'T'
     jp  z, test_mode
-    ; Tnnnn : test memory area 0x0nnnn to 0x0EFFF
+    ; T : Async. FIFO test mode
 ;   cp  'N'
 ;   jp  z, noun_verb_mode
 ;   ; N : for debug mode ...

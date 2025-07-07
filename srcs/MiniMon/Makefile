@@ -16,14 +16,14 @@ OBJS = $(ASMOBJ) command_j.o command_d.o command_m.o command_i.o \
 	command_b.o command_p.o command_f.o \
 	command_t.o \
 	command_x.o \
-	testmode.o \
-	lcdlib.o
+	parse_format.o crc.o testmode.o
+#	lcdlib.o
 #	xymodem.o
 
 MAP = $(TARGET).map
-ASFLAGS = -DWITH_XYMODEM=1 -DUSE_LCD=1 \
+ASFLAGS = -DWITH_XYMODEM=1 -DUSE_LCD=0 \
 	-DWITH_7SEG=0 -DWITH_SPI=1
-CFLAGS = +embedded -DUSE_LCD=1
+CFLAGS = +embedded -DUSE_LCD=0 -DCRC8
 #	--opt-code-speed
 #	-D__Z88DK_R2L_CALLING_CONVENTION
 LDFLAGS = +embedded --no-crt -m
@@ -47,6 +47,17 @@ lcdlib.o:
 testmode.o:
 	$(CC) $(CFLAGS) -c testmode.c
 
+parse_format.o:
+	$(CP) tmhost/parse_format.c .
+	$(CP) tmhost/parse.h .
+	$(CP) tmhost/control.h .
+	$(CC) $(CFLAGS) -c parse_format.c
+
+crc.o:
+	$(CP) tmhost/crc8-ccitt.c .
+	$(CC) $(CFLAGS) -c crc8-ccitt.c -o crc.o
 
 clean:
 	$(RM) -f $(BIN) $(OBJS) $(MAP) *.lis *.lst *.sym *.rom
+	$(RM) -f parse_format.c parse.h control.h
+	$(RM) -f crc8-ccitt.c
