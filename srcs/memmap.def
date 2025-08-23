@@ -75,6 +75,24 @@
 	DEFC	BIOS_ADDR_COUNT = 12
 
 ;	struct XYMODEM_WORK_t see xymodem.c
-	DEFC	_XYW	= 0FC20h
-	DEFC	_XYW_DestAddr = _XYW
-	DEFC	_XYW_LENGTH	= 12
+;	DEFC	_XYW	= 0FC20h
+;	DEFC	_XYW_DestAddr = _XYW
+;	DEFC	_XYW_LENGTH	= 12
+
+	DEFC	_TM = 0FC20h
+;	typedef struct
+;	{
+;		uint16_t SEQ;
+	DEFC	_TM_SEQ = 0FC20h		; TM + 0
+;		uint16_t DestAddr;
+	DEFC	_TM_DestAddr = 0FC22h	; TM + 2
+;		uint8_t Result;
+	DEFC	_TM_Result = 0FC24h		; TM + 4
+;		uint8_t CRC8;
+	DEFC	_TM_CRC8 = 0FC25h		; TM + 5
+;		bool F_Trace;
+	DEFC	_TM_F_Trace = 0FC26h	; TM + 6
+;		uint8_t RealSize;
+	DEFC	_TM_RealSize = 0FC26h	; TM + 8
+;	} _TM_WORK_t;
+	DEFC	_TM_LENGTH = 9

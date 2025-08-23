@@ -8,12 +8,12 @@ const uint8_t TxFormat[ 8 ][ 80 ] = {
     // Start Linkup
     {
            8,
-         SYN,  PAD, PAD, PAD, PAD, PAD, PAD, PAD,  ENQ
+         SYN,  PAD,  PAD,  PAD,  PAD,  PAD,  PAD,  ENQ
     },
     // No Operation/Keep Alive
     {
            8,
-         SYN, 0xA5, PAD, PAD, PAD, PAD, PAD, PAD,  ENQ
+         SYN, 0xA5,  PAD,  PAD,  PAD,  PAD,  PAD,  ENQ
     },
     // Set Breakpoint
     {
@@ -30,6 +30,7 @@ const uint8_t TxFormat[ 8 ][ 80 ] = {
     {
           72,
          SYN,  'W',  'M',   64,   64, 0x00, 0x00,  ENQ,
+    //   SYN   'W'   'M'       {Size}{Address}
         //00,  +01,  +02,  +03,  +04,  +05, + 06,  +07
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         //08
@@ -51,18 +52,21 @@ const uint8_t TxFormat[ 8 ][ 80 ] = {
     {
            8,
          SYN,  'R',  'M',   64,   64, 0x00, 0x00,  ENQ
+    //   SYN   'R'   'M'       {Size}{Address}
     },
     // Write Memory 1byte
     {
-           8,
-         SYN,  'W',  'M',    1,    1, 0x00, 0x00,  ENQ
-    },
-    // Read Memory 1byte
-    {
            9,
-         SYN,  'R',  'M',    1,    1, 0x00, 0x00,  ENQ,
+         SYN,  'W',  'M',    1,    1, 0x00, 0x00,  ENQ,
+    //   SYN   'W'   'M'       {Size}{Address}
         //00
         0x00
+    },
+    // Read Memory 4bytes
+    {
+           12,
+         SYN,  'R',  'M',    4,    4, 0x00, 0x00,  ENQ
+    //   SYN   'R'   'M'       {Size}{Address}
     }
     // Inport
     // Outport
@@ -80,13 +84,13 @@ const uint8_t RxFormat[ 8 ][ 80 ] = {
     // No Opertion/Keep Alive
     {
            8,
-         SYN, 0x5A,  PAD,  PAD,  PAD,  PAD,  PAD,  ACK
+         SYN, 0xA5,  PAD,  PAD,  PAD,  PAD,  PAD,  ACK
     },
     // Set Breakpoint
     {
            8,
-         SYN,  'B',  'P',    0,    0, 0x00, 0x00,  ACK
-    //   SYN   'B'   'P' {Num.}      {Address}     ACK
+         SYN,  'B',  'P',    0,      0, 0x00, 0x00,  ACK
+    //   SYN   'B'   'P' {Num.} {Condx} {Address}    ACK
     },
     // Register Previous Breakpoint
     {
@@ -131,11 +135,11 @@ const uint8_t RxFormat[ 8 ][ 80 ] = {
            8,
          SYN,  'W',  'M',    1,    1, 0x00, 0x00,  ACK
     },
-    // Read Memory 1byte
+    // Read Memory 4bytes
     {
-          9,
-         SYN,  'R',  'M',    1,    1, 0x00, 0x00,  ACK,
-        //00
-        0x00
+          12,
+         SYN,  'R',  'M',    4,    4, 0x00, 0x00,  ACK,
+        //00,  +01,  +02,  +03
+        0x00, 0x00, 0x00, 0x00
     }
 };

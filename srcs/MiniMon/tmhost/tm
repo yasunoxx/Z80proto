@@ -1,4 +1,4 @@
 #!/bin/sh
-rmmod ftdi_sio
-./tmhost
+sudo rmmod ftdi_sio
+sudo ./tmhost
 

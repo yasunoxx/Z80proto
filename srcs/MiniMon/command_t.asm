@@ -3,6 +3,8 @@
 
   PUBLIC  test_mode
   PUBLIC  _BUF_SIO256
+  PUBLIC  _SysTick
+  PUBLIC  _TM
   EXTERN  p_ix2bc
   EXTERN  putchar_SIO0
   EXTERN  putCRLF
@@ -20,7 +22,7 @@ test_mode:
   ld  ix, BUF_CON
   inc ix
   call  p_ix2bc
-  ld  ( _XYW_DestAddr ), bc
+  ld  ( _TM_DestAddr ), bc
 
   ld  a, 0FFh
   out (PPI0PC), a
@@ -81,38 +83,16 @@ _tm_Transfer_Dest:
   push  hl
   push  de
   push  bc
-  push  af
   ;
   ld  hl, _BUF_SIO256 + 3
-  ld  de, ( _XYW_DestAddr )
+  ld  de, ( _TM_DestAddr )
   ld  bc, 128
   ldir
   ;
-  ld  ( _XYW_DestAddr ), de
+  ld  ( _TM_DestAddr ), de
   ;
-  pop af
   pop bc
   pop de
   pop hl
 
   ret
-
-if WITH_7SEG == 0
-numbers:
-    defb    11111100b   ;   0
-    defb    01100000b   ;   1
-    defb    11011010b   ;   2
-    defb    11110010b   ;   3
-    defb    01100110b   ;   4
-    defb    10110110b   ;   5
-    defb    10111110b   ;   6
-    defb    11100100b   ;   7
-    defb    11111110b   ;   8
-    defb    11110110b   ;   9
-    defb    11101110b   ;   A
-    defb    00111110b   ;   b
-    defb    10011100b   ;   C
-    defb    01111010b   ;   d
-    defb    10011110b   ;   E
-    defb    10001110b   ;   F
-endif

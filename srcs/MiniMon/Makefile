@@ -15,16 +15,14 @@ BIN = $(TARGET).bin
 OBJS = $(ASMOBJ) command_j.o command_d.o command_m.o command_i.o \
 	command_b.o command_p.o command_f.o \
 	command_t.o \
-	command_x.o \
 	parse_format.o crc.o testmode.o
 #	lcdlib.o
-#	xymodem.o
+#	command_x.o xymodem.o
 
 MAP = $(TARGET).map
-ASFLAGS = -DWITH_XYMODEM=1 -DUSE_LCD=0 \
+ASFLAGS = -DWITH_XYMODEM=0 -DUSE_LCD=0 \
 	-DWITH_7SEG=0 -DWITH_SPI=1
-CFLAGS = +embedded -DUSE_LCD=0 -DCRC8
-#	--opt-code-speed
+CFLAGS = +embedded -DUSE_LCD=0 --opt-code-size
 #	-D__Z88DK_R2L_CALLING_CONVENTION
 LDFLAGS = +embedded --no-crt -m
 ASMFLAGS = -r$(ADDRESS) $(ASFLAGS)
@@ -34,7 +32,7 @@ ASMFLAGS = -r$(ADDRESS) $(ASFLAGS)
 all: $(OBJS)
 	$(AS) $(ASMFLAGS) $(ASMSRC) -o$(ASMOBJ)
 	$(CC) $(LDFLAGS) $(OBJS) -o $(BIN)
-	$(DASM) -o $(ADDRESS) -x $(MAP) -s $(MAP) $(BIN) > $(TARGET).lst
+	$(DASM) -x $(MAP) -o $(ADDRESS) $(BIN) > $(TARGET).lst
 	$(CP) ../ipl0/ipl0.bin ./$(BIN).rom
 	$(CAT) $(BIN) >> $(BIN).rom
 

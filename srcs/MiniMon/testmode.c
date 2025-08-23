@@ -11,24 +11,31 @@
     #include "lcd1602.h"
 #endif
 
-typedef struct {
+#ifndef HIGH
+    #define HIGH true
+    #define LOW false
+#endif
+
+typedef struct
+{
+    uint16_t SEQ;
     uint16_t DestAddr;
-    uint8_t SEQ, CRCH, CRCL;
-    uint16_t CRC;
-    uint8_t S_xymodem_state;
-    uint8_t S_xymodem_EOTstate;
-    uint8_t F_firstack;
-    uint16_t DataCount;
-    uint8_t FrameType; // first receive char
-} _XYMODEM_WORK_t;
-extern  void puts_SIO0( uint8_t * );    // z80sio_sub.asm
+    uint8_t Result;
+    uint8_t CRC8;
+    bool F_Trace;
+    uint8_t RealSize;
+} _TM_WORK_t;
+
+extern void puts_SIO0( uint8_t * );    // z80sio_sub.asm
 extern volatile uint16_t SysTick;
 extern volatile uint16_t SlowTick;
 extern volatile uint8_t BUF_SIO256[ 256 ];
-extern volatile _XYMODEM_WORK_t XYW;
+extern volatile _TM_WORK_t TM;
 
 void testmode_init( void );
 void testmode_main( void );
+int16_t tm_Parse( void );
+bool tm_Parse2( uint8_t );
 void tm_DebugDump( void );
 void tm_GetStat_RXF( void );
 void tm_GetStat_TXE( void );
@@ -44,7 +51,6 @@ volatile bool F_RXF;
 volatile bool F_TXE;
 volatile uint8_t ScratchPad[ 2 ];
 volatile uint8_t CBuf[ 64 ];
-volatile uint8_t vCRC8;
 
 void testmode_init()
 {
@@ -54,14 +60,12 @@ void testmode_init()
     LCD_Clear();
 #endif
     tm_ZeroFill_buf();
-    tm_DebugDump();
+//    tm_DebugDump();
     count = tm_Flush_FIFO();
 
-    XYW.CRC = 0;
-    XYW.SEQ = 0x0FF;
-    XYW.FrameType = NUL;
-
-    vCRC8 = 0;
+    TM.CRC8 = 0;
+    TM.SEQ = 0x0FFFF;
+    TM.F_Trace = false;
 }
 
 void tm_Wait( uint16_t wait )
@@ -96,26 +100,17 @@ void tm_DebugDump()
         puts_SIO0( CBuf );
     }
 
-#ifdef CRC16
     bool crcstat = tm_chkcrc( BUF_SIO256 );
 //    if( crcstat == true )
     {
-        sprintf( ( char * )CBuf, "CRC16:0x%04X\r\n", XYW.CRC );
+        sprintf( ( char * )CBuf, "CRC8:0x%02X\r\n", TM.CRC8 );
         puts_SIO0( CBuf );
     }
-#endif
-#ifdef CRC8
-    bool crcstat = tm_chkcrc( BUF_SIO256 );
-//    if( crcstat == true )
-    {
-        sprintf( ( char * )CBuf, "CRC8:0x%02X\r\n", vCRC8 );
-        puts_SIO0( CBuf );
-    }
-#endif
     sprintf( ( char * )CBuf, "\r\n" );
     puts_SIO0( CBuf );
 }
 
+#define DEBUG 1
 void testmode_main()
 {
     uint16_t count, prevTick;
@@ -128,35 +123,241 @@ void testmode_main()
 
     while( 1 )
     {
-        prevTick = SysTick;
+        // wait FIFO RxFill
         while( 1 )
         {
-            if( SysTick > prevTick + 500 )
+            prevTick = SysTick;
+            while( 1 )
             {
-                prevTick = SysTick;
-                break;
+                if( SysTick > prevTick + 10 )
+                {
+                    prevTick = SysTick;
+                    break;
+                }
             }
             tm_GetStat_RXF();
-            if( F_RXF == false ) goto ReadIn;
+            if( F_RXF == LOW ) break; // goto ReadIn;
         }
-    }
 
 ReadIn:
-    {
-        BUF_SIO256[ 0 ] = NUL;
-        XYW.FrameType = NUL;
-        count = tm_ReadIn_FIFO();
-        sprintf( ( char * )CBuf, "%02X:ReadIn %04d, ", XYW.SEQ, count );
-        puts_SIO0( CBuf );
-#if USE_LCD
-        LCD_SetCursorPos( 0, 0 );
-        sprintf( ( char * )CBuf,
-              "%02X:ReadIn %04d", XYW.SEQ, count );
-        LCD_Puts( CBuf, 16 );
+        {
+            uint8_t countz = 0;
+            BUF_SIO256[ 0 ] = NUL;
+            while( 1 )
+            {
+                count = tm_ReadIn_FIFO();
+                countz += count;
+                if( countz >= FIFO_PACKET_SIZE ) break;
+            }
+#ifdef DEBUG
+            sprintf( ( char * )CBuf, "%04X:ReadIn %04d, ", TM.SEQ, count );
+            puts_SIO0( CBuf );
 #endif
-        tm_DebugDump();
-        tm_Wait( 500 );
+#if USE_LCD
+            LCD_SetCursorPos( 0, 0 );
+            sprintf( ( char * )CBuf,
+                  "%04X:ReadIn %04d", TM.SEQ, count );
+            LCD_Puts( CBuf, 16 );
+#endif
+        }
+        // Parse BUF_SIO256
+        int16_t cmd = tm_Parse();
+        bool result;
+        if( cmd >= 0 )
+        {
+            result = tm_Parse2( ( uint8_t )cmd );
+        }
+
+        TM.CRC8 = 0;
+        tm_chkcrc( BUF_SIO256 );
+        BUF_SIO256[ IDX_CRCL ] = TM.CRC8;
+        BUF_SIO256[ IDX_ETX ] = ETX;
+    
+        result = tm_Write_FIFO( BUF_SIO256, count );
     }
+}
+
+//#define DEBUG 1
+int16_t tm_Parse()
+{
+    int16_t loop;
+    bool cmp = false;
+
+//  typedef struct
+//  {
+//      uint16_t SEQ;
+//      uint16_t DestAddr;
+//      uint8_t Result;
+//      uint8_t CRC8;
+//      bool F_Trace;
+//      uint8_t RealSize;
+//  } _TM_WORK_t;
+    TM.SEQ = ( BUF_SIO256[ IDX_SEQH ] << 8 ) |
+               BUF_SIO256[ IDX_SEQL ];
+
+    // compare BUF_SIO256 and TxFormat
+    for( loop = 0; loop <= QUIT; loop++ )
+    {
+        if( BUF_SIO256[ IDX_CMD0 ] == RxFormat[ loop ][ 2 ] &&
+            BUF_SIO256[ IDX_CMD1 ] == RxFormat[ loop ][ 3 ] &&
+            BUF_SIO256[ IDX_CMD2 ] == RxFormat[ loop ][ 4 ] )
+        {
+            TM.RealSize = BUF_SIO256[ IDX_SIZE ]; // WMx, RMx real size
+            TM.DestAddr = ( BUF_SIO256[ IDX_ADDRH ] << 8 ) | // Src/Dest address MSB
+                          BUF_SIO256[ IDX_ADDRL ];           // Src/Dest address LSB
+            bool crcstat = tm_chkcrc( BUF_SIO256 );
+            if( crcstat == true )
+            {
+                TM.Result = ACK;
+            }
+            else
+            {
+                TM.Result = NAK;
+            }
+            cmp = true;
+            break;
+        }
+    }
+    if( cmp == false )
+    {
+        return -1;
+    }
+
+#ifdef DEBUG
+    sprintf( ( char * )CBuf, "STX #%04X SYN ", TM.SEQ );
+    puts_SIO0( CBuf );
+    if( BUF_SIO256[ IDX_CMD0 ] == PAD )
+    {
+        sprintf( ( char * )CBuf, "PAD PAD PAD PAD PAD PAD " );
+    }
+    else if( BUF_SIO256[ IDX_CMD0 ] == 0xA5 )
+    {
+        sprintf( ( char * )CBuf, "0xA5 PAD PAD PAD PAD PAD " );
+    }
+    else if( BUF_SIO256[ IDX_CMD1 ] == 'M' ||
+             BUF_SIO256[ IDX_CMD1 ] == 'P' )
+    {
+        sprintf( ( char * )CBuf, "STX >%C >%C #%02D #%02D ",
+                 BUF_SIO256[ IDX_CMD0 ],
+                 BUF_SIO256[ IDX_CMD1 ],
+                 BUF_SIO256[ IDX_CMD2 ],
+                 BUF_SIO256[ IDX_SIZE ] );
+    }
+    else
+    {
+        sprintf( ( char * )CBuf, "STX >%C >%C >%C PAD ",
+                 BUF_SIO256[ IDX_CMD0 ],
+                 BUF_SIO256[ IDX_CMD1 ],
+                 BUF_SIO256[ IDX_CMD2 ] );
+    }
+    puts_SIO0( CBuf );
+#endif
+//#ifdef DEBUG
+    if( TM.Result == true )
+    {
+        sprintf( ( char * )CBuf, "ACK\r\n" );
+    }
+    else
+    {
+        sprintf( ( char * )CBuf, "NAK[%02X]\r\n", TM.CRC8 );
+    }
+    puts_SIO0( CBuf );
+//#endif
+
+    return loop;
+}
+
+void tm_AppendACK( uint8_t stat )
+{
+    BUF_SIO256[ IDX_ACKNAK ] = stat;
+}
+
+//#define DEBUG 1
+bool tm_Parse2( uint8_t cmd )
+{
+    bool result = false;
+    tm_AppendACK( NAK );
+    switch( cmd )
+    {
+        case START:
+#ifdef DEBUG
+            sprintf( ( char * )CBuf,
+                     "Receive START\r\n" );
+            puts_SIO0( CBuf );
+#endif
+            tm_AppendACK( ACK );
+            result = true;
+            break;
+    case NOP:
+#ifdef DEBUG
+            sprintf( ( char * )CBuf,
+                     "Receive NOP\r\n" );
+            puts_SIO0( CBuf );
+#endif
+            tm_AppendACK( ACK );
+            result = true;
+            break;
+        case SET_BP:
+#ifdef DEBUG
+            sprintf( ( char * )CBuf,
+                     "Receive SET_BP\r\n" );
+            puts_SIO0( CBuf );
+#endif
+            result = true;
+            break;
+        case REG:
+#ifdef DEBUG
+            sprintf( ( char * )CBuf,
+                     "Receive REG\r\n" );
+            puts_SIO0( CBuf );
+#endif
+            result = true;
+            break;
+        case WM64:
+#ifdef DEBUG
+            sprintf( ( char * )CBuf,
+                     "Receive WM64\r\n" );
+            puts_SIO0( CBuf );
+#endif
+            result = true;
+            break;
+        case WM01:
+#ifdef DEBUG
+            sprintf( ( char * )CBuf,
+                     "Receive WM01\r\n" );
+            puts_SIO0( CBuf );
+#endif
+            result = true;
+            break;
+        case RM64:
+#ifdef DEBUG
+            sprintf( ( char * )CBuf,
+                     "Receive RM64\r\n" );
+            puts_SIO0( CBuf );
+#endif
+            result = true;
+            break;
+        case RM01:
+#ifdef DEBUG
+            sprintf( ( char * )CBuf,
+                    "Receive RM01\r\n" );
+            puts_SIO0( CBuf );
+#endif
+            result = true;
+            break;
+        case QUIT:
+#ifdef DEBUG
+           sprintf( ( char * )CBuf,
+                     "Receive QUIT\r\n" );
+            puts_SIO0( CBuf );
+#endif
+            tm_AppendACK( ACK );
+            result = true;
+        default:
+            break;
+    }
+
+    return result;
 }
 
 void tm_SEQ_RD( void );
@@ -207,7 +408,7 @@ uint16_t tm_Flush_FIFO()
     while( 1 )
     {
         tm_GetStat_RXF();
-        if( F_RXF == false )
+        if( F_RXF == LOW )
         {
             tm_Wait( 10 );
             tm_SEQ_RD();
@@ -229,7 +430,7 @@ uint16_t tm_ReadIn_FIFO()
     while( 1 )
     {
         tm_GetStat_RXF();
-        if( F_RXF == false )
+        if( F_RXF == LOW )
         {
             tm_Wait( 10 );
             tm_SEQ_RD();
@@ -322,9 +523,7 @@ void tm_SEQ_WR( void )
     }
 }
 
-#ifdef CRC8
 extern uint8_t calcCRC8CCITT( uint8_t crc, uint8_t buf );
-#endif
 
 bool tm_chkcrc( uint8_t *buf )
 {
@@ -332,90 +531,9 @@ bool tm_chkcrc( uint8_t *buf )
 
     for( loop = 0; loop <= FIFO_TRAILER_SIZE; loop++ )
     {
-#ifdef CRC16
-        XYW.CRC = CALC_CRC1b( XYW.CRC, buf[ loop + 3 ] );
-#endif
-#ifdef CRC8
-        vCRC8 = calcCRC8CCITT( vCRC8, buf[ loop + 3 ] );
-#endif
+        TM.CRC8 = calcCRC8CCITT( TM.CRC8, buf[ loop + 3 ] );
     }
-
-    if( XYW.CRC == ( XYW.CRCH << 8 ) + XYW.CRCL )
-    {
-        return true;
-    }
-    return false;
-}
-
-bool xymodem_chkcrc( uint16_t DestAddr )
-{
-    // DestAddr = XYW.DestAddr - 128
-    ScratchPad[ 0 ] = ( ( DestAddr + 3 ) & 0x00FF );
-    ScratchPad[ 1 ] = ( ( DestAddr + 3 ) >> 8 );
-#asm
-chkcrc:
-    DEFC _FIFO_TRAILER_SIZE = 79
-    ld  hl, ( _ScratchPad )
-    ld  (DMPAD), hl
-    ld  b, _FIFO_TRAILER_SIZE
-    ;
-    ; Special Thanks to DemiGod Ippei
-    ; CRC16 (C)1987 by Ippei Iwai
-    ;
-    ;   G(X) = X^16 + X^12 + X^5 + 1
-    ;
-;    LD      A, 16
-;    ADD     A, A
-;    ADD     A, A
-;    ADD     A, A
-;    LD      B, A        ; B = 128
-    LD      HL, (DMPAD)
-    JR      CRC1
-DMPAD:
-    DEFW    0           ; Destination Address
-CRC1:
-    PUSH    DE          ; first 16 bits
-    LD      E, 80H      ; mask pattern
-    EXX
-    POP     HL          ; first 16 bits
-    EXX
-    ;
-CRC2:
-    LD      A, (HL)     ; load 1 byte
-    AND     E           ; get bit
-    JR      Z, CRC3     ; CY = 0
-    SCF                 ; CY = 1
-    ;
-CRC3:
-    EXX
-    ADC     HL, HL      ; add the bit to HL
-    JR      NC, CRC4    ; non 16th bit
-    ;
-    LD      A, 10H
-    XOR     H
-    LD      H, A
-    LD      A, 21H      ; 1021H = X^12+X^5+1
-    XOR     L
-    LD      L, A        ; HL = HL XOR 1021H
-    ;
-CRC4:
-    EXX
-    RRC     E           ; rotate mask pattern
-    ;                   ; to get next bit
-    JR      NC, CRC2    ; case of loop =< 8
-    INC     HL          ; next byte
-    DJNZ    CRC2
-    EXX
-    EX      DE, HL
-;
-CRC5:
-    EX      DE, HL
-    ;   HL = CRC16
-
-
-    ld  ( _XYW + 5 ), hl
-#endasm
-    if( XYW.CRC == ( XYW.CRCH << 8 ) + XYW.CRCL )
+    if( TM.CRC8 == buf[ loop + 4 ] )
     {
         return true;
     }
