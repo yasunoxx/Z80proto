@@ -71,7 +71,7 @@ lcdlib.cは、Sakazume氏(http://219.117.208.26/~saka/ham/LCD2/)による実装�
 
 xprintf.cは、CHaN氏(http://elm-chan.org/fsw.html)による実装の一部です。
 
-私(yasunoxx▼Julia)が書いたプログラムは、MITライセンスで開示しています。本プログラム[Z80proto2](https://github.com/yasunoxx/Z80proto2)を使用した/使用しない事による全ての結果について、上記権利者と私は何の保証も賠償も致しません。
+私(yasunoxx▼Julia)が書いたプログラムは、MITライセンスで開示しています。本プログラム[Z80proto](https://github.com/yasunoxx/Z80proto)を使用した/使用しない事による全ての結果について、上記権利者と私は何の保証も賠償も致しません。
 
 ## FAQ(よくあるしつもん、そしてツッコミ)
 ROMを書く道具がない, ROMが入手できない -> 私は中華ROMライタ(TL866Ⅱ plus)をハードオフで拾いました。もし、どうしてもROMを入手したい(けれどもROMライタは買いたくない)という方は、私のtwitterアカウント(@noisequeen)にDMしてみて下さい。メールは殆ど読んでいません。

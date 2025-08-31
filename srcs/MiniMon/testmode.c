@@ -83,7 +83,8 @@ void tm_DebugDump()
 
     sprintf( ( char * )CBuf, "BUF_SIO256:\r\n" );
     puts_SIO0( CBuf );
-    for( loop = 0; loop < 256; loop++ )
+//    for( loop = 0; loop < 256; loop++ )
+    for( loop = 0; loop < 128; loop++ )
     {
         for( loop2 = 0; loop2 < 16; loop2++ )
         {
@@ -110,7 +111,7 @@ void tm_DebugDump()
     puts_SIO0( CBuf );
 }
 
-#define DEBUG 1
+// #define DEBUG 1
 void testmode_main()
 {
     uint16_t count, prevTick;
@@ -150,7 +151,7 @@ ReadIn:
                 if( countz >= FIFO_PACKET_SIZE ) break;
             }
 #ifdef DEBUG
-            sprintf( ( char * )CBuf, "%04X:ReadIn %04d, ", TM.SEQ, count );
+            sprintf( ( char * )CBuf, "ReadIn %04d, ", count );
             puts_SIO0( CBuf );
 #endif
 #if USE_LCD
@@ -161,23 +162,34 @@ ReadIn:
 #endif
         }
         // Parse BUF_SIO256
+        TM.CRC8 = 0;
         int16_t cmd = tm_Parse();
         bool result;
         if( cmd >= 0 )
         {
             result = tm_Parse2( ( uint8_t )cmd );
         }
-
-        TM.CRC8 = 0;
-        tm_chkcrc( BUF_SIO256 );
-        BUF_SIO256[ IDX_CRCL ] = TM.CRC8;
-        BUF_SIO256[ IDX_ETX ] = ETX;
+        if( result == true )
+        {
+            TM.CRC8 = 0;
+            tm_chkcrc( BUF_SIO256 );
+            BUF_SIO256[ IDX_CRCL ] = TM.CRC8;
+            BUF_SIO256[ IDX_ETX ] = ETX;
     
-        result = tm_Write_FIFO( BUF_SIO256, count );
+            result = tm_Write_FIFO( BUF_SIO256, FIFO_PACKET_SIZE );
+            if( cmd == QUIT )
+            {
+                return;
+            }
+        }
+        else
+        {
+            tm_DebugDump();
+        }
     }
 }
 
-//#define DEBUG 1
+#define DEBUG 1
 int16_t tm_Parse()
 {
     int16_t loop;
@@ -228,11 +240,11 @@ int16_t tm_Parse()
     puts_SIO0( CBuf );
     if( BUF_SIO256[ IDX_CMD0 ] == PAD )
     {
-        sprintf( ( char * )CBuf, "PAD PAD PAD PAD PAD PAD " );
+        sprintf( ( char * )CBuf, "PAD PAD ... " );
     }
     else if( BUF_SIO256[ IDX_CMD0 ] == 0xA5 )
     {
-        sprintf( ( char * )CBuf, "0xA5 PAD PAD PAD PAD PAD " );
+        sprintf( ( char * )CBuf, "0xA5 PAD ... " );
     }
     else if( BUF_SIO256[ IDX_CMD1 ] == 'M' ||
              BUF_SIO256[ IDX_CMD1 ] == 'P' )
@@ -252,8 +264,7 @@ int16_t tm_Parse()
     }
     puts_SIO0( CBuf );
 #endif
-//#ifdef DEBUG
-    if( TM.Result == true )
+    if( TM.Result == ACK )
     {
         sprintf( ( char * )CBuf, "ACK\r\n" );
     }
@@ -262,7 +273,6 @@ int16_t tm_Parse()
         sprintf( ( char * )CBuf, "NAK[%02X]\r\n", TM.CRC8 );
     }
     puts_SIO0( CBuf );
-//#endif
 
     return loop;
 }
@@ -285,7 +295,6 @@ bool tm_Parse2( uint8_t cmd )
                      "Receive START\r\n" );
             puts_SIO0( CBuf );
 #endif
-            tm_AppendACK( ACK );
             result = true;
             break;
     case NOP:
@@ -294,7 +303,6 @@ bool tm_Parse2( uint8_t cmd )
                      "Receive NOP\r\n" );
             puts_SIO0( CBuf );
 #endif
-            tm_AppendACK( ACK );
             result = true;
             break;
         case SET_BP:
@@ -351,12 +359,15 @@ bool tm_Parse2( uint8_t cmd )
                      "Receive QUIT\r\n" );
             puts_SIO0( CBuf );
 #endif
-            tm_AppendACK( ACK );
             result = true;
         default:
             break;
     }
 
+    if( result == true )
+    {
+        tm_AppendACK( ACK );
+    }
     return result;
 }
 
@@ -434,7 +445,6 @@ uint16_t tm_ReadIn_FIFO()
         {
             tm_Wait( 10 );
             tm_SEQ_RD();
-//            if( count < 256 )
             {
                 BUF_SIO256[ count++ ] = ScratchPad[ 0 ];
             }
@@ -479,10 +489,11 @@ void tm_SEQ_RD( void )
 
     {
 #asm
-        ld  a, 0FFh
         ; Read Sequence
-        res 0, a    ; PC_RD
-        res 2, a    ; PC_CS
+        ; ld  a, 0FFh
+        ; res 0, a    ; PC_RD
+        ; res 2, a    ; PC_CS
+        ld  a, ( 0FFh | 00001010b )
         out ( PPI0PC ), a
         ; FIFO Read
         in  a, ( PPI0PA )
@@ -503,10 +514,11 @@ void tm_SEQ_WR( void )
 
     {
 #asm
-        ld  a, 0FFh
         ; Write Sequence
-        res 1, a    ; PC_WR
-        res 2, a    ; PC_CS
+        ; ld  a, 0FFh
+        ; res 1, a    ; PC_WR
+        ; res 2, a    ; PC_CS
+        ld  a, ( 0FFh | 00001001b )
         out ( PPI0PC ), a
         ; FIFO Write
         ld  a, ( _ScratchPad )
@@ -533,7 +545,7 @@ bool tm_chkcrc( uint8_t *buf )
     {
         TM.CRC8 = calcCRC8CCITT( TM.CRC8, buf[ loop + 3 ] );
     }
-    if( TM.CRC8 == buf[ loop + 4 ] )
+    if( TM.CRC8 == buf[ loop + 5 ] )
     {
         return true;
     }

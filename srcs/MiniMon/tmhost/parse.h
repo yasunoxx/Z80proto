@@ -2,6 +2,7 @@
 
 #ifndef _PARSE_H_
 #define _PARSE_H_
+#include <stdbool.h>
 
 typedef struct disRx
 {
@@ -19,10 +20,10 @@ typedef struct disRx
     uint8_t etx;            // +1 = 78
 } _disRx;
 
-extern const uint8_t RxFormat[ 8 ][ 80 ];
+extern const uint8_t RxFormat[ 13 ][ 10 ];
 #ifdef _TMHOST_
-extern const uint8_t TxFormat[ 8 ][ 80 ];
-extern void Check_RxBuffer( uint8_t * );
+extern const uint8_t TxFormat[ 13 ][ 80 ];
+extern bool Check_RxBuffer( uint8_t * );
 extern uint8_t ParseTxBuf( uint8_t );
 #endif
 #define IDX_STX 0

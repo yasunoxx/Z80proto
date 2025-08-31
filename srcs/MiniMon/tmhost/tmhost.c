@@ -44,8 +44,7 @@ void tm_setTxBuffer_Break( bool flag );
 int16_t tm_SetFIFO( FT_HANDLE ftHandle );
 
 //int16_t tm_GetFIFO( FT_HANDLE ftHandle );
-int16_t tm_GetFIFO( FT_HANDLE ftHandle, uint16_t req_size,
-    uint16_t timeout );
+int16_t tm_GetFIFO( FT_HANDLE ftHandle, uint16_t timeout );
 void tm_DumpRxBuffer( uint8_t *buf );
 
 FT_HANDLE tm_InitDevice();
@@ -102,8 +101,10 @@ int16_t tm_main()
         switch( result )
         {
             case -32767:
-                tm_Closing( ftHandle );
-                return 0;   // exit
+//                tm_Closing( ftHandle );
+//                return 0;   // exit
+                tm_setTxBuffer( QUIT );
+                break;
             case SET_BP:
                 tm_setTxBuffer( SET_BP );
                 tm_setTxBuffer_Break( F_Break );
@@ -116,12 +117,45 @@ int16_t tm_main()
                 tm_setTxBuffer( NOP );
                 break;
         }
+main_try:
         tm_SetFIFO( ftHandle );
+        usleep( 500000 );
+        {
+            uint16_t getsize = tm_GetFIFO( ftHandle, 3000 );
+
+            if( getsize > FIFO_PACKET_SIZE )
+            {
+                uint16_t loop, offset;
+                for( offset = 0; offset < getsize; offset++ )
+                {
+                    if( RxBuffer[ offset ] == STX )
+                    {
+                        // adjust offset
+                        for( loop = 0; loop < FIFO_PACKET_SIZE; loop++ )
+                        {
+                            RxBuffer[ loop ] = RxBuffer[ loop + offset ];
+                        }
+                        break;
+                    }
+                }
+            }
+        }
         usleep( 250000 );
-        tm_GetFIFO( ftHandle, FIFO_PACKET_SIZE, 2000 );
         tm_Purge( ftHandle );
-        tm_DumpRxBuffer( RxBuffer );
-        Check_RxBuffer( RxBuffer );
+//        tm_DumpRxBuffer( RxBuffer );
+        if( true == Check_RxBuffer( RxBuffer ) )
+        {
+            SequenceNum++;
+            if( result == -32767 )
+            {
+                tm_Closing( ftHandle );
+                return 0; // exit
+            }
+        }
+        else
+        {
+            goto main_try; // retry
+        }
     }
 }
 
@@ -174,11 +208,10 @@ bool tm_setTxBuffer( uint8_t cmd )
 
     // set template
     TxBuffer[ 0 ] = STX;
-
-    tm_setTxBuffer_seq( SequenceNum++ );
-    for( loop = 0; loop < 80; loop++ )
+    tm_setTxBuffer_seq( SequenceNum );
+    for( loop = 0; loop <= FIFO_TRAILER_SIZE; loop++ )
     {
-        TxBuffer[ loop + 3 ] = 0;
+        TxBuffer[ loop + 3 ] = TxFormat[ cmd ][ loop + 1 ];
     }
 
     switch( cmd )
@@ -206,6 +239,8 @@ bool tm_setTxBuffer( uint8_t cmd )
         case RM01:
 //            tm_setTxBuffer_address( DestAddr );
             break;
+        case QUIT:
+            break;
         default:
             return false;
     }
@@ -213,10 +248,9 @@ bool tm_setTxBuffer( uint8_t cmd )
     uint8_t crc8 = 0;
     for( loop = 0; loop <= FIFO_TRAILER_SIZE; loop++ )
     {
-        TxBuffer[ loop + 3 ] = TxFormat[ cmd ][ loop + 1 ];
         crc8 = calcCRC8CCITT( crc8, TxBuffer[ loop + 3 ] );
     }
-//    TxBuffer[ loop + 4 ] = crc8;  // IDX_CRCH
+    TxBuffer[ loop + 4 ] = 0;       // IDX_CRCH
     TxBuffer[ loop + 5 ] = crc8;    // IDX_CRCL
     sprintf( Buf_Mes, "Generated TxBuffer[], CRC8:%02X", crc8 );
     syslog( LOG_DEBUG, "%s", Buf_Mes );
@@ -253,8 +287,7 @@ int16_t tm_SetFIFO( FT_HANDLE ftHandle )
 // Rx
 // ==============================================
 //int16_t tm_GetFIFO( FT_HANDLE ftHandle )
-int16_t tm_GetFIFO( FT_HANDLE ftHandle, uint16_t req_size,
-                     uint16_t timeout )
+int16_t tm_GetFIFO( FT_HANDLE ftHandle, uint16_t timeout )
 {
     uint16_t loop;
     FT_STATUS ftStatus;
@@ -265,11 +298,6 @@ int16_t tm_GetFIFO( FT_HANDLE ftHandle, uint16_t req_size,
     clockid_t clkid;
     uint16_t prev_msec, brk_msec;
     intmax_t prev_sec, brk_sec;
-
-    for( loop = 0; loop < 256; loop++ )
-    {
-        RxBuffer[ loop ] = 0;
-    }
 
     if( clock_gettime( CLOCK_REALTIME, &ts ) == -1 )
     {
@@ -302,9 +330,9 @@ int16_t tm_GetFIFO( FT_HANDLE ftHandle, uint16_t req_size,
     {
         ftStatus = FT_GetQueueStatus( ftHandle, &RxBytes );
         // or FT_GetStatus( ftHandle, &RxBytes, &TxBytes, &Event );
-        if( ftStatus == FT_OK && RxBytes >= req_size )
+        if( ftStatus == FT_OK && RxBytes >= FIFO_PACKET_SIZE )
         {
-            fprintf( stderr, "Received. %d\n", RxBytes );
+            fprintf( stderr, "FIFO: Receive %d bytes.\n", RxBytes );
             break;
         }
         clock_gettime( CLOCK_REALTIME, &ts );
@@ -312,7 +340,7 @@ int16_t tm_GetFIFO( FT_HANDLE ftHandle, uint16_t req_size,
         {
             if( ( ts.tv_nsec / 1000000L ) >= brk_msec )
             {
-                fprintf( stderr, "Receive timed out(%d) .\n", RxBytes );
+                fprintf( stderr, "FIFO: Receive timed out(%d) .\n", RxBytes );
                 return -1;
             }
         }
@@ -320,7 +348,7 @@ int16_t tm_GetFIFO( FT_HANDLE ftHandle, uint16_t req_size,
         {
             if( ts.tv_sec >= brk_sec )
             {
-                fprintf( stderr, "Receive timed out(%d) .\n", RxBytes );
+                fprintf( stderr, "FIFO: Receive timed out(%d) .\n", RxBytes );
                 return -1;
             }
         }
@@ -343,7 +371,7 @@ void tm_DumpRxBuffer( uint8_t *buf )
 {
     uint16_t loop, loop2;
 
-    sprintf( ( char * )Buf_Mes, "RxBuffer:\n" );
+    sprintf( ( char * )Buf_Mes, "RxBuffer:" );
     fprintf( stderr, "%s\n", Buf_Mes );
     for( loop = 0; loop < 256; loop++ )
     {

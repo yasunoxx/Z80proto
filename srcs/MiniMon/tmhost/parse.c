@@ -63,8 +63,7 @@ bool parse_disRx( struct disRx *pDisRx )
     }
     else if( pDisRx->cmd[ 0 ] == 0x0A5 )
     {
-        fprintf( stderr, "NOP " );
-        fprintf( stderr, "PAD PAD " );
+        fprintf( stderr, "NOP PAD ... " );
         if( pDisRx->result[ 2 ] == ACK )
         {
             fprintf( stderr, "ACK ... " );
@@ -115,7 +114,7 @@ int16_t get_RxType( uint8_t *buf )
         return -1;
     }
 
-    for( loop = 0; loop < 6; loop++ )
+    for( loop = 0; loop <= QUIT; loop++ )
     {
         if( buf[ 1 ] == RxFormat[ loop ][ 2 ] )
         {
@@ -127,10 +126,10 @@ int16_t get_RxType( uint8_t *buf )
     return type;
 }
 
-void Check_RxBuffer( uint8_t *buf )
+bool Check_RxBuffer( uint8_t *buf )
 {
     copy_RxBuffer( ( uint8_t * )&Now_disRx, buf );
-    parse_disRx( &Now_disRx );
+    return parse_disRx( &Now_disRx );
 }
 
 

@@ -5,6 +5,11 @@
 build ../ipl0.bin, 'zcc +embedded --no-crt ../ipl0.asm -o ../ipl0.bin'
 and just type 'make' .
 
+# Stats(進捗状況)
+現在、testmode(Debug via Async FIFO)の実装中です。FT245RをLinux(or wsl2)に接続して、MiniMonプロンプトに”T”コマンドを入力し、tmhost [tmhost/tm]を実行すると、FIFOを使用したハンドシェイクらしき動作をします。
+
+その他、実装済コマンドはMiniLoader同様に動作します。
+
 # ## Environment(動作環境)
 Tool                    | Description
 :-----------------------|:---------------------------------------------------
@@ -19,17 +24,15 @@ ROM | 0 ~ 0FFh          | ipl0
 ROM | 100h ~ 1FFFh      | MiniMon .text & .data area
 RAM | 8000h ~ 0D7FFh    | (free)
 RAM | 0D800h ~ 0E7FFh   | MiniMon .text & .data area
-RAM | 0E800h ~ 0F800h   | (free)
+RAM | 0E800h ~ 0F800h   | (free, but do not touch)
 RAM | 0F800h ~ 0FFFFh   | MiniMon work area
 RAM | (0FC30h ~ 0FFFFh) | stack
 
 ## LICENSE(ライセンス)
 使用しているデバイスについて、メーカーがデータシートなどで開示している技術情報は、各社に工業所有権があります。
 
-xymodem.cは、Chuck Forsberg氏による10-14-88版ドキュメントより作成しました。
-
 "Super AKI-80"、"スーパーAKI-80"は、株式会社秋月電子通商の商標です。
 
 lcdlib.cは、Sakazume氏(http://219.117.208.26/~saka/ham/LCD2/)による実装です。
 
-私(yasunoxx▼Julia)が書いたプログラムは、MITライセンスで開示しています。本プログラム[Z80proto2](https://github.com/yasunoxx/Z80proto2)を使用した/使用しない事による全ての結果について、上記権利者と私は何の保証も賠償も致しません。
+私(yasunoxx▼Julia)が書いたプログラムは、MITライセンスで開示しています。本プログラム[Z80proto](https://github.com/yasunoxx/Z80proto)を使用した/使用しない事による全ての結果について、上記権利者と私は何の保証も賠償も致しません。

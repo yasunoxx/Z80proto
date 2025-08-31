@@ -4,7 +4,7 @@
 #include "parse.h"
 
 #ifdef _TMHOST_
-const uint8_t TxFormat[ 8 ][ 80 ] = {
+const uint8_t TxFormat[ 13 ][ 80 ] = {
     // Start Linkup
     {
            8,
@@ -65,17 +65,45 @@ const uint8_t TxFormat[ 8 ][ 80 ] = {
     // Read Memory 4bytes
     {
            12,
-         SYN,  'R',  'M',    4,    4, 0x00, 0x00,  ENQ
+         SYN,  'R',  'M',    4,    4, 0x00, 0x00,  ENQ,
     //   SYN   'R'   'M'       {Size}{Address}
-    }
+        //00,  +01,  +02,  +03,  +04,  +05, + 06,  +07
+        0x00, 0x00, 0x00, 0x00
+    },
     // Inport
+    {
+           8,
+         SYN,  'R',  'M',   64,   64, 0x00, 0x00,  ENQ
+    //   SYN   'R'   'M'       {Size}{Address}
+    },
     // Outport
+    {
+           8,
+         SYN,  'R',  'M',   64,   64, 0x00, 0x00,  ENQ
+    //   SYN   'R'   'M'       {Size}{Address}
+    },
     // Run with Trace
+    {
+           8,
+         SYN,  'R',  'M',   64,   64, 0x00, 0x00,  ENQ
+    //   SYN   'R'   'M'       {Size}{Address}
+    },
     // Stop Run & Trace
+    {
+           8,
+         SYN,  'R',  'M',   64,   64, 0x00, 0x00,  ENQ
+    //   SYN   'R'   'M'       {Size}{Address}
+    },
+    // Quit
+    {
+           8,
+         SYN,  'Q',  'U',  'I',  'T', 0x00, 0x00,  ENQ
+    //   SYN   'Q'   'U'   'I'   'T'
+    }
 };
 #endif // _TMHOST_
 
-const uint8_t RxFormat[ 8 ][ 80 ] = {
+const uint8_t RxFormat[ 13 ][ 10 ] = {
     // Start Linkup
     {
            8,
@@ -89,20 +117,20 @@ const uint8_t RxFormat[ 8 ][ 80 ] = {
     // Set Breakpoint
     {
            8,
-         SYN,  'B',  'P',    0,      0, 0x00, 0x00,  ACK
-    //   SYN   'B'   'P' {Num.} {Condx} {Address}    ACK
+         SYN,  'B',  'P',    0,     0, 0x00, 0x00,  ACK
+    //   SYN   'B'   'P' {Num.} {Cndx} {Address}    ACK
     },
     // Register Previous Breakpoint
     {
           32,
-         SYN,  'R',  'E',  'G',   24,  PAD,  PAD,  ACK,
+         SYN,  'R',  'E',  'G',   24,  PAD,  PAD,  ACK
         // or SYN, "REG", NUL
-        // A,    F,    B,    C,    D,    E,    H,    L
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //A',   F',   B',   C',   D',   E',   H',   L'
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //      IX,         IY,         PC,         SP
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+//        // A,    F,    B,    C,    D,    E,    H,    L
+//        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+//        //A',   F',   B',   C',   D',   E',   H',   L'
+//        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+//        //      IX,         IY,         PC,         SP
+//        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     },
     // Write Memory 64bytes
     {
@@ -112,23 +140,14 @@ const uint8_t RxFormat[ 8 ][ 80 ] = {
     // Read Memory 64bytes
     {
           72,
-         SYN,  'R',  'M',   64,   64, 0x00, 0x00,  ACK,
+         SYN,  'R',  'M',   64,   64, 0x00, 0x00,  ACK
         //00,  +01,  +02,  +03,  +04,  +05, + 06,  +07
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+//        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         //08
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //10
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //18
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //20
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //28
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //30
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //88
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+//        :
+//        :
+        //38
+//        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     },
     // Write Memory byte
     {
@@ -138,8 +157,37 @@ const uint8_t RxFormat[ 8 ][ 80 ] = {
     // Read Memory 4bytes
     {
           12,
-         SYN,  'R',  'M',    4,    4, 0x00, 0x00,  ACK,
+         SYN,  'R',  'M',    4,    4, 0x00, 0x00,  ACK
         //00,  +01,  +02,  +03
-        0x00, 0x00, 0x00, 0x00
-    }
-};
+     },
+     // Inport
+     {
+            8,
+          SYN,  'R',  'M',   64,   64, 0x00, 0x00,  ENQ
+     //   SYN   'R'   'M'       {Size}{Address}
+     },
+     // Outport
+     {
+            8,
+          SYN,  'R',  'M',   64,   64, 0x00, 0x00,  ENQ
+     //   SYN   'R'   'M'       {Size}{Address}
+     },
+     // Run with Trace
+     {
+            8,
+          SYN,  'R',  'M',   64,   64, 0x00, 0x00,  ENQ
+     //   SYN   'R'   'M'       {Size}{Address}
+     },
+     // Stop Run & Trace
+     {
+            8,
+          SYN,  'R',  'M',   64,   64, 0x00, 0x00,  ENQ
+     //   SYN   'R'   'M'       {Size}{Address}
+     },
+     // Quit
+     {
+            8,
+          SYN,  'Q',  'U',  'I',  'T', 0x00, 0x00,  ENQ
+     //   SYN   'Q'   'U'   'I'   'T'
+     }
+ };
